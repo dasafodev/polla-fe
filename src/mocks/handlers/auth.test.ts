@@ -1,16 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { server } from '../server'
-import { resetDb } from '../seed'
-import { setNow, resetClock } from '../../lib/clock'
+import { describe, it, expect } from 'vitest'
 import { makeFakeIdToken } from '../jwt'
 
 const URL = (p: string) => `http://localhost/api${p}`
 const post = (p: string, body: unknown) =>
   fetch(URL(p), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'include' })
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterAll(() => server.close())
-beforeEach(() => { resetDb(); resetClock(); setNow('2026-06-06T12:00:00.000Z'); server.resetHandlers() })
 
 const juanCred = () => makeFakeIdToken({ sub: 'sub-juan', email: 'juan@gmail.com', name: 'Juan' })
 const newCred = () => makeFakeIdToken({ sub: 'sub-nuevo', email: 'nuevo@gmail.com', name: 'Nuevo' })
