@@ -5,6 +5,7 @@ import { type ReactNode } from 'react'
 import { makeQueryClient } from '../lib/queryClient'
 import { useLogin, useSignup } from './hooks'
 import { makeFakeIdToken } from '../mocks/jwt'
+import { isApiError } from '../lib/errors'
 
 function wrapper() {
   const qc = makeQueryClient()
@@ -24,7 +25,8 @@ describe('useLogin', () => {
     const { result } = renderHook(() => useLogin(), { wrapper: wrapper() })
     result.current.mutate(makeFakeIdToken({ sub: 'sub-x', email: 'x@x.com', name: 'X' }))
     await waitFor(() => expect(result.current.isError).toBe(true))
-    expect((result.current.error as { code: string }).code).toBe('USER_NOT_FOUND')
+    const err = result.current.error
+    expect(isApiError(err) && err.code).toBe('USER_NOT_FOUND')
   })
 })
 
