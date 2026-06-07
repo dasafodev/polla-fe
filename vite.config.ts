@@ -17,6 +17,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    // Alinea el origin de jsdom con las URLs de los tests (http://localhost/api/...)
+    // y con los fetch relativos del apiClient, para que MSW resuelva los handlers.
+    environmentOptions: { jsdom: { url: 'http://localhost/' } },
     setupFiles: ['./src/test/setup.ts'],
     css: false,
   },
