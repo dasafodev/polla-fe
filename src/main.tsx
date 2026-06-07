@@ -1,9 +1,22 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { RouterProvider } from 'react-router-dom'
+import { Providers } from './app/providers'
+import { router } from './app/router'
+import { env } from './lib/env'
 
-// Placeholder; se completa en Task 17 (bootstrap real con arranque condicional de MSW).
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <div>Polla 2026 — bootstrap</div>
-  </StrictMode>,
-)
+async function enableMocks() {
+  if (!env.useMocks) return
+  const { worker } = await import('./mocks/browser')
+  await worker.start({ onUnhandledRequest: 'warn' })
+}
+
+enableMocks().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <Providers>
+        <RouterProvider router={router} />
+      </Providers>
+    </StrictMode>,
+  )
+})
