@@ -66,7 +66,7 @@ export function PhoneField({
             setIso(e.target.value)
             emit(e.target.value, num)
           }}
-          className={`min-h-[52px] w-[44%] shrink-0 rounded-control border bg-surface px-3 text-[16px] text-ink focus:outline-none focus:ring-2 focus:ring-violet focus:border-violet ${
+          className={`min-h-[52px] w-[9.25rem] shrink-0 rounded-control border bg-surface px-3 text-[16px] text-ink focus:outline-none focus:ring-2 focus:ring-violet focus:border-violet ${
             error ? 'border-danger' : 'border-border'
           }`}
         >
@@ -88,7 +88,7 @@ export function PhoneField({
           placeholder="300 123 4567"
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={`min-h-[52px] flex-1 rounded-control border bg-surface px-4 text-[16px] text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-violet focus:border-violet ${
+          className={`min-h-[52px] w-full min-w-0 flex-1 rounded-control border bg-surface px-4 text-[16px] text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-violet focus:border-violet ${
             error ? 'border-danger' : 'border-border'
           }`}
         />
