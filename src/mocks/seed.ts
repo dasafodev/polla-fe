@@ -49,9 +49,10 @@ function buildKoMatches(): DbKoMatch[] {
     status, homeTeamId, awayTeamId, homeTeamLabel: homeTeamId ? null : `Pos ${n}`, awayTeamLabel: awayTeamId ? null : `Pos ${n}b`, result,
   })
   return [
-    // finished (desempate): r32-1, r32-2 y r16-1
-    m('ko-r32-1', 'r32', 1, '2026-06-29T16:00:00.000Z', 'finished', 'tA1', 'tB1', { scoreHome: 2, scoreAway: 1, winnerTeamId: 'tA1' }),
-    m('ko-r32-2', 'r32', 2, '2026-06-29T20:00:00.000Z', 'finished', 'tC1', 'tD1', { scoreHome: 1, scoreAway: 0, winnerTeamId: 'tC1' }),
+    // finished (desempate): r32-1, r32-2 y r16-1. scheduledAt en el pasado respecto al reloj de
+    // test (6-jun) → lockedIn true (un partido terminado está cerrado). Datos ilustrativos (§13 riesgo 7).
+    m('ko-r32-1', 'r32', 1, '2026-06-01T16:00:00.000Z', 'finished', 'tA1', 'tB1', { scoreHome: 2, scoreAway: 1, winnerTeamId: 'tA1' }),
+    m('ko-r32-2', 'r32', 2, '2026-06-02T20:00:00.000Z', 'finished', 'tC1', 'tD1', { scoreHome: 1, scoreAway: 0, winnerTeamId: 'tC1' }),
     // locked sin resultado: lockedAt en el pasado respecto a now de test (2026-06-06) → MATCH_LOCKED sin setNow
     m('ko-r32-locked', 'r32', 3, '2026-06-05T16:00:00.000Z', 'scheduled', 'tE1', 'tF1', null),
     // abiertos (lockedAt futuro): para crear/editar predicciones en tests
@@ -61,7 +62,7 @@ function buildKoMatches(): DbKoMatch[] {
     m('ko-r32-open-4', 'r32', 7, '2026-07-02T16:00:00.000Z', 'scheduled', 'tE2', 'tF2', null),
     m('ko-r32-open-5', 'r32', 8, '2026-07-03T16:00:00.000Z', 'scheduled', 'tG2', 'tH2', null),
     // placeholder sin cruce definido (homeTeam null)
-    m('ko-r16-1', 'r16', 1, '2026-07-05T16:00:00.000Z', 'finished', 'tA1', 'tC1', { scoreHome: 0, scoreAway: 0, winnerTeamId: 'tA1' }),
+    m('ko-r16-1', 'r16', 1, '2026-06-03T16:00:00.000Z', 'finished', 'tA1', 'tC1', { scoreHome: 0, scoreAway: 0, winnerTeamId: 'tA1' }),
   ]
 }
 
