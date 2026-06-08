@@ -23,6 +23,10 @@ export function useLogout() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: () => postLogout(),
-    onSuccess: () => qc.clear(),
+    // No usar qc.clear(): elimina la query `me` y deja huérfano su observer (un setQueryData posterior
+    // al loguear otro usuario no actualizaría la UI). resetQueries() resetea el cache (borra el `data`
+    // previo, evitando que un 401 quede "authenticated" por data persistente) y refetchea las queries
+    // activas: `me` → 401 → unauthenticated, con el observer vivo para el próximo login.
+    onSuccess: () => qc.resetQueries(),
   })
 }
