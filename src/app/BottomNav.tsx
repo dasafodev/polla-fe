@@ -4,7 +4,7 @@ import { useAuth } from '../auth/useAuth'
 
 const items = [
   { to: '/', label: 'Inicio', Icon: House, end: true },
-  { to: '/onboarding', label: 'Predicciones', Icon: ListChecks, end: false },
+  { to: '/predicciones', label: 'Predicciones', Icon: ListChecks, end: false },
   { to: '/tabla', label: 'Tabla', Icon: Trophy, end: false },
 ]
 

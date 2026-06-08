@@ -21,13 +21,15 @@ try {
   await page.getByRole('heading', { name: /Hola, Juan/i }).waitFor({ timeout: 8000 })
   check(true, 'dev login-as Juan → Dashboard "Hola, Juan"')
 
-  // 2) Predicciones → wizard de grupos consume /groups + /groups/predictions/me (Juan 12/12)
+  // 2) Predicciones → Hub (con barra inferior); entra a Grupos (consume /groups + /groups/predictions/me, Juan 12/12)
   await page.getByRole('link', { name: 'Predicciones' }).click()
+  await page.getByRole('heading', { name: /^Predicciones$/ }).waitFor({ timeout: 8000 })
+  await page.getByRole('button', { name: /Grupos/ }).click()
   await page.getByText(/12 de 12 listos/).waitFor({ timeout: 8000 })
-  check(true, 'wizard de Grupos consume /groups + /groups/predictions/me (12 de 12 listos)')
+  check(true, 'Predicciones: Hub → Grupos consume /groups + /groups/predictions/me (12 de 12 listos)')
 
-  // volver al Dashboard desde el paso de Grupos (flecha atrás del header)
-  await page.getByRole('button', { name: 'Atrás' }).click()
+  // volver al Dashboard por la barra inferior (sigue visible en el flujo in-shell)
+  await page.getByRole('link', { name: 'Inicio' }).click()
   await page.getByRole('heading', { name: /Hola, Juan/i }).waitFor({ timeout: 8000 })
 
   // 3) Tabla: podio (Juan 1º) + detalle en sheet

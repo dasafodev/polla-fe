@@ -7,8 +7,7 @@ import { OnboardingLayout } from '../features/onboarding/OnboardingLayout'
 import { Dashboard } from '../features/home/Dashboard'
 import { Hub } from '../features/predicciones/Hub'
 import { Review } from '../features/predicciones/Review'
-import { GroupsList } from '../features/groups/GroupsList'
-import { GroupEditor } from '../features/groups/GroupEditor'
+import { GroupsEditor } from '../features/groups/GroupsEditor'
 import { Thirds } from '../features/groups/Thirds'
 import { Powerups } from '../features/powerups/Powerups'
 import { KoRoundList } from '../features/ko/KoRoundList'
@@ -44,8 +43,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       { path: 'predicciones', element: <Hub /> },
-      { path: 'predicciones/grupos', element: <GroupsList /> },
-      { path: 'predicciones/grupos/:groupId', element: <GroupEditor /> },
+      { path: 'predicciones/grupos', element: <GroupsEditor /> },
       { path: 'predicciones/terceros', element: <Thirds /> },
       { path: 'predicciones/powerups', element: <Powerups /> },
       { path: 'predicciones/revisar', element: <Review /> },
