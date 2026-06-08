@@ -7,11 +7,13 @@ export function Sheet({
   open,
   onClose,
   title,
+  ariaLabel,
   children,
 }: {
   open: boolean
   onClose: () => void
   title?: string
+  ariaLabel?: string
   children: ReactNode
 }) {
   const reduced = useReduced()
@@ -43,7 +45,7 @@ export function Sheet({
             ref={panelRef}
             role="dialog"
             aria-modal="true"
-            aria-label={title}
+            aria-label={ariaLabel ?? title}
             tabIndex={-1}
             className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[80%] max-w-[480px] flex-col rounded-t-[24px] bg-surface shadow-diffuse focus:outline-none"
             initial={reduced ? false : { y: '100%' }}

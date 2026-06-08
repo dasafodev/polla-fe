@@ -34,4 +34,13 @@ describe('Sheet', () => {
     )
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
+
+  it('usa ariaLabel para nombrar el dialog cuando no hay título visible', () => {
+    render(
+      <Sheet open onClose={() => {}} ariaLabel="Juan">
+        <p>c</p>
+      </Sheet>,
+    )
+    expect(screen.getByRole('dialog', { name: 'Juan' })).toBeInTheDocument()
+  })
 })
