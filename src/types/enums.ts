@@ -22,3 +22,22 @@ export const ERROR_CODES = [
   'PARTICIPANT_NOT_FOUND', 'NETWORK_ERROR',
 ] as const
 export type ErrorCode = (typeof ERROR_CODES)[number]
+
+// Escala de ronda KO (enum cerrado del contrato, KoMyPrediction.pointsEarned.scale_slug)
+export const SCALE_SLUGS = ['scale_r32', 'scale_r16', 'scale_qf', 'scale_sf', 'scale_final'] as const
+export type ScaleSlug = (typeof SCALE_SLUGS)[number]
+
+// Mapa ronda KO → slug de escala. '3rd' reusa scale_sf (el contrato no define scale_3rd).
+export const ROUND_TO_SCALE: Record<RoundSlug, ScaleSlug> = {
+  r32: 'scale_r32', r16: 'scale_r16', qf: 'scale_qf', sf: 'scale_sf', '3rd': 'scale_sf', final: 'scale_final',
+}
+
+// Keys de scoring_params (contrato /admin/scoring-params)
+export const SCORING_KEYS = [
+  'pts_group_position_exact', 'pts_group_position_partial', 'bonus_group_complete',
+  'pts_third_correct', 'pts_ko_advances', 'pts_ko_exact_score',
+  'pts_dark_horse_per_round', 'pts_disappointment_per_round', 'mult_triple',
+  'scale_r32', 'scale_r16', 'scale_qf', 'scale_sf', 'scale_final',
+] as const
+export type ScoringKey = (typeof SCORING_KEYS)[number]
+export type ScoringParams = Record<ScoringKey, number>
