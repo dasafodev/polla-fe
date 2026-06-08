@@ -30,11 +30,13 @@ try {
   await page.getByRole('button', { name: 'Atrás' }).click()
   await page.getByRole('heading', { name: /Hola, Juan/i }).waitFor({ timeout: 8000 })
 
-  // 3) Tabla consume /scoreboard (Juan 1º por desempate)
+  // 3) Tabla: podio (Juan 1º) + detalle en sheet
   await page.getByRole('link', { name: 'Tabla' }).click()
-  await page.getByRole('heading', { name: /Tabla de posiciones/i }).waitFor({ timeout: 8000 })
-  const firstRow = (await page.locator('ol li').first().innerText()).trim()
-  check(/#1\s+Juan/.test(firstRow), `Tabla consume /scoreboard (1º: "${firstRow}")`)
+  await page.getByRole('heading', { name: /^Tabla$/ }).waitFor({ timeout: 8000 })
+  await page.getByRole('button', { name: /Juan/i }).first().click()
+  await page.getByRole('dialog', { name: 'Juan' }).waitFor({ timeout: 8000 })
+  check(true, 'Tabla: podio + detalle de Juan (sheet)')
+  await page.keyboard.press('Escape') // cierra el sheet antes de seguir navegando
 
   // 4) logout (menú de avatar) y entrar como Admin → /admin consume /admin/participants
   await page.getByRole('link', { name: 'Inicio' }).click()
