@@ -6,7 +6,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div>
       <main>{children}</main>
       <nav>
-        <Link to="/">Inicio</Link> | <Link to="/predicciones">Predicciones</Link> | <Link to="/tabla">Tabla</Link>
+        <Link to="/">Inicio</Link> | <Link to="/predicciones">Predicciones</Link> |{' '}
+        <Link to="/eliminatorias">Eliminatorias</Link> | <Link to="/tabla">Tabla</Link>
       </nav>
     </div>
   )
