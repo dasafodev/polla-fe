@@ -3,10 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from '@phosphor-icons/react'
 import { useOnboardingState, type StepKey } from './onboardingState'
 import { SegmentedProgress } from '../../ui/SegmentedProgress'
-import { Button } from '../../ui/Button'
 import { Welcome } from './Welcome'
-import { StepPlaceholder } from './StepPlaceholder'
 import { GroupDeck } from '../groups/GroupDeck'
+import { Thirds } from '../groups/Thirds'
+import { Powerups } from '../powerups/Powerups'
 
 const ORDER: StepKey[] = ['groups', 'thirds', 'powerups']
 const META: Record<StepKey, { kicker: string; title: string; help: string }> = {
@@ -55,17 +55,12 @@ export function OnboardingLayout() {
     if (idx > 0) goStep(ORDER[idx - 1])
     else nav('/')
   }
-  function next() {
-    const idx = ORDER.indexOf(current)
-    if (idx < ORDER.length - 1) goStep(ORDER[idx + 1])
-    else nav('/')
-  }
 
   if (showWelcome) return <Welcome onStart={() => setStarted(true)} />
 
   const meta = META[current]
-  // En Grupos, la baraja trae su propia navegación (Anterior / Listo, siguiente): no mostramos
-  // el footer global para no duplicar acciones. Los demás pasos sí tienen un único CTA.
+  // Cada paso trae su propio CTA (footer fijo en Thirds/Powerups, navegación inline en Grupos):
+  // no hay footer global. Solo reservamos espacio inferior para el footer fijo de los pasos 2 y 3.
   const hasFooter = current !== 'groups'
   return (
     <div className={`min-h-[100dvh] bg-bg ${hasFooter ? 'pb-[calc(96px+env(safe-area-inset-bottom))]' : 'pb-8'}`}>
@@ -90,20 +85,10 @@ export function OnboardingLayout() {
 
         <div className="px-5 pt-6">
           {current === 'groups' && <GroupDeck onComplete={() => goStep('thirds')} />}
-          {current === 'thirds' && <StepPlaceholder kind="thirds" enabled={state.steps[1].status !== 'disabled'} />}
-          {current === 'powerups' && <StepPlaceholder kind="powerups" />}
+          {current === 'thirds' && <Thirds onComplete={() => goStep('powerups')} />}
+          {current === 'powerups' && <Powerups onComplete={() => nav('/')} />}
         </div>
       </div>
-
-      {hasFooter && (
-        <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 px-5 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-md">
-          <div className="mx-auto max-w-[480px]">
-            <Button fullWidth onClick={next}>
-              {current === 'powerups' ? 'Finalizar' : 'Siguiente paso'}
-            </Button>
-          </div>
-        </footer>
-      )}
     </div>
   )
 }
