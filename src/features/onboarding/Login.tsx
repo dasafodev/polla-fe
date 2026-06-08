@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { GoogleLogin } from '@react-oauth/google'
 import { useLogin } from '../../auth/hooks'
@@ -12,6 +12,8 @@ import { DevLoginPanel } from './DevLoginPanel'
 
 export function Login() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const presetCode = params.get('code') ?? undefined
   const login = useLogin()
   const [credential, setCredential] = useState<string | null>(null)
   const [showSignup, setShowSignup] = useState(false)
@@ -41,6 +43,7 @@ export function Login() {
     return (
       <Signup
         credential={credential}
+        presetCode={presetCode}
         onNeedRelogin={() => {
           setShowSignup(false)
           setCredential(null)
@@ -64,13 +67,13 @@ export function Login() {
           <img src="/logo.png" alt="Polla Mundial 2026" width={92} height={92} className="rounded-[26px] shadow-diffuse" />
         </motion.div>
 
-        <motion.h1 variants={fadeUp} className="font-display text-4xl font-black leading-none tracking-tight">
+        <motion.h1 variants={fadeUp} className="font-display text-4xl font-black leading-tight tracking-tight">
           POLLA
           <br />
-          <span className="text-transparent [-webkit-text-stroke:1.5px_rgba(255,255,255,0.85)]">MUNDIAL</span>
+          <span className="text-violet-light">MUNDIAL</span>
         </motion.h1>
-        <motion.p variants={fadeUp} className="mt-3 text-violet-light/90">
-          2026 · Entre amigos
+        <motion.p variants={fadeUp} className="mt-2 font-mono text-sm font-bold tracking-[0.3em] text-white/70">
+          2026
         </motion.p>
 
         <motion.div variants={fadeUp} className="mt-10 w-full">
@@ -84,13 +87,6 @@ export function Login() {
             </p>
           )}
         </motion.div>
-
-        <motion.p variants={fadeUp} className="mt-8 text-xs text-white/60">
-          Solo por invitación ·{' '}
-          <button type="button" className="underline underline-offset-2">
-            ¿Cómo funciona?
-          </button>
-        </motion.p>
       </motion.div>
 
       {import.meta.env.DEV && env.useMocks && (
