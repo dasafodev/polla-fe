@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { RequireAuth } from './guards/RequireAuth'
+import { RequireAdmin } from './guards/RequireAdmin'
 import { AppShell } from './AppShell'
 import { Login } from '../features/onboarding/Login'
 import { Dashboard } from '../features/home/Dashboard'
@@ -14,6 +15,7 @@ import { KoRoundDetail } from '../features/ko/KoRoundDetail'
 import { KoMatchDetail } from '../features/ko/KoMatchDetail'
 import { Scoreboard } from '../features/scoreboard/Scoreboard'
 import { Breakdown } from '../features/scoreboard/Breakdown'
+import { Participants } from '../features/admin/Participants'
 
 function ProtectedShell() {
   return (
@@ -43,6 +45,8 @@ export const router = createBrowserRouter([
       { path: 'eliminatorias/partido/:matchId', element: <KoMatchDetail /> },
       { path: 'tabla', element: <Scoreboard /> },
       { path: 'tabla/:participantId', element: <Breakdown /> },
+      // Única pantalla admin: lista de inscritos (el resto de la data entra por scripts a la DB).
+      { path: 'admin', element: <RequireAdmin><Participants /></RequireAdmin> },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },

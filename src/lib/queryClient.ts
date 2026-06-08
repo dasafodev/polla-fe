@@ -36,4 +36,7 @@ export const keys = {
     all: () => ['scoreboard'] as const,
     breakdown: (pid: string) => ['scoreboard', 'breakdown', pid] as const,
   },
+  admin: {
+    participants: () => ['admin', 'participants'] as const,
+  },
 }

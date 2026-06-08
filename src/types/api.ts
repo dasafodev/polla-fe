@@ -122,3 +122,8 @@ export interface ScoreBreakdown {
   participant: { id: string; name: string }; total: number
   breakdown: ScoreBreakdownDetail; tripleUsesRemaining: number; prize: number | null
 }
+
+// ── Admin (única pantalla del front: lista de inscritos; el resto entra por scripts a la DB) ──
+// Contrato abierto (§5.1/§13): definido a mano. paymentStatus (RF-07/D1) queda diferido — sin schema aún.
+export interface AdminParticipant { id: string; name: string; email: string; phone: string | null; role: Role; total: number }
+export interface AdminParticipantsResponse { data: AdminParticipant[] }
