@@ -29,7 +29,7 @@ export function GroupCard({
   return (
     <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
       <h2 className="font-display text-xl font-extrabold text-ink">{groupName}</h2>
-      <p className="mt-1 text-sm text-ink-soft">Ordena del 1° al 4°.</p>
+      <p className="mt-1 text-sm text-ink-soft">Ordena del 1° al 4°. Los 2 primeros clasifican.</p>
       <Reorder.Group axis="y" values={order} onReorder={onReorder} className="mt-4 space-y-2.5">
         {order.map((id, idx) => {
           const t = byId(id)
@@ -40,13 +40,11 @@ export function GroupCard({
               key={id}
               value={id}
               dragListener={!readOnly}
-              className={`flex items-center gap-3 rounded-control border bg-surface px-3 py-3 ${
-                top ? 'border-violet/40 bg-tint/40' : 'border-border'
-              }`}
+              className="flex items-center gap-3 rounded-control border border-border bg-surface px-3 py-3"
             >
               <span
                 className={`grid size-7 shrink-0 place-items-center rounded-full font-mono text-sm font-bold ${
-                  top ? 'bg-violet text-white' : 'bg-surface-2 text-ink-soft'
+                  top ? 'bg-tint text-violet-strong' : 'bg-surface-2 text-ink-soft'
                 }`}
               >
                 {idx + 1}

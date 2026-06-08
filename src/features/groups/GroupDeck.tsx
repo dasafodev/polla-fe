@@ -1,14 +1,11 @@
 import { useMemo, useState } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useGroups, useMyGroupPredictions, useSaveGroupPredictions, useFriendsGroups } from './hooks'
 import { isApiError } from '../../lib/errors'
 import { Button } from '../../ui/Button'
-import { Stamp } from '../../ui/Stamp'
 import { Confetti } from '../../ui/Confetti'
 import { useReduced } from '../../ui/motion'
 import { GroupCard } from './GroupCard'
-
-const SWIPE = 90
 
 export function GroupDeck({ onComplete }: { onComplete?: () => void }) {
   const groups = useGroups()
@@ -22,11 +19,6 @@ export function GroupDeck({ onComplete }: { onComplete?: () => void }) {
   const [orders, setOrders] = useState<Record<string, string[]>>({})
   const [message, setMessage] = useState('')
   const [done, setDone] = useState(false)
-
-  const x = useMotionValue(0)
-  const rotate = useTransform(x, [-200, 200], [-12, 12])
-  const listoOpacity = useTransform(x, [40, 140], [0, 1])
-  const volverOpacity = useTransform(x, [-140, -40], [1, 0])
 
   const list = groups.data?.data ?? []
   const completed = mine.data?.completedGroups ?? 0
@@ -49,7 +41,6 @@ export function GroupDeck({ onComplete }: { onComplete?: () => void }) {
     setOrders((o) => ({ ...o, [current.id]: next }))
   }
   function goTo(i: number) {
-    x.set(0)
     setIndex(Math.max(0, Math.min(list.length - 1, i)))
   }
   function confirm(dir: 1 | -1) {
@@ -92,55 +83,33 @@ export function GroupDeck({ onComplete }: { onComplete?: () => void }) {
   }
 
   return (
-    <div className="select-none">
+    <div>
       <div className="mb-4 flex items-center justify-between">
         <p className="font-mono text-sm font-bold text-ink">{completed} de 12 listos</p>
         <DeckDots total={list.length} index={index} onPick={goTo} />
       </div>
 
-      <div className="relative h-[460px]">
-        {list[index + 1] && !reduced && (
+      <div className="relative">
+        {list[index + 1] && (
           <div
-            className="absolute inset-x-3 top-3 -z-10 h-full scale-[0.97] rounded-2xl border border-border bg-surface-2 opacity-70"
+            className="absolute inset-x-2 -bottom-2 top-2 -z-10 scale-[0.98] rounded-2xl border border-border bg-surface-2 opacity-60"
             aria-hidden
           />
         )}
-        <AnimatePresence initial={false}>
-          <motion.div
-            key={current.id}
-            style={reduced ? undefined : { x, rotate }}
-            drag={locked || reduced ? false : 'x'}
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.6}
-            onDragEnd={(_, info) => {
-              if (info.offset.x > SWIPE) confirm(1)
-              else if (info.offset.x < -SWIPE) confirm(-1)
-              else x.set(0)
-            }}
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0"
-          >
-            <GroupCard
-              groupName={current.name}
-              teams={current.teams}
-              order={effectiveOrder}
-              onReorder={setOrder}
-              readOnly={locked}
-            />
-            {!reduced && (
-              <>
-                <motion.div style={{ opacity: listoOpacity }} className="absolute right-5 top-5">
-                  <Stamp kind="listo" />
-                </motion.div>
-                <motion.div style={{ opacity: volverOpacity }} className="absolute left-5 top-5">
-                  <Stamp kind="volver" />
-                </motion.div>
-              </>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        <motion.div
+          key={current.id}
+          initial={reduced ? false : { opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <GroupCard
+            groupName={current.name}
+            teams={current.teams}
+            order={effectiveOrder}
+            onReorder={setOrder}
+            readOnly={locked}
+          />
+        </motion.div>
       </div>
 
       {locked && (

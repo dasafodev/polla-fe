@@ -13,7 +13,7 @@ const META: Record<StepKey, { kicker: string; title: string; help: string }> = {
   groups: {
     kicker: 'PASO 1 DE 3 · GRUPOS',
     title: 'Ordena cada grupo',
-    help: 'Arrastra los equipos del 1° al 4°. Desliza la carta para pasar al siguiente grupo.',
+    help: 'Arrastra los equipos para ordenarlos del 1° al 4°, o usa las flechas.',
   },
   thirds: {
     kicker: 'PASO 2 DE 3 · TERCEROS',
