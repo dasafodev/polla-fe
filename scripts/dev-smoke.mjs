@@ -26,8 +26,8 @@ try {
   await page.getByText(/12 de 12 listos/).waitFor({ timeout: 8000 })
   check(true, 'wizard de Grupos consume /groups + /groups/predictions/me (12 de 12 listos)')
 
-  // volver al Dashboard desde el wizard (footer fijo)
-  await page.getByRole('button', { name: /Guardar y salir/i }).click()
+  // volver al Dashboard desde el paso de Grupos (flecha atrás del header)
+  await page.getByRole('button', { name: 'Atrás' }).click()
   await page.getByRole('heading', { name: /Hola, Juan/i }).waitFor({ timeout: 8000 })
 
   // 3) Tabla consume /scoreboard (Juan 1º por desempate)

@@ -64,8 +64,11 @@ export function OnboardingLayout() {
   if (showWelcome) return <Welcome onStart={() => setStarted(true)} />
 
   const meta = META[current]
+  // En Grupos, la baraja trae su propia navegación (Anterior / Listo, siguiente): no mostramos
+  // el footer global para no duplicar acciones. Los demás pasos sí tienen un único CTA.
+  const hasFooter = current !== 'groups'
   return (
-    <div className="min-h-[100dvh] bg-bg pb-[calc(96px+env(safe-area-inset-bottom))]">
+    <div className={`min-h-[100dvh] bg-bg ${hasFooter ? 'pb-[calc(96px+env(safe-area-inset-bottom))]' : 'pb-8'}`}>
       <div className="mx-auto max-w-[480px]">
         <header className="px-5 pt-[max(16px,env(safe-area-inset-top))]">
           <div className="flex items-center gap-3">
@@ -92,16 +95,15 @@ export function OnboardingLayout() {
         </div>
       </div>
 
-      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 px-5 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-md">
-        <div className="mx-auto flex max-w-[480px] items-center gap-3">
-          <Button variant="ghost" onClick={() => nav('/')}>
-            Guardar y salir
-          </Button>
-          <Button className="flex-1" onClick={next}>
-            {current === 'powerups' ? 'Finalizar' : 'Siguiente paso'}
-          </Button>
-        </div>
-      </footer>
+      {hasFooter && (
+        <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 px-5 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-md">
+          <div className="mx-auto max-w-[480px]">
+            <Button fullWidth onClick={next}>
+              {current === 'powerups' ? 'Finalizar' : 'Siguiente paso'}
+            </Button>
+          </div>
+        </footer>
+      )}
     </div>
   )
 }

@@ -154,8 +154,8 @@ export function GroupDeck({ onComplete }: { onComplete?: () => void }) {
         </p>
       )}
 
-      <div className="mt-4 flex items-center gap-3">
-        <Button variant="light" onClick={() => confirm(-1)} disabled={index === 0}>
+      <div className="mt-4 flex items-center gap-2">
+        <Button variant="ghost" onClick={() => confirm(-1)} disabled={index === 0}>
           Anterior
         </Button>
         <Button className="flex-1" loading={save.isPending} disabled={locked} onClick={() => confirm(1)}>
