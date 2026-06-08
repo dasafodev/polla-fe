@@ -36,7 +36,7 @@ export function Signup({
     signup.mutate(
       { credential, code: code.trim(), phone },
       {
-        onSuccess: () => navigate('/'),
+        onSuccess: () => navigate('/onboarding'),
         onError: (err) => {
           if (isApiError(err) && err.code === 'INVALID_GOOGLE_TOKEN') onNeedRelogin()
           else setMessage(isApiError(err) ? err.message : 'No se pudo crear la cuenta')
