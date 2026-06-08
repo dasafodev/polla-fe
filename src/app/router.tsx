@@ -3,6 +3,7 @@ import { RequireAuth } from './guards/RequireAuth'
 import { RequireAdmin } from './guards/RequireAdmin'
 import { AppShell } from './AppShell'
 import { Login } from '../features/onboarding/Login'
+import { OnboardingLayout } from '../features/onboarding/OnboardingLayout'
 import { Dashboard } from '../features/home/Dashboard'
 import { Hub } from '../features/predicciones/Hub'
 import { Review } from '../features/predicciones/Review'
@@ -29,6 +30,14 @@ function ProtectedShell() {
 
 export const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
+  {
+    path: '/onboarding',
+    element: (
+      <RequireAuth>
+        <OnboardingLayout />
+      </RequireAuth>
+    ),
+  },
   {
     path: '/',
     element: <ProtectedShell />,
