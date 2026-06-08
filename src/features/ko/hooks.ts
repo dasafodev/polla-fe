@@ -14,7 +14,9 @@ export function useSaveKoPrediction(id: string, mode: 'create' | 'update') {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (body: SaveKoPredictionBody) => (mode === 'create' ? createKoPrediction(id, body) : updateKoPrediction(id, body)),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: keys.ko.match(id) }) },
+    // Invalida todo el namespace ko (match + round + friends): el marcador ✎ del listado de ronda
+    // depende de myPrediction, no solo el detalle del partido.
+    onSuccess: () => { qc.invalidateQueries({ queryKey: keys.ko.all() }) },
   })
 }
 export function useFriendsKo(id: string) {

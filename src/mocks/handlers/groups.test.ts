@@ -122,3 +122,13 @@ describe('GET /groups/predictions/friends — gating', () => {
     expect(ids).not.toContain('p-admin')
   })
 })
+
+describe('POST /groups/predictions — groupId duplicado en el body', () => {
+  it('400 INVALID_RANKINGS si se repite un groupId', async () => {
+    const g = db.groups[0]
+    const r = rankingsFor(g.teamIds)
+    const res = await post('/groups/predictions', { predictions: [{ groupId: g.id, rankings: r }, { groupId: g.id, rankings: r }] })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({ code: 'INVALID_RANKINGS' })
+  })
+})

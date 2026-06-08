@@ -6,7 +6,11 @@ export function now(): number {
 }
 
 export function setNow(iso: string): void {
-  fixedEpochMs = Date.parse(iso)
+  const ms = Date.parse(iso)
+  // Nunca guardar NaN: now() devuelve `fixedEpochMs ?? Date.now()` y `??` no atrapa NaN, así que un
+  // ISO inválido dejaría now()=NaN y toda comparación de candado en false (candados desactivados).
+  if (Number.isNaN(ms)) throw new Error(`setNow: ISO inválido "${iso}"`)
+  fixedEpochMs = ms
 }
 
 export function resetClock(): void {

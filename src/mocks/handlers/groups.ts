@@ -50,7 +50,10 @@ export const groupsHandlers = [
     if (groupsLocked()) return err('PREDICTIONS_LOCKED', 'Las predicciones de grupos están cerradas', 423)
     const body = (await request.json()) as { predictions: { groupId: string; rankings: { teamId: string; position: number }[] }[] }
     if (!body?.predictions?.length) return err('INVALID_RANKINGS', 'Predicciones vacías', 400)
+    const seenGroups = new Set<string>()
     for (const p of body.predictions) {
+      if (seenGroups.has(p.groupId)) return err('INVALID_RANKINGS', `Grupo ${p.groupId} duplicado en la solicitud`, 400)
+      seenGroups.add(p.groupId)
       const group = db.groups.find((g) => g.id === p.groupId)
       if (!group) return err('INVALID_RANKINGS', `Grupo ${p.groupId} no existe`, 400)
       if (!validateRankings(group, p.rankings)) return err('INVALID_RANKINGS', `Rankings inválidos en grupo ${group.label}`, 400)

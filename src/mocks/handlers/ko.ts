@@ -7,6 +7,7 @@ import { koPointsFor } from '../scoring'
 
 const TRIPLE_CAP = 3
 const matchLocked = (m: DbKoMatch) => now() >= Date.parse(m.lockedAt)
+const validScore = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 0
 const predOf = (pid: string, mid: string) => db.koPredictions.find((p) => p.participantId === pid && p.matchId === mid)
 const tripleUsed = (pid: string) => db.koPredictions.filter((p) => p.participantId === pid && p.tripleActive).length
 function koTeam(id: string | null) {
@@ -17,7 +18,7 @@ function serializeMatch(m: DbKoMatch, pid: string) {
   const mp = predOf(pid, m.id)
   return {
     id: m.id, externalMatchId: m.externalMatchId, matchNumber: m.matchNumber, scheduledAt: m.scheduledAt, lockedAt: m.lockedAt,
-    status: m.status, homeTeam: koTeam(m.homeTeamId), awayTeam: koTeam(m.awayTeamId),
+    status: m.status, locked: matchLocked(m), homeTeam: koTeam(m.homeTeamId), awayTeam: koTeam(m.awayTeamId),
     homeTeamLabel: m.homeTeamLabel, awayTeamLabel: m.awayTeamLabel, result: m.result,
     myPrediction: mp ? {
       scoreHome: mp.scoreHome, scoreAway: mp.scoreAway, teamAdvancesId: mp.teamAdvancesId, tripleActive: mp.tripleActive,
@@ -50,6 +51,7 @@ export const koHandlers = [
     if (m.status === 'finished') return err('MATCH_FINISHED', 'El partido ya tiene resultado oficial', 423)
     if (matchLocked(m)) return err('MATCH_LOCKED', 'El partido está cerrado para predicciones', 423)
     const body = (await request.json()) as { scoreHome: number; scoreAway: number; teamAdvancesId: string; tripleActive?: boolean }
+    if (!validScore(body.scoreHome) || !validScore(body.scoreAway)) return err('VALIDATION_ERROR', 'El marcador debe ser un entero ≥ 0', 400)
     if (body.teamAdvancesId !== m.homeTeamId && body.teamAdvancesId !== m.awayTeamId) return err('INVALID_TEAM_ADVANCES', 'teamAdvancesId no corresponde a un equipo del partido', 400)
     const pid = s.participant.id
     if (predOf(pid, m.id)) return err('PREDICTION_ALREADY_EXISTS', 'Ya existe una predicción para este partido', 409)
@@ -66,6 +68,7 @@ export const koHandlers = [
     if (m.status === 'finished') return err('MATCH_FINISHED', 'El partido ya tiene resultado oficial', 423)
     if (matchLocked(m)) return err('MATCH_LOCKED', 'El partido está cerrado para predicciones', 423)
     const body = (await request.json()) as { scoreHome: number; scoreAway: number; teamAdvancesId: string; tripleActive: boolean }
+    if (!validScore(body.scoreHome) || !validScore(body.scoreAway)) return err('VALIDATION_ERROR', 'El marcador debe ser un entero ≥ 0', 400)
     if (body.teamAdvancesId !== m.homeTeamId && body.teamAdvancesId !== m.awayTeamId) return err('INVALID_TEAM_ADVANCES', 'teamAdvancesId no corresponde a un equipo del partido', 400)
     const pid = s.participant.id
     const existing = predOf(pid, m.id)

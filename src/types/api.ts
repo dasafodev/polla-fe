@@ -98,7 +98,7 @@ export interface KoMyPrediction {
 }
 export interface KoMatch {
   id: string; externalMatchId: number; matchNumber: number; scheduledAt: string; lockedAt: string
-  status: MatchStatus; homeTeam: KoTeam | null; awayTeam: KoTeam | null
+  status: MatchStatus; locked: boolean; homeTeam: KoTeam | null; awayTeam: KoTeam | null
   homeTeamLabel: string | null; awayTeamLabel: string | null
   result: KoResult | null; myPrediction: KoMyPrediction | null
 }

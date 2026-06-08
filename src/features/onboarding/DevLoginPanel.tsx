@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { keys } from '../../lib/queryClient'
+import { request } from '../../lib/apiClient'
+import type { ParticipantMe } from '../../types/api'
 
 interface DevParticipant { id: string; name: string; role: string }
 
@@ -14,34 +16,37 @@ export function DevLoginPanel() {
   const [status, setStatus] = useState('')
 
   useEffect(() => {
-    fetch('/api/__dev__/participants', { credentials: 'include' })
-      .then((r) => r.json())
+    request<{ data: DevParticipant[] }>('GET', '/__dev__/participants')
       .then((d) => setParticipants(d.data))
       .catch(() => setStatus('No se pudo cargar la lista (¿mocks activos?)'))
   }, [])
 
   async function loginAs(participantId: string) {
-    const res = await fetch('/api/__dev__/login-as', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participantId }), credentials: 'include',
-    })
-    if (!res.ok) { setStatus('No se pudo iniciar sesión'); return }
-    // Igual que useLogin: sembramos el cache de `me` directamente (no dependemos de un refetch).
-    qc.setQueryData(keys.me(), await res.json())
-    navigate('/')
+    try {
+      // Igual que useLogin: sembramos el cache de `me` directamente (no dependemos de un refetch)…
+      const me = await request<ParticipantMe>('POST', '/__dev__/login-as', { body: { participantId } })
+      qc.setQueryData(keys.me(), me)
+      // …pero además invalidamos todo: las queries no keyeadas por participante (scoreboard, friends, ko)
+      // servirían datos del usuario anterior al cambiar de sesión sin pasar por logout (que hace resetQueries).
+      await qc.invalidateQueries()
+      navigate('/')
+    } catch {
+      setStatus('No se pudo iniciar sesión')
+    }
   }
 
   async function applyClock(iso: string | null) {
-    await fetch('/api/__dev__/set-now', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ iso }), credentials: 'include',
-    })
-    await qc.invalidateQueries()
-    setStatus(`Reloj: ${iso ?? 'real'}`)
+    try {
+      await request('POST', '/__dev__/set-now', { body: { iso } })
+      await qc.invalidateQueries()
+      setStatus(`Reloj: ${iso ?? 'real'}`)
+    } catch {
+      setStatus('ISO inválido')
+    }
   }
 
   async function reset() {
-    await fetch('/api/__dev__/reset', { method: 'POST', credentials: 'include' })
+    await request('POST', '/__dev__/reset')
     await qc.invalidateQueries()
     setStatus('Mock reseteado')
   }

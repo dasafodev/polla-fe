@@ -99,22 +99,30 @@ export function tripleUsesRemaining(db: Db, participantId: string): number {
   return clamp(TRIPLE_CAP - used, 0, TRIPLE_CAP)
 }
 
-export function countKoExact(db: Db, participantId: string): number {
-  let n = 0
-  for (const pred of db.koPredictions) {
-    if (pred.participantId !== participantId) continue
-    const match = db.koMatches.find((m) => m.id === pred.matchId)
-    if (match?.result && pred.scoreHome === match.result.scoreHome && pred.scoreAway === match.result.scoreAway) n += 1
-  }
-  return n
+// Índice matchId → match (O(1)), construido una sola vez por agregación para evitar find() en bucle.
+function buildMatchIndex(db: Db): Map<string, DbKoMatch> {
+  return new Map(db.koMatches.map((m) => [m.id, m]))
 }
 
-export function computeBreakdown(db: Db, participantId: string): ScoreBreakdown {
-  const p = db.participants.find((x) => x.id === participantId)
-  if (!p) throw new Error(`PARTICIPANT_NOT_FOUND:${participantId}`)
+// Una sola pasada por las predicciones KO del participante: total de puntos + # de exactos.
+function participantKo(db: Db, participantId: string, idx: Map<string, DbKoMatch>): { total: number; exact: number } {
+  let total = 0, exact = 0
+  for (const pred of db.koPredictions) {
+    if (pred.participantId !== participantId) continue
+    const match = idx.get(pred.matchId)
+    if (!match) continue
+    const pe = computeKoPoints(match, pred, db.scoringParams)
+    if (pe) total += pe.total
+    if (match.result && pred.scoreHome === match.result.scoreHome && pred.scoreAway === match.result.scoreAway) exact += 1
+  }
+  return { total, exact }
+}
 
+// Puntaje completo de un participante en pasadas mínimas (grupos/terceros/ko/powerups), reusando el índice.
+function scoreParticipant(db: Db, participantId: string, idx: Map<string, DbKoMatch>): { detail: ScoreBreakdownDetail; total: number; koExact: number } {
   let groups = 0
-  for (const gp of db.groupPredictions.filter((g) => g.participantId === participantId)) {
+  for (const gp of db.groupPredictions) {
+    if (gp.participantId !== participantId) continue
     const pe = computeGroupPoints(gp.rankings, db.officialGroupStandings?.[gp.groupId], db.scoringParams)
     if (pe) groups += pe.total
   }
@@ -124,31 +132,36 @@ export function computeBreakdown(db: Db, participantId: string): ScoreBreakdown 
     const pe = computeThirdPoints(teamId, db.officialBestThirds, db.scoringParams)
     if (pe) thirds += pe.total
   }
-  let ko = 0
-  for (const pred of db.koPredictions.filter((k) => k.participantId === participantId)) {
-    const match = db.koMatches.find((m) => m.id === pred.matchId)
-    if (!match) continue
-    const pe = computeKoPoints(match, pred, db.scoringParams)
-    if (pe) ko += pe.total
-  }
+  const { total: ko, exact: koExact } = participantKo(db, participantId, idx)
   const pw = powerupsPointsFor(db, participantId)
   const darkHorse = pw?.pts_dark_horse_per_round ?? 0
   const disappointment = pw?.pts_disappointment_per_round ?? 0
+  const detail: ScoreBreakdownDetail = { groups, thirds, ko, darkHorse, disappointment }
+  return { detail, total: groups + thirds + ko + darkHorse + disappointment, koExact }
+}
 
-  const breakdown: ScoreBreakdownDetail = { groups, thirds, ko, darkHorse, disappointment }
+export function countKoExact(db: Db, participantId: string, idx: Map<string, DbKoMatch> = buildMatchIndex(db)): number {
+  return participantKo(db, participantId, idx).exact
+}
+
+export function computeBreakdown(db: Db, participantId: string, idx: Map<string, DbKoMatch> = buildMatchIndex(db)): ScoreBreakdown {
+  const p = db.participants.find((x) => x.id === participantId)
+  if (!p) throw new Error(`PARTICIPANT_NOT_FOUND:${participantId}`)
+  const { detail, total } = scoreParticipant(db, participantId, idx)
   return {
     participant: { id: p.id, name: p.name },
-    total: groups + thirds + ko + darkHorse + disappointment,
-    breakdown,
+    total,
+    breakdown: detail,
     tripleUsesRemaining: tripleUsesRemaining(db, participantId),
     prize: null, // lo fija el handler con prizeForParticipant
   }
 }
 
 export function computeScoreboard(db: Db): ScoreboardEntry[] {
+  const idx = buildMatchIndex(db)
   const rows = db.participants
     .filter((p) => p.role !== 'admin')
-    .map((p) => ({ id: p.id, name: p.name, total: computeBreakdown(db, p.id).total, koExact: countKoExact(db, p.id) }))
+    .map((p) => { const s = scoreParticipant(db, p.id, idx); return { id: p.id, name: p.name, total: s.total, koExact: s.koExact } })
   rows.sort((a, b) => (b.total - a.total) || (b.koExact - a.koExact) || a.id.localeCompare(b.id))
   return rows.map((r, i) => ({
     rank: i + 1, participant: { id: r.id, name: r.name }, total: r.total, prize: i < PRIZES.length ? PRIZES[i] : null,

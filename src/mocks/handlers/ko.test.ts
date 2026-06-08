@@ -121,3 +121,36 @@ describe('friends KO — gating por scheduledAt', () => {
     expect(ids).not.toContain('p-admin')
   })
 })
+
+describe('validación de marcador', () => {
+  it('400 VALIDATION_ERROR con marcador negativo', async () => {
+    const m = openMatches()[0]
+    const res = await send(`/ko/matches/${m.id}/predictions`, 'POST', { scoreHome: -1, scoreAway: 0, teamAdvancesId: m.homeTeamId })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({ code: 'VALIDATION_ERROR' })
+  })
+  it('400 VALIDATION_ERROR si falta el marcador', async () => {
+    const m = openMatches()[0]
+    const res = await send(`/ko/matches/${m.id}/predictions`, 'POST', { teamAdvancesId: m.homeTeamId })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({ code: 'VALIDATION_ERROR' })
+  })
+  it('PUT 400 VALIDATION_ERROR con marcador no entero', async () => {
+    const m = openMatches()[0]
+    await send(`/ko/matches/${m.id}/predictions`, 'POST', { scoreHome: 1, scoreAway: 0, teamAdvancesId: m.homeTeamId })
+    const res = await send(`/ko/matches/${m.id}/predictions`, 'PUT', { scoreHome: 1.5, scoreAway: 0, teamAdvancesId: m.homeTeamId, tripleActive: false })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({ code: 'VALIDATION_ERROR' })
+  })
+})
+
+describe('match.locked (candado a nivel de partido)', () => {
+  it('un partido bloqueado por tiempo expone locked:true aunque no haya predicción', async () => {
+    const body = await (await get('/ko/matches?roundSlug=r32')).json()
+    const locked = body.matches.find((x: { id: string }) => x.id === 'ko-r32-locked')
+    expect(locked.locked).toBe(true)
+    expect(locked.myPrediction).toBeNull()
+    const open = body.matches.find((x: { id: string }) => x.id === 'ko-r32-open-1')
+    expect(open.locked).toBe(false)
+  })
+})

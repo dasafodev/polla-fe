@@ -5,15 +5,17 @@ import { isApiError } from '../../lib/errors'
 export function Thirds() {
   const thirds = useThirds()
   const save = useSaveThirds()
-  const [picked, setPicked] = useState<string[]>([])
+  // null = sin ediciones (usa la selección del server); [] = el usuario deseleccionó todo (estado válido).
+  const [picked, setPicked] = useState<string[] | null>(null)
   const [message, setMessage] = useState('')
   if (thirds.isLoading) return <p>Cargando…</p>
   const data = thirds.data?.data ?? []
-  const selected = picked.length ? picked : data.filter((c) => c.selected).map((c) => c.teamId)
+  const serverSelected = data.filter((c) => c.selected).map((c) => c.teamId)
+  const selected = picked ?? serverSelected
 
   function toggle(teamId: string) {
     setPicked((prev) => {
-      const base = prev.length ? prev : data.filter((c) => c.selected).map((c) => c.teamId)
+      const base = prev ?? serverSelected
       return base.includes(teamId) ? base.filter((x) => x !== teamId) : [...base, teamId]
     })
   }

@@ -37,4 +37,9 @@ describe('GET /scoreboard/:id/breakdown', () => {
     expect(res.status).toBe(404)
     expect(await res.json()).toMatchObject({ code: 'PARTICIPANT_NOT_FOUND' })
   })
+  it('404 PARTICIPANT_NOT_FOUND para el admin (no concursa, excluido del scoreboard)', async () => {
+    const res = await get('/scoreboard/p-admin/breakdown')
+    expect(res.status).toBe(404)
+    expect(await res.json()).toMatchObject({ code: 'PARTICIPANT_NOT_FOUND' })
+  })
 })

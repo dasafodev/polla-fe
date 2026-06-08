@@ -30,8 +30,10 @@ export const devHandlers = [
   // Simula el reloj del mock (para probar candados). iso=null vuelve al reloj real.
   http.post('/api/__dev__/set-now', async ({ request }) => {
     const { iso } = (await request.json()) as { iso: string | null }
-    if (iso) setNow(iso)
-    else resetClock()
+    if (iso) {
+      if (Number.isNaN(Date.parse(iso))) return HttpResponse.json({ error: 'ISO inválido', code: 'VALIDATION_ERROR' }, { status: 400 })
+      setNow(iso)
+    } else resetClock()
     return HttpResponse.json({ ok: true }, { status: 200 })
   }),
 

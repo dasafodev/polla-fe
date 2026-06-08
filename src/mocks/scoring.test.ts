@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { db } from './db'
+import { db, type DbKoMatch, type DbKoPrediction } from './db'
 import { resetDb } from './seed'
-import { computeScoreboard, computeBreakdown, countKoExact, koPointsFor } from './scoring'
+import { computeScoreboard, computeBreakdown, countKoExact, koPointsFor, computeKoPoints } from './scoring'
+import { ROUND_SLUGS, ROUND_TO_SCALE } from '../types/enums'
 
 beforeEach(() => resetDb())
 
@@ -57,5 +58,23 @@ describe('koPointsFor — null vs no-null', () => {
 describe('tripleUsesRemaining (derivado, clamp 0..3)', () => {
   it('pedro tiene 3 triples activos → remaining 0', () => {
     expect(computeBreakdown(db, 'p-pedro').tripleUsesRemaining).toBe(0)
+  })
+})
+
+describe('ROUND_TO_SCALE — cubre todas las rondas KO (incl. qf/sf/3rd/final que el seed no ejercita)', () => {
+  it('cada ronda mapea a su escala (3rd reusa scale_sf) y aplica el factor correcto', () => {
+    for (const slug of ROUND_SLUGS) {
+      const match: DbKoMatch = {
+        id: 'x', roundSlug: slug, externalMatchId: 1, matchNumber: 1,
+        scheduledAt: '2026-07-01T00:00:00.000Z', lockedAt: '2026-07-01T00:00:00.000Z', status: 'finished',
+        homeTeamId: 'tA1', awayTeamId: 'tB1', homeTeamLabel: null, awayTeamLabel: null,
+        result: { scoreHome: 1, scoreAway: 0, winnerTeamId: 'tA1' },
+      }
+      const pred: DbKoPrediction = { participantId: 'p', matchId: 'x', scoreHome: 1, scoreAway: 0, teamAdvancesId: 'tA1', tripleActive: false }
+      const pe = computeKoPoints(match, pred, db.scoringParams)!
+      expect(pe.scale_slug).toBe(ROUND_TO_SCALE[slug])
+      expect(pe.scale_factor).toBe(db.scoringParams[ROUND_TO_SCALE[slug]])
+      expect(pe.total).toBe((db.scoringParams.pts_ko_advances + db.scoringParams.pts_ko_exact_score) * pe.scale_factor)
+    }
   })
 })

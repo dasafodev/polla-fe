@@ -16,4 +16,8 @@ describe('clock', () => {
     resetClock()
     expect(Math.abs(now() - Date.now())).toBeLessThan(1000)
   })
+  it('setNow rechaza un ISO inválido (no deja now()=NaN, que desactivaría los candados)', () => {
+    expect(() => setNow('no-es-fecha')).toThrow()
+    expect(Number.isNaN(now())).toBe(false)
+  })
 })

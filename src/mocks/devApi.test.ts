@@ -43,4 +43,14 @@ describe('dev-bypass (__dev__)', () => {
     await post('/__dev__/reset')
     expect(db.powerups.some((x) => x.participantId === 'p-luis')).toBe(false)
   })
+
+  it('set-now con ISO inválido → 400 y NO corrompe el reloj (el candado se mantiene)', async () => {
+    await post('/__dev__/login-as', { participantId: 'p-luis' })
+    await post('/__dev__/set-now', { iso: db.tournamentStartAt }) // candado activo
+    const bad = await post('/__dev__/set-now', { iso: 'no-es-fecha' })
+    expect(bad.status).toBe(400)
+    // si el ISO inválido hubiera dejado now()=NaN, el candado se "abriría"; debe seguir cerrado (423)
+    const res = await post('/powerups/predictions', { darkHorseTeamId: 'tB4', disappointmentTeamId: 'tB1' })
+    expect(res.status).toBe(423)
+  })
 })

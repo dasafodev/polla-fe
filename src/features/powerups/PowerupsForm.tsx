@@ -6,8 +6,9 @@ import { isApiError } from '../../lib/errors'
 export function PowerupsForm() {
   const groups = useGroups()
   const mine = usePowerups()
-  const [darkHorse, setDarkHorse] = useState('')
-  const [disappointment, setDisappointment] = useState('')
+  // null = sin editar (usa el valor guardado); '' = el usuario lo limpió a "—" (estado válido).
+  const [darkHorse, setDarkHorse] = useState<string | null>(null)
+  const [disappointment, setDisappointment] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const hasPowerups = !!(mine.data?.darkHorse || mine.data?.disappointment)
   const save = useSavePowerups(hasPowerups ? 'update' : 'create')
@@ -16,8 +17,8 @@ export function PowerupsForm() {
   const teams = (groups.data?.data ?? []).flatMap((g) => g.teams)
   const notTop8 = teams.filter((t) => !t.isTop8)
   const top8 = teams.filter((t) => t.isTop8)
-  const dh = darkHorse || mine.data?.darkHorse?.teamId || ''
-  const dis = disappointment || mine.data?.disappointment?.teamId || ''
+  const dh = darkHorse ?? mine.data?.darkHorse?.teamId ?? ''
+  const dis = disappointment ?? mine.data?.disappointment?.teamId ?? ''
 
   function onSave() {
     setMessage('')

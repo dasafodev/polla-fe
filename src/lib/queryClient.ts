@@ -28,6 +28,7 @@ export const keys = {
     friends: () => ['powerups', 'friends'] as const,
   },
   ko: {
+    all: () => ['ko'] as const,
     round: (slug: string) => ['ko', 'round', slug] as const,
     match: (id: string) => ['ko', 'match', id] as const,
     friends: (id: string) => ['ko', 'friends', id] as const,

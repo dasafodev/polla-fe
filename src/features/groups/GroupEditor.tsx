@@ -9,24 +9,25 @@ export function GroupEditor() {
   const mine = useMyGroupPredictions()
   const save = useSaveGroupPredictions()
   const [message, setMessage] = useState('')
-  const group = groups.data?.data.find((g) => g.id === groupId)
-  const existing = mine.data?.data.find((g) => g.groupId === groupId)
-  const [order, setOrder] = useState<string[]>(existing?.rankings.map((r) => r.teamId) ?? group?.teams.map((t) => t.id) ?? [])
+  // null = sin reordenar aún → deriva del server (que puede no haber cargado en el primer render).
+  const [order, setOrder] = useState<string[] | null>(null)
 
   if (groups.isLoading || mine.isLoading) return <p>Cargando…</p>
+  const group = groups.data?.data.find((g) => g.id === groupId)
   if (!group) return <p role="alert">Grupo no encontrado</p>
+  const existing = mine.data?.data.find((g) => g.groupId === groupId)
+  const effectiveOrder = order ?? existing?.rankings.map((r) => r.teamId) ?? group.teams.map((t) => t.id)
 
   function move(teamId: string, dir: -1 | 1) {
-    setOrder((prev) => {
-      const i = prev.indexOf(teamId), j = i + dir
-      if (i < 0 || j < 0 || j >= prev.length) return prev
-      const next = [...prev]; [next[i], next[j]] = [next[j], next[i]]; return next
-    })
+    const i = effectiveOrder.indexOf(teamId), j = i + dir
+    if (i < 0 || j < 0 || j >= effectiveOrder.length) return
+    const next = [...effectiveOrder]; [next[i], next[j]] = [next[j], next[i]]
+    setOrder(next)
   }
   function onSave() {
     setMessage('')
     save.mutate(
-      { predictions: [{ groupId, rankings: order.map((teamId, i) => ({ teamId, position: i + 1 })) }] },
+      { predictions: [{ groupId, rankings: effectiveOrder.map((teamId, i) => ({ teamId, position: i + 1 })) }] },
       { onSuccess: () => setMessage('Guardado'), onError: (e) => setMessage(isApiError(e) ? e.message : 'Error') },
     )
   }
@@ -34,8 +35,9 @@ export function GroupEditor() {
     <div>
       <h1>{group.name}</h1>
       <ol>
-        {order.map((teamId, i) => {
-          const t = group.teams.find((x) => x.id === teamId)!
+        {effectiveOrder.map((teamId, i) => {
+          const t = group.teams.find((x) => x.id === teamId)
+          if (!t) return null
           return (
             <li key={teamId}>
               {i + 1}. {t.name} ({t.code}){t.isTop8 ? ' ★' : ''}
