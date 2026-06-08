@@ -1,0 +1,46 @@
+import { describe, it, expect } from 'vitest'
+import { db } from './db'
+
+const URL = (p: string) => `http://localhost/api${p}`
+const get = (p: string) => fetch(URL(p), { credentials: 'include' })
+const post = (p: string, body?: unknown) =>
+  fetch(URL(p), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}), credentials: 'include' })
+
+describe('dev-bypass (__dev__)', () => {
+  it('login-as abre sesión; /me devuelve ese participante', async () => {
+    const res = await post('/__dev__/login-as', { participantId: 'p-maria' })
+    expect(res.status).toBe(200)
+    expect(await (await get('/me')).json()).toMatchObject({ id: 'p-maria', name: 'María' })
+  })
+
+  it('login-as con id inexistente → 404', async () => {
+    const res = await post('/__dev__/login-as', { participantId: 'nope' })
+    expect(res.status).toBe(404)
+  })
+
+  it('logout cierra la sesión', async () => {
+    await post('/__dev__/login-as', { participantId: 'p-juan' })
+    await post('/__dev__/logout')
+    expect((await get('/me')).status).toBe(401)
+  })
+
+  it('set-now simula el reloj → candado de grupos/powerups se activa', async () => {
+    await post('/__dev__/login-as', { participantId: 'p-luis' })
+    await post('/__dev__/set-now', { iso: db.tournamentStartAt })
+    const res = await post('/powerups/predictions', { darkHorseTeamId: 'tB4', disappointmentTeamId: 'tB1' })
+    expect(res.status).toBe(423)
+  })
+
+  it('participants lista los inscritos', async () => {
+    const body = await (await get('/__dev__/participants')).json()
+    expect(body.data.map((p: { id: string }) => p.id)).toContain('p-juan')
+  })
+
+  it('reset restaura la semilla', async () => {
+    await post('/__dev__/login-as', { participantId: 'p-luis' })
+    await post('/powerups/predictions', { darkHorseTeamId: 'tB4', disappointmentTeamId: 'tB1' })
+    expect(db.powerups.some((x) => x.participantId === 'p-luis')).toBe(true)
+    await post('/__dev__/reset')
+    expect(db.powerups.some((x) => x.participantId === 'p-luis')).toBe(false)
+  })
+})

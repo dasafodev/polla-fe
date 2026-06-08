@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import { useLogin } from '../../auth/hooks'
 import { isApiError } from '../../lib/errors'
+import { env } from '../../lib/env'
 import { Signup } from './Signup'
+import { DevLoginPanel } from './DevLoginPanel'
 
 export function Login() {
   const navigate = useNavigate()
@@ -35,6 +37,7 @@ export function Login() {
       <h1>Polla Mundial 2026</h1>
       <GoogleLogin onSuccess={onSuccess} onError={() => setMessage('No se pudo iniciar con Google')} />
       {message && <p role="alert">{message}</p>}
+      {import.meta.env.DEV && env.useMocks && <DevLoginPanel />}
     </div>
   )
 }
