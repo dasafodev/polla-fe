@@ -7,7 +7,7 @@ import { chromium } from 'playwright-core'
 
 const BASE = process.env.SMOKE_BASE || 'http://localhost:5173'
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
-const page = await browser.newPage()
+const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
 const errors = []
 page.on('pageerror', (e) => errors.push(String(e)))
 
@@ -16,18 +16,19 @@ const check = (ok, msg) => { console.log(`${ok ? '✓' : '✗'} ${msg}`); if (!o
 
 try {
   await page.goto(`${BASE}/login`)
-  await page.getByRole('heading', { name: /Polla Mundial 2026/i }).waitFor({ timeout: 10000 })
-
   // 1) dev login-as Juan → Dashboard
   await page.getByRole('button', { name: /^Juan \(participant\)$/ }).click()
   await page.getByRole('heading', { name: /Hola, Juan/i }).waitFor({ timeout: 8000 })
   check(true, 'dev login-as Juan → Dashboard "Hola, Juan"')
 
-  // 2) Predicciones → Grupos consume /groups + /groups/predictions/me
+  // 2) Predicciones → wizard de grupos consume /groups + /groups/predictions/me (Juan 12/12)
   await page.getByRole('link', { name: 'Predicciones' }).click()
-  await page.getByRole('link', { name: 'Grupos' }).click()
-  await page.getByText(/12\/12 completos/).waitFor({ timeout: 8000 })
-  check(true, 'Grupos consume /groups + /groups/predictions/me (12/12 completos)')
+  await page.getByText(/12 de 12 listos/).waitFor({ timeout: 8000 })
+  check(true, 'wizard de Grupos consume /groups + /groups/predictions/me (12 de 12 listos)')
+
+  // volver al Dashboard desde el wizard (footer fijo)
+  await page.getByRole('button', { name: /Guardar y salir/i }).click()
+  await page.getByRole('heading', { name: /Hola, Juan/i }).waitFor({ timeout: 8000 })
 
   // 3) Tabla consume /scoreboard (Juan 1º por desempate)
   await page.getByRole('link', { name: 'Tabla' }).click()
@@ -35,16 +36,12 @@ try {
   const firstRow = (await page.locator('ol li').first().innerText()).trim()
   check(/#1\s+Juan/.test(firstRow), `Tabla consume /scoreboard (1º: "${firstRow}")`)
 
-  // 4) Eliminatorias consume /ko/matches
-  await page.getByRole('link', { name: 'Eliminatorias' }).click()
-  await page.getByRole('link', { name: 'Dieciseisavos' }).click()
-  await page.getByRole('heading', { name: /Dieciseisavos/i }).waitFor({ timeout: 8000 })
-  check(true, 'Eliminatorias consume /ko/matches (ronda r32)')
-
-  // 5) logout y entrar como Admin → /admin consume /admin/participants
+  // 4) logout (menú de avatar) y entrar como Admin → /admin consume /admin/participants
   await page.getByRole('link', { name: 'Inicio' }).click()
+  await page.getByRole('heading', { name: /Hola, Juan/i }).waitFor({ timeout: 8000 })
+  await page.getByRole('button', { name: /Tu cuenta/i }).click()
   await page.getByRole('button', { name: /Cerrar sesión/i }).click()
-  await page.getByRole('heading', { name: /Dev bypass/i }).waitFor({ timeout: 8000 })
+  await page.getByRole('button', { name: /^Admin \(admin\)$/ }).waitFor({ timeout: 8000 })
   await page.getByRole('button', { name: /^Admin \(admin\)$/ }).click()
   await page.getByRole('heading', { name: /Hola, Admin/i }).waitFor({ timeout: 8000 })
   await page.getByRole('link', { name: 'Admin' }).click()
