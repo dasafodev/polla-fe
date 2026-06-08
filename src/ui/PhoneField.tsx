@@ -4,30 +4,33 @@ interface Country {
   iso: string
   name: string
   dial: string
+  flag: string
 }
 
 // Lista acotada al público de la polla (Colombia + comunes de la región y diáspora).
+// `flag` es emoji bandera: el <select> nativo solo admite texto, y así se ve la bandera
+// dentro del selector nativo (ideal en móvil). En desktop sin soporte degrada a las letras del país.
 export const COUNTRIES: Country[] = [
-  { iso: 'CO', name: 'Colombia', dial: '57' },
-  { iso: 'MX', name: 'México', dial: '52' },
-  { iso: 'AR', name: 'Argentina', dial: '54' },
-  { iso: 'PE', name: 'Perú', dial: '51' },
-  { iso: 'CL', name: 'Chile', dial: '56' },
-  { iso: 'EC', name: 'Ecuador', dial: '593' },
-  { iso: 'VE', name: 'Venezuela', dial: '58' },
-  { iso: 'PA', name: 'Panamá', dial: '507' },
-  { iso: 'CR', name: 'Costa Rica', dial: '506' },
-  { iso: 'UY', name: 'Uruguay', dial: '598' },
-  { iso: 'PY', name: 'Paraguay', dial: '595' },
-  { iso: 'BO', name: 'Bolivia', dial: '591' },
-  { iso: 'BR', name: 'Brasil', dial: '55' },
-  { iso: 'GT', name: 'Guatemala', dial: '502' },
-  { iso: 'DO', name: 'Rep. Dominicana', dial: '1' },
-  { iso: 'US', name: 'Estados Unidos', dial: '1' },
-  { iso: 'ES', name: 'España', dial: '34' },
-  { iso: 'GB', name: 'Reino Unido', dial: '44' },
-  { iso: 'IT', name: 'Italia', dial: '39' },
-  { iso: 'FR', name: 'Francia', dial: '33' },
+  { iso: 'CO', name: 'Colombia', dial: '57', flag: '🇨🇴' },
+  { iso: 'MX', name: 'México', dial: '52', flag: '🇲🇽' },
+  { iso: 'AR', name: 'Argentina', dial: '54', flag: '🇦🇷' },
+  { iso: 'PE', name: 'Perú', dial: '51', flag: '🇵🇪' },
+  { iso: 'CL', name: 'Chile', dial: '56', flag: '🇨🇱' },
+  { iso: 'EC', name: 'Ecuador', dial: '593', flag: '🇪🇨' },
+  { iso: 'VE', name: 'Venezuela', dial: '58', flag: '🇻🇪' },
+  { iso: 'PA', name: 'Panamá', dial: '507', flag: '🇵🇦' },
+  { iso: 'CR', name: 'Costa Rica', dial: '506', flag: '🇨🇷' },
+  { iso: 'UY', name: 'Uruguay', dial: '598', flag: '🇺🇾' },
+  { iso: 'PY', name: 'Paraguay', dial: '595', flag: '🇵🇾' },
+  { iso: 'BO', name: 'Bolivia', dial: '591', flag: '🇧🇴' },
+  { iso: 'BR', name: 'Brasil', dial: '55', flag: '🇧🇷' },
+  { iso: 'GT', name: 'Guatemala', dial: '502', flag: '🇬🇹' },
+  { iso: 'DO', name: 'Rep. Dominicana', dial: '1', flag: '🇩🇴' },
+  { iso: 'US', name: 'Estados Unidos', dial: '1', flag: '🇺🇸' },
+  { iso: 'ES', name: 'España', dial: '34', flag: '🇪🇸' },
+  { iso: 'GB', name: 'Reino Unido', dial: '44', flag: '🇬🇧' },
+  { iso: 'IT', name: 'Italia', dial: '39', flag: '🇮🇹' },
+  { iso: 'FR', name: 'Francia', dial: '33', flag: '🇫🇷' },
 ]
 
 const dialOf = (iso: string) => COUNTRIES.find((c) => c.iso === iso)?.dial ?? '57'
@@ -66,13 +69,13 @@ export function PhoneField({
             setIso(e.target.value)
             emit(e.target.value, num)
           }}
-          className={`min-h-[52px] w-[9.25rem] shrink-0 rounded-control border bg-surface px-3 text-[16px] text-ink focus:outline-none focus:ring-2 focus:ring-violet focus:border-violet ${
+          className={`min-h-[52px] w-[6.5rem] shrink-0 rounded-control border bg-surface px-3 text-[18px] text-ink focus:outline-none focus:ring-2 focus:ring-violet focus:border-violet ${
             error ? 'border-danger' : 'border-border'
           }`}
         >
           {COUNTRIES.map((c) => (
-            <option key={c.iso} value={c.iso}>
-              {c.name} +{c.dial}
+            <option key={c.iso} value={c.iso} aria-label={`${c.name} +${c.dial}`}>
+              {c.flag} +{c.dial}
             </option>
           ))}
         </select>
