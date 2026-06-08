@@ -14,7 +14,8 @@ Tras la revisión del panel, estas decisiones se tomaron con criterio para desbl
 - **D2 · Faseado (§0.1):** Fase A (crítica, debe estar antes del 11-jun) / B / C. Los criterios de éxito (§14) son bloqueantes solo para Fase A.
 - **D3 · Cookie en dev:** **proxy de Vite** sirviendo el API bajo el mismo origen (`:5173`), con `SameSite=Lax`. Evita el problema de `Secure` sobre HTTP en cross-origin.
 - **D4 · Triple o nada por ronda (pendiente #4 del PDF):** solo **tope global de 3 usos**, sin límite por ronda.
-- **D5 · ¿Admin participa? (pendiente #10 del PDF):** el admin **solo administra** (no predice); en el seed no tiene predicciones ni aparece en scoreboard. Conserva sus rutas admin.
+- **D5 · ¿Admin participa? (pendiente #10 del PDF):** el admin **solo administra** (no predice); en el seed no tiene predicciones ni aparece en scoreboard.
+- **D10 · Alcance del admin en el front (decidido 2026-06-07):** toda la data del torneo (equipos, grupos, bracket KO, resultados, top-8, parámetros de puntaje, invitaciones) entra **por scripts directos a la base de datos**, no por UI. La **única pantalla admin del front es la lista de participantes inscritos** (`GET /admin/participants`). Se descartan las pantallas admin de carga/edición (`/admin/grupos|partidos|resultados|top8|parametros|invitaciones`) y sus endpoints de escritura como superficie del front.
 - **D6 · Identidad única:** `google_sub` (cierra pendiente #9 del PDF; confirmar con dueño de producto).
 - **D7 · CSRF/SameSite en prod:** por defecto **same-site** (front y back bajo el mismo dominio, API en `/api`), `SameSite=Lax`, sin token CSRF extra. Si el back queda en dominio distinto (`SameSite=None`), se añade defensa CSRF.
 - **D8 · Visibilidad de amigos:** se mantiene el gate por `scheduledAt` (como el contrato). Confirmar si debe abrirse en el candado (`scheduledAt − 30min`).
@@ -22,8 +23,8 @@ Tras la revisión del panel, estas decisiones se tomaron con criterio para desbl
 
 ### 0.1 Fases de implementación
 - **Fase A (crítica · antes del 11-jun):** `apiClient` + locks/UTC + auth (login/signup/me/logout) + grupos + terceros + powerups + candado global. Más el andamiaje base (providers, router, error boundary, MSW, seed, contrato de test).
-- **Fase B:** eliminatorias (KO) + scoreboard + breakdown + admin esencial (invitaciones; cargar grupos/partidos/resultados; top8; scoring-params).
-- **Fase C (deseable):** pronósticos de amigos (grupos/powerups/KO), `/admin/participants`, `/health` como sonda, refinamientos.
+- **Fase B:** eliminatorias (KO) + scoreboard + breakdown. (La carga de datos del torneo entra por scripts a la DB — D10, no hay admin de carga en el front.)
+- **Fase C (deseable):** pronósticos de amigos (grupos/powerups/KO), `/health` como sonda, refinamientos. La **lista de participantes** (`/admin`, D10) es la única pantalla admin.
 
 > La capa de datos (tipos + `api.ts` + handlers MSW) cablea **todo el contrato** desde Fase A, aunque las *pantallas* de B/C lleguen después. Así "connection-ready" no depende del faseado de UI.
 
@@ -42,7 +43,7 @@ Polla privada para el Mundial 2026, ~20 participantes, solo por invitación. Est
 | Decisión | Elección | Razón |
 |---|---|---|
 | Framework | **React 18 + Vite + TypeScript (strict)** | SPA mobile-first, ecosistema, swap mock→real sin fricción |
-| Alcance de páginas | **Participante + Admin** (scaffolds crudos), faseado (§0.1) | Cubre el contrato end-to-end sin diluir el camino crítico |
+| Alcance de páginas | **Participante completo + una sola pantalla admin** (lista de inscritos, D10), faseado (§0.1) | El flujo participante cubre su contrato end-to-end; la data del torneo entra por scripts a la DB |
 | Naturaleza de la entrega | **Lógica + conexión + organización**, sin estilos | Petición explícita del usuario |
 | Login con Google | **`@react-oauth/google` (Google Identity Services)** | La más liviana; produce el ID token de Google; sin proyecto Firebase |
 | Modelo de sesión | **Cookie HttpOnly + signup atómico** | Más seguro (JS no lee la cookie) e íntegro (transacción única en el registro) |
@@ -102,7 +103,7 @@ src/
     ko/                     # KoRoundList, KoMatchDetail, BracketView (read-only)  (+ api/hooks)
     scoreboard/             # Scoreboard, Breakdown  (+ api/hooks)
     friends/                # vistas de amigos; orquesta hooks de groups/powerups/ko (sin api.ts propio)
-    admin/                  # Invitations, LoadGroups, LoadKoMatches, Results, Top8, ScoringParams, Participants
+    admin/                  # Participants (única pantalla admin — D10; el resto de la data entra por scripts a la DB)
   components/               # primitivas crudas compartidas (sin estilo)
   mocks/
     browser.ts              # setupWorker
@@ -203,7 +204,7 @@ Envuelven `request<T>()` con tipos concretos (único sitio que conoce rutas). Di
 - **Público:** `/login` (la pantalla Signup es un sub-estado de `/login`, §7.5).
 - **`RequireAuth`:** hace `GET /me`; 200 → pasa; 401 → `/login`; `NETWORK_ERROR` → reintentar. (No hay guard de onboarding progresivo: signup atómico.)
 - **Participante:** `/` (Dashboard), `/predicciones` (hub), `/predicciones/grupos`, `/predicciones/grupos/:groupId`, `/predicciones/terceros`, `/predicciones/powerups`, `/predicciones/revisar`, `/eliminatorias`, `/eliminatorias/:round`, `/eliminatorias/partido/:matchId`, `/tabla`, `/tabla/:participantId` (breakdown). **Amigos** cuelgan de `/tabla` (vistas dentro de la sección Tabla), no en `/amigos/*`.
-- **`RequireAdmin`** (`role === 'admin'`): `/admin`, `/admin/invitaciones`, `/admin/grupos`, `/admin/partidos`, `/admin/resultados`, `/admin/top8`, `/admin/parametros`, `/admin/participantes`.
+- **`RequireAdmin`** (`role === 'admin'`): `/admin` (lista de participantes inscritos, **única** pantalla admin del front — D10). La carga/edición de datos del torneo entra por scripts a la DB, no por UI.
 - **Nav inferior** crudo: Inicio / Predicciones / Tabla.
 - **Bracket:** listas anidadas read-only (la versión visual queda para diseño).
 
@@ -357,10 +358,5 @@ VITE_GOOGLE_CLIENT_ID=<oauth-client-id>
 | `GET /ko/matches/{id}/predictions/friends` | `getFriendsKo` | `useFriendsKo` | ko | C |
 | `GET /scoreboard` | `getScoreboard` | `useScoreboard` | scoreboard | B |
 | `GET /scoreboard/{id}/breakdown` | `getBreakdown` | `useBreakdown` | scoreboard | B |
-| `POST/GET /admin/invitations` | `…Invitations` | admin hooks | admin | A/B |
-| `POST /admin/groups` | `postAdminGroups` | admin hooks | admin | B |
-| `POST /admin/ko/matches` | `postAdminKoMatches` | admin hooks | admin | B |
-| `PUT /admin/ko/matches/{id}/result` | `putAdminKoResult` | admin hooks | admin | B |
-| `PUT /admin/scoring-params/{key}` | `putScoringParam` | admin hooks | admin | B |
-| `PUT /admin/top8` | `putTop8` | admin hooks | admin | B |
-| `GET /admin/participants` *(contrato abierto)* | `getAdminParticipants` | admin hooks | admin | C |
+| `GET /admin/participants` *(contrato abierto)* | `getAdminParticipants` | `useAdminParticipants` | admin | A (única pantalla admin) |
+| ~~`POST/GET /admin/invitations`, `POST /admin/groups`, `POST /admin/ko/matches`, `PUT .../result`, `PUT /admin/scoring-params`, `PUT /admin/top8`~~ | — | — | — | **fuera del front (D10): entran por scripts a la DB** |
