@@ -1,6 +1,7 @@
 import { Reorder } from 'framer-motion'
 import { ArrowUp, ArrowDown } from '@phosphor-icons/react'
 import type { Team } from '../../types/api'
+import { Flag } from '../../ui/Flag'
 
 export function GroupCard({
   groupName,
@@ -76,17 +77,5 @@ export function GroupCard({
         })}
       </Reorder.Group>
     </div>
-  )
-}
-
-function Flag({ code }: { code: string }) {
-  const hueA = (code.charCodeAt(0) * 47) % 360
-  const hueB = (code.charCodeAt(Math.min(1, code.length - 1)) * 83) % 360
-  return (
-    <span
-      className="size-7 shrink-0 overflow-hidden rounded-md border border-border"
-      aria-hidden
-      style={{ background: `linear-gradient(135deg, hsl(${hueA} 60% 55%), hsl(${hueB} 60% 45%))` }}
-    />
   )
 }
