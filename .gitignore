@@ -2,3 +2,8 @@ node_modules
 dist
 *.local
 .env
+
+# Build artifacts (tsc -b / vite)
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
