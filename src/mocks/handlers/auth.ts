@@ -2,10 +2,10 @@ import { http, HttpResponse } from 'msw'
 import { db } from '../db'
 import { decodeIdToken } from '../jwt'
 import { now } from '../../lib/clock'
+import { err } from './_shared'
 import type { ParticipantMe } from '../../types/api'
 
 const E164 = /^\+[1-9]\d{7,14}$/
-const err = (code: string, error: string, status: number) => HttpResponse.json({ error, code }, { status })
 
 function toMe(pId: string): ParticipantMe {
   const p = db.participants.find((x) => x.id === pId)!
