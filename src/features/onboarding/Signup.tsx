@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check, ShieldCheck } from '@phosphor-icons/react'
@@ -15,34 +15,66 @@ const E164 = /^\+[1-9]\d{7,14}$/
 export function Signup({
   credential,
   presetCode,
+  presetPhone,
   onNeedRelogin,
 }: {
   credential: string
   presetCode?: string
+  presetPhone?: string
   onNeedRelogin: () => void
 }) {
   const navigate = useNavigate()
   const signup = useSignup()
+  const validPresetPhone = presetPhone && E164.test(presetPhone) ? presetPhone : undefined
   const [code, setCode] = useState(presetCode ?? '')
-  const [phone, setPhone] = useState('')
+  const [phone, setPhone] = useState(validPresetPhone ?? '')
   const [message, setMessage] = useState('')
   const hasPresetCode = !!presetCode
 
+  // Link de invitación completo (code + phone válido): entramos directo sin mostrar el formulario.
+  // Si el signup falla revelamos el formulario ya prellenado para que el usuario corrija.
+  const canAutoSubmit = !!presetCode && !!validPresetPhone
+  const [revealForm, setRevealForm] = useState(!canAutoSubmit)
+  const autoFired = useRef(false)
+
+  // mutateAsync (no mutate): la promesa se resuelve/rechaza aunque el observer del componente se
+  // destruya. Con mutate, los callbacks onSuccess/onError se descartan al desmontar, y StrictMode
+  // simula un desmonte al disparar desde un efecto → el navigate se perdía y quedaba en "Entrando…".
+  async function submit(submitCode: string, submitPhone: string) {
+    setMessage('')
+    try {
+      await signup.mutateAsync({ credential, code: submitCode, phone: submitPhone })
+      navigate('/onboarding')
+    } catch (err) {
+      // El backend responde 401 INVALID_CREDENTIAL si el ID token de Google ya expiró.
+      if (isApiError(err) && err.code === 'INVALID_CREDENTIAL') return onNeedRelogin()
+      setRevealForm(true) // cae al formulario prellenado para reintentar
+      setMessage(isApiError(err) ? err.message : 'No se pudo crear la cuenta')
+    }
+  }
+
+  useEffect(() => {
+    if (!canAutoSubmit || autoFired.current) return
+    autoFired.current = true // evita el doble disparo del StrictMode en dev
+    void submit(presetCode!, validPresetPhone!)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canAutoSubmit])
+
   function onSubmit(e: FormEvent) {
     e.preventDefault()
-    setMessage('')
     if (!code.trim()) return setMessage('Ingresa el código de invitación')
     if (!E164.test(phone)) return setMessage('Ingresa un número de teléfono válido')
-    signup.mutate(
-      { credential, code: code.trim(), phone },
-      {
-        onSuccess: () => navigate('/onboarding'),
-        onError: (err) => {
-          // El backend responde 401 INVALID_CREDENTIAL si el ID token de Google ya expiró.
-          if (isApiError(err) && err.code === 'INVALID_CREDENTIAL') onNeedRelogin()
-          else setMessage(isApiError(err) ? err.message : 'No se pudo crear la cuenta')
-        },
-      },
+    void submit(code.trim(), phone)
+  }
+
+  if (!revealForm) {
+    return (
+      <div className="grid min-h-[100dvh] place-items-center bg-bg px-6 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <img src="/logo.png" alt="" width={64} height={64} className="rounded-[20px] shadow-card" />
+          <p className="font-display text-lg font-semibold text-ink">Entrando…</p>
+        </div>
+      </div>
     )
   }
 
@@ -88,6 +120,7 @@ export function Signup({
             <PhoneField
               label="Teléfono (WhatsApp)"
               helper="Elige tu país y escribe tu número."
+              initialE164={validPresetPhone}
               onChange={setPhone}
             />
 

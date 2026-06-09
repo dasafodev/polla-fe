@@ -10,10 +10,20 @@ import { fadeUp, stagger } from '../../ui/motion'
 import { Signup } from './Signup'
 import { DevLoginPanel } from './DevLoginPanel'
 
+// El + de E.164 se decodifica como espacio en un query string; lo reconstruimos para aceptar
+// tanto el link correcto (?phone=%2B57...) como el que trae el + crudo (?phone=+57...).
+function normalizePhone(raw: string | null): string | undefined {
+  if (!raw) return undefined
+  const p = raw.replace(/\s+/g, '')
+  if (!p) return undefined
+  return p.startsWith('+') ? p : `+${p}`
+}
+
 export function Login() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const presetCode = params.get('code') ?? undefined
+  const presetPhone = normalizePhone(params.get('phone'))
   const login = useLogin()
   const [credential, setCredential] = useState<string | null>(null)
   const [showSignup, setShowSignup] = useState(false)
@@ -45,6 +55,7 @@ export function Login() {
       <Signup
         credential={credential}
         presetCode={presetCode}
+        presetPhone={presetPhone}
         onNeedRelogin={() => {
           setShowSignup(false)
           setCredential(null)

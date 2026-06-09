@@ -35,19 +35,33 @@ export const COUNTRIES: Country[] = [
 
 const dialOf = (iso: string) => COUNTRIES.find((c) => c.iso === iso)?.dial ?? '57'
 
+// Parte un E.164 (+573001234567) en país + número nacional para prellenar el campo.
+// Toma el dial code más largo que prefije los dígitos (593 antes que 59, etc.).
+function parseE164(e164: string): { iso: string; num: string } | null {
+  const m = /^\+(\d+)$/.exec(e164)
+  if (!m) return null
+  const digits = m[1]
+  const match = COUNTRIES.filter((c) => digits.startsWith(c.dial)).sort((a, b) => b.dial.length - a.dial.length)[0]
+  if (!match) return null
+  return { iso: match.iso, num: digits.slice(match.dial.length) }
+}
+
 export function PhoneField({
   label,
   helper,
   error,
+  initialE164,
   onChange,
 }: {
   label: string
   helper?: string
   error?: string
+  initialE164?: string
   onChange: (e164: string) => void
 }) {
-  const [iso, setIso] = useState('CO')
-  const [num, setNum] = useState('')
+  const parsed = initialE164 ? parseE164(initialE164) : null
+  const [iso, setIso] = useState(parsed?.iso ?? 'CO')
+  const [num, setNum] = useState(parsed?.num ?? '')
   const inputId = useId()
   const describedBy = error ? `${inputId}-err` : helper ? `${inputId}-help` : undefined
 

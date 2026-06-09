@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders, makeFakeIdToken } from '../../test/utils'
+import { db } from '../../mocks/db'
 
 // Mock de GoogleLogin: un botón que dispara onSuccess con el credential del último set.
 let nextCredential = ''
@@ -29,5 +30,26 @@ describe('Login', () => {
     await userEvent.click(screen.getByText('Google'))
     await waitFor(() => expect(screen.getByLabelText(/código/i)).toBeInTheDocument())
     expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument()
+  })
+
+  it('link con code + phone → entra directo y crea la cuenta sin formulario', async () => {
+    nextCredential = makeFakeIdToken({ sub: 'sub-nuevo', email: 'nuevo@gmail.com', name: 'Nuevo' })
+    renderWithProviders(<Login />, { route: '/login?code=OK1234&phone=%2B573001234567' })
+    await userEvent.click(screen.getByText('Google'))
+    await waitFor(() => {
+      const p = db.participants.find((x) => x.googleSub === 'sub-nuevo')
+      expect(p?.phone).toBe('+573001234567')
+    })
+    expect(screen.queryByRole('button', { name: /crear cuenta/i })).not.toBeInTheDocument()
+  })
+
+  it('link con el + crudo (se decodifica como espacio) → igual crea la cuenta', async () => {
+    nextCredential = makeFakeIdToken({ sub: 'sub-nuevo', email: 'nuevo@gmail.com', name: 'Nuevo' })
+    renderWithProviders(<Login />, { route: '/login?code=OK1234&phone=+573001234567' })
+    await userEvent.click(screen.getByText('Google'))
+    await waitFor(() => {
+      const p = db.participants.find((x) => x.googleSub === 'sub-nuevo')
+      expect(p?.phone).toBe('+573001234567')
+    })
   })
 })
