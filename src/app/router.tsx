@@ -5,8 +5,7 @@ import { AppShell } from './AppShell'
 import { Login } from '../features/onboarding/Login'
 import { OnboardingLayout } from '../features/onboarding/OnboardingLayout'
 import { Dashboard } from '../features/home/Dashboard'
-import { Hub } from '../features/predicciones/Hub'
-import { Review } from '../features/predicciones/Review'
+import { MisPronosticos } from '../features/predicciones/MisPronosticos'
 import { GroupsEditor } from '../features/groups/GroupsEditor'
 import { Thirds } from '../features/groups/Thirds'
 import { Powerups } from '../features/powerups/Powerups'
@@ -42,11 +41,10 @@ export const router = createBrowserRouter([
     element: <ProtectedShell />,
     children: [
       { index: true, element: <Dashboard /> },
-      { path: 'predicciones', element: <Hub /> },
+      { path: 'predicciones', element: <MisPronosticos /> },
       { path: 'predicciones/grupos', element: <GroupsEditor /> },
       { path: 'predicciones/terceros', element: <Thirds /> },
       { path: 'predicciones/powerups', element: <Powerups /> },
-      { path: 'predicciones/revisar', element: <Review /> },
       { path: 'eliminatorias', element: <KoRoundList /> },
       { path: 'eliminatorias/:round', element: <KoRoundDetail /> },
       { path: 'eliminatorias/partido/:matchId', element: <KoMatchDetail /> },

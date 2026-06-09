@@ -21,12 +21,17 @@ try {
   await page.getByRole('heading', { name: /Hola, Juan/i }).waitFor({ timeout: 8000 })
   check(true, 'dev login-as Juan → Dashboard "Hola, Juan"')
 
-  // 2) Predicciones → Hub (con barra inferior); entra a Grupos (consume /groups + /groups/predictions/me, Juan 12/12)
+  // 2) Predicciones → resumen tabbed por fase (tab Grupos por defecto). Cambiar de tab y
+  //    entrar al editor de un grupo desde el resumen (consume /groups + /groups/predictions/me).
   await page.getByRole('link', { name: 'Predicciones' }).click()
   await page.getByRole('heading', { name: /^Predicciones$/ }).waitFor({ timeout: 8000 })
-  await page.getByRole('button', { name: /Grupos/ }).click()
+  await page.getByText('Grupo A').first().waitFor({ timeout: 8000 })
+  await page.getByRole('button', { name: 'Eliminatorias' }).click()
+  await page.getByText(/Dieciseisavos|Octavos/).first().waitFor({ timeout: 8000 })
+  await page.getByRole('button', { name: 'Grupos' }).click()
+  await page.getByRole('link', { name: /Grupo A/ }).first().click()
   await page.getByText(/12 de 12 listos/).waitFor({ timeout: 8000 })
-  check(true, 'Predicciones: Hub → Grupos consume /groups + /groups/predictions/me (12 de 12 listos)')
+  check(true, 'Predicciones: resumen por fase (tabs) → editor de grupo (12 de 12 listos)')
 
   // volver al Dashboard por la barra inferior (sigue visible en el flujo in-shell)
   await page.getByRole('link', { name: 'Inicio' }).click()
