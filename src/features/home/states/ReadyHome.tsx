@@ -3,6 +3,7 @@ import { Check } from '@phosphor-icons/react'
 import { NavyBackdrop } from '../../../ui/Backdrop'
 import { fadeUp, stagger } from '../../../ui/motion'
 import { StarBets } from '../components/StarBets'
+import { MatchCountdown } from '../components/MatchCountdown'
 import { daysUntil } from '../format'
 import type { OnboardingState } from '../../onboarding/onboardingState'
 
@@ -32,6 +33,12 @@ export function ReadyHome({ state }: { state: OnboardingState }) {
           </div>
         </div>
       </motion.div>
+
+      {state.closesAt && (
+        <motion.div variants={fadeUp}>
+          <MatchCountdown targetIso={state.closesAt} />
+        </motion.div>
+      )}
 
       <motion.div variants={fadeUp}>
         <StarBets />

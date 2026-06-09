@@ -4,8 +4,9 @@ import { Button } from '../../../ui/Button'
 import { NavyBackdrop } from '../../../ui/Backdrop'
 import { fadeUp, stagger } from '../../../ui/motion'
 import { FunFactCard } from '../components/FunFactCard'
+import { MatchCountdown } from '../components/MatchCountdown'
 
-export function EmptyHome() {
+export function EmptyHome({ closesAt }: { closesAt: string | null }) {
   const nav = useNavigate()
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-5">
@@ -22,6 +23,12 @@ export function EmptyHome() {
           </div>
         </div>
       </motion.div>
+
+      {closesAt && (
+        <motion.div variants={fadeUp}>
+          <MatchCountdown targetIso={closesAt} />
+        </motion.div>
+      )}
 
       <motion.div variants={fadeUp}>
         <FunFactCard />

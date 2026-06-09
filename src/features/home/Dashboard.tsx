@@ -22,7 +22,7 @@ export function Dashboard() {
     <div className="space-y-5">
       <DashboardHeader subtitle={subtitle} />
       {view === 'loading' && <HomeSkeleton />}
-      {view === 'empty' && <EmptyHome />}
+      {view === 'empty' && <EmptyHome closesAt={state.closesAt} />}
       {view === 'progress' && <InProgressHome state={state} />}
       {view === 'ready' && <ReadyHome state={state} />}
       {view === 'live' && <LiveHome />}
