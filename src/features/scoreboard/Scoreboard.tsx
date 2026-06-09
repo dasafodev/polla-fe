@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { useScoreboard } from './hooks'
 import { useAuth } from '../../auth/useAuth'
 import type { ScoreboardEntry } from '../../types/api'
@@ -43,29 +43,9 @@ export function Scoreboard() {
           <p className="mb-2 font-mono text-[10.5px] font-bold tracking-wide text-muted">DEMÁS JUGADORES</p>
         )}
         <ul className="space-y-2">
-          {rest.map((e) => {
-            const isMe = e.participant.id === meId
-            return (
-              <li key={e.participant.id}>
-                <button
-                  onClick={() => setSelected(e)}
-                  className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition active:scale-[0.99] ${
-                    isMe ? 'border-violet bg-tint' : 'border-border bg-surface'
-                  }`}
-                >
-                  <span className="w-5 text-center font-mono text-sm font-bold text-muted">{e.rank}</span>
-                  <Avatar name={e.participant.name} size={30} />
-                  <span className="flex-1 font-display font-bold text-ink">{e.participant.name}</span>
-                  {isMe && (
-                    <span className="rounded-full border border-violet bg-surface px-2 py-0.5 font-display text-[10px] font-bold text-violet">
-                      TÚ
-                    </span>
-                  )}
-                  <span className="font-mono text-sm font-bold text-ink">{e.total} pts</span>
-                </button>
-              </li>
-            )
-          })}
+          {rest.map((e) => (
+            <ScoreboardRow key={e.participant.id} entry={e} meId={meId} onPick={setSelected} />
+          ))}
         </ul>
       </div>
 
@@ -75,6 +55,38 @@ export function Scoreboard() {
     </div>
   )
 }
+
+const ScoreboardRow = memo(function ScoreboardRow({
+  entry,
+  meId,
+  onPick,
+}: {
+  entry: ScoreboardEntry
+  meId: string | null
+  onPick: (e: ScoreboardEntry) => void
+}) {
+  const isMe = entry.participant.id === meId
+  return (
+    <li>
+      <button
+        onClick={() => onPick(entry)}
+        className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition active:scale-[0.99] ${
+          isMe ? 'border-violet bg-tint' : 'border-border bg-surface'
+        }`}
+      >
+        <span className="w-5 text-center font-mono text-sm font-bold text-muted">{entry.rank}</span>
+        <Avatar name={entry.participant.name} size={30} />
+        <span className="flex-1 font-display font-bold text-ink">{entry.participant.name}</span>
+        {isMe && (
+          <span className="rounded-full border border-violet bg-surface px-2 py-0.5 font-display text-[10px] font-bold text-violet">
+            TÚ
+          </span>
+        )}
+        <span className="font-mono text-sm font-bold text-ink">{entry.total} pts</span>
+      </button>
+    </li>
+  )
+})
 
 function formatUpdated(iso: string): string {
   return new Date(iso).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })

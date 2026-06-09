@@ -64,7 +64,11 @@ export function Login() {
         className="relative z-10 flex w-full max-w-sm flex-col items-center text-center"
       >
         <motion.div variants={fadeUp} className="relative mb-8">
-          <div className="absolute inset-0 -z-10 rounded-[28px] bg-violet-light/30 blur-2xl" />
+          <div
+            className="absolute -inset-4 -z-10 rounded-full"
+            aria-hidden
+            style={{ background: 'radial-gradient(circle, rgba(139,109,255,0.35), transparent 70%)' }}
+          />
           <img src="/logo.png" alt="Polla Mundial 2026" width={92} height={92} className="rounded-[26px] shadow-diffuse" />
         </motion.div>
 

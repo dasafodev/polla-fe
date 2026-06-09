@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { TrendUp, TrendDown, Trophy } from '@phosphor-icons/react'
 import type { Team } from '../../types/api'
@@ -29,14 +29,16 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
   const [saved, setSaved] = useState(false)
   const [done, setDone] = useState(false)
 
-  if (groups.isLoading || mine.isLoading) return <PowerupsSkeleton wizard={wizard} />
+  const listData = groups.data?.data
+  const { teams, notTop8, top8, groupOf } = useMemo(() => {
+    const list = listData ?? []
+    const teams = list.flatMap((g) => g.teams)
+    const groupOf: Record<string, string> = {}
+    for (const g of list) for (const t of g.teams) groupOf[t.id] = g.label
+    return { teams, notTop8: teams.filter((t) => !t.isTop8), top8: teams.filter((t) => t.isTop8), groupOf }
+  }, [listData])
 
-  const list = groups.data?.data ?? []
-  const teams = list.flatMap((g) => g.teams)
-  const notTop8 = teams.filter((t) => !t.isTop8)
-  const top8 = teams.filter((t) => t.isTop8)
-  const groupOf: Record<string, string> = {}
-  for (const g of list) for (const t of g.teams) groupOf[t.id] = g.label
+  if (groups.isLoading || mine.isLoading) return <PowerupsSkeleton wizard={wizard} />
 
   const dh = darkHorse ?? mine.data?.darkHorse?.teamId ?? ''
   const dis = disappointment ?? mine.data?.disappointment?.teamId ?? ''
@@ -310,6 +312,11 @@ function PowerupsDone({ onHome }: { onHome: () => void }) {
 function TrophyHero({ reduced }: { reduced: boolean }) {
   return (
     <div className="relative grid place-items-center">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute size-44 rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(241,199,94,0.4), transparent 70%)' }}
+      />
       {!reduced &&
         [0, 1, 2].map((i) => (
           <motion.span
@@ -319,7 +326,7 @@ function TrophyHero({ reduced }: { reduced: boolean }) {
             style={{ borderColor: 'rgba(241,199,94,0.4)' }}
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: [0.7, 2.1], opacity: [0.5, 0] }}
-            transition={{ duration: 2.6, repeat: Infinity, ease: 'easeOut', delay: 0.5 + i * 0.85 }}
+            transition={{ duration: 2.6, repeat: 3, ease: 'easeOut', delay: 0.5 + i * 0.85 }}
           />
         ))}
 
@@ -327,7 +334,7 @@ function TrophyHero({ reduced }: { reduced: boolean }) {
         className="relative grid size-28 place-items-center overflow-hidden rounded-full"
         style={{
           background: 'radial-gradient(circle at 50% 32%, rgba(241,199,94,0.42), rgba(18,15,41,0.12) 70%)',
-          boxShadow: '0 0 70px rgba(241,199,94,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)',
         }}
         initial={reduced ? false : { scale: 0, rotate: -14 }}
         animate={{ scale: 1, rotate: 0 }}

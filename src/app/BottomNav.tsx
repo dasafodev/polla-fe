@@ -15,7 +15,7 @@ export function BottomNav() {
       ? [...items, { to: '/admin', label: 'Admin', Icon: Shield, end: false }]
       : items
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto flex max-w-[480px] items-stretch justify-around px-2">
         {all.map(({ to, label, Icon, end }) => (
           <NavLink

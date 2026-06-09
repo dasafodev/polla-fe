@@ -2,6 +2,7 @@
 // Función pura (deriveLiveHome) + hook (useLiveHome), espejando el patrón de onboarding/onboardingState.
 // Todo sale de hooks existentes; ningún endpoint nuevo.
 
+import { useMemo } from 'react'
 import { useAuth } from '../../auth/useAuth'
 import { useScoreboard } from '../scoreboard/hooks'
 import { useAllKoPredictions } from '../predicciones/hooks'
@@ -140,12 +141,18 @@ export function useLiveHome(): LiveHomeState {
   const scoreboard = useScoreboard()
   const ko = useAllKoPredictions()
   const powerups = usePowerups()
-  return deriveLiveHome({
-    myId: participant?.id ?? '',
-    scoreboard: scoreboard.data?.data ?? [],
-    rounds: ko.rounds,
-    powerups: powerups.data ?? null,
-    now: Date.now(),
-    loading: scoreboard.isLoading || ko.isLoading || powerups.isLoading,
-  })
+
+  const myId = participant?.id ?? ''
+  const boardData = scoreboard.data?.data
+  const rounds = ko.rounds
+  const pwData = powerups.data
+  const loading = scoreboard.isLoading || ko.isLoading || powerups.isLoading
+
+  // `now` se captura solo cuando cambian los datos (no en cada render): así los sorts/derivaciones
+  // no se recalculan en cada refetch de cualquier query del Dashboard.
+  return useMemo(
+    () =>
+      deriveLiveHome({ myId, scoreboard: boardData ?? [], rounds, powerups: pwData ?? null, now: Date.now(), loading }),
+    [myId, boardData, rounds, pwData, loading],
+  )
 }

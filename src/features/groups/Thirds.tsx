@@ -26,6 +26,7 @@ export function Thirds({ onComplete }: { onComplete?: () => void }) {
   const data = thirds.data?.data ?? []
   const serverSelected = data.filter((c) => c.selected).map((c) => c.teamId)
   const selected = picked ?? serverSelected
+  const selectedSet = new Set(selected)
   const count = selected.length
   const full = count === TARGET
 
@@ -96,7 +97,7 @@ export function Thirds({ onComplete }: { onComplete?: () => void }) {
 
       <div className="grid grid-cols-2 gap-2.5">
         {data.map((c) => {
-          const isSel = selected.includes(c.teamId)
+          const isSel = selectedSet.has(c.teamId)
           return (
             <button
               key={c.teamId}

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Reorder } from 'framer-motion'
 import { ArrowUp, ArrowDown } from '@phosphor-icons/react'
 import type { Team } from '../../types/api'
@@ -16,7 +17,7 @@ export function GroupCard({
   onReorder: (next: string[]) => void
   readOnly?: boolean
 }) {
-  const byId = (id: string) => teams.find((t) => t.id === id)
+  const teamById = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams])
 
   function move(id: string, dir: -1 | 1) {
     const i = order.indexOf(id)
@@ -33,7 +34,7 @@ export function GroupCard({
       <p className="mt-1 text-sm text-ink-soft">Ordena del 1° al 4°. Los 2 primeros clasifican.</p>
       <Reorder.Group axis="y" values={order} onReorder={onReorder} className="mt-4 space-y-2.5">
         {order.map((id, idx) => {
-          const t = byId(id)
+          const t = teamById.get(id)
           if (!t) return null
           const top = idx < 2
           return (

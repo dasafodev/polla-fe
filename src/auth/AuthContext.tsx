@@ -1,4 +1,4 @@
-import { createContext, useEffect, type ReactNode } from 'react'
+import { createContext, useEffect, useMemo, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { keys } from '../lib/queryClient'
 import { getSession, clearSession } from './session'
@@ -40,5 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   else if (isApiError(error) && error.status === 401) status = 'unauthenticated'
   else if (error) status = 'error'
 
-  return <AuthContext.Provider value={{ participant: data ?? null, status }}>{children}</AuthContext.Provider>
+  const value = useMemo<AuthValue>(() => ({ participant: data ?? null, status }), [data, status])
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

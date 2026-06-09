@@ -56,7 +56,11 @@ export function Signup({
       <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-6">
         <motion.div variants={fadeUp} className="flex flex-col items-center text-center">
           <div className="relative mb-4">
-            <div className="absolute inset-0 -z-10 rounded-[24px] bg-violet-light/40 blur-xl" />
+            <div
+              className="absolute -inset-3 -z-10 rounded-full"
+              aria-hidden
+              style={{ background: 'radial-gradient(circle, rgba(139,109,255,0.45), transparent 70%)' }}
+            />
             <img src="/logo.png" alt="" width={64} height={64} className="rounded-[20px] shadow-card" />
           </div>
           <h1 className="font-display text-2xl font-extrabold text-ink">Ya casi estás dentro</h1>

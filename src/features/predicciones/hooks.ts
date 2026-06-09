@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { useAuth } from '../../auth/useAuth'
 import { useBreakdown } from '../scoreboard/hooks'
@@ -15,8 +16,13 @@ export function useAllKoPredictions(): { isLoading: boolean; rounds: KoMatchesRe
   const results = useQueries({
     queries: ROUND_SLUGS.map((slug) => ({ queryKey: keys.ko.round(slug), queryFn: () => getKoMatches(slug) })),
   })
-  return {
-    isLoading: results.some((r) => r.isLoading),
-    rounds: results.map((r) => r.data).filter((d): d is KoMatchesResponse => !!d),
-  }
+  const data = results.map((r) => r.data)
+  // Cada r.data es estable en react-query; el array externo de useQueries no, por eso
+  // desglosamos los datos como deps para no romper la memoización aguas abajo (useLiveHome).
+  const rounds = useMemo(
+    () => data.filter((d): d is KoMatchesResponse => !!d),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    data,
+  )
+  return { isLoading: results.some((r) => r.isLoading), rounds }
 }

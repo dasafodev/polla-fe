@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import type { ScoreboardEntry } from '../../../types/api'
 import { Avatar } from '../../../ui/Avatar'
@@ -8,7 +9,7 @@ import { NAVY_BG } from '../theme'
 // Estado vacío de la Tabla: antes del primer partido nadie tiene puntos. En vez de una
 // tarjeta plana, previsualizamos el roster "Todos en 0" para que se sienta vivo.
 export function ScoreboardEmpty({ entries, meId }: { entries: ScoreboardEntry[]; meId: string | null }) {
-  const players = sortPlayers(entries, meId)
+  const players = useMemo(() => sortPlayers(entries, meId), [entries, meId])
   const n = players.length
 
   return (

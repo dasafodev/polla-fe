@@ -19,8 +19,8 @@ const variants: Record<Variant, string> = {
   ghost: 'bg-transparent text-ink-soft hover:text-ink',
   light: 'bg-white text-ink border border-border hover:bg-surface-2',
   glass:
-    'bg-white/10 text-white border border-white/20 backdrop-blur-md ' +
-    'shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] hover:bg-white/15',
+    'bg-white/15 text-white border border-white/20 ' +
+    'shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] hover:bg-white/20',
 }
 
 export const Button = forwardRef<HTMLButtonElement, Props>(function Button(

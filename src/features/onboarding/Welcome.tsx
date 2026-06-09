@@ -26,7 +26,7 @@ export function Welcome({ onStart }: { onStart: () => void }) {
             <motion.li
               key={s}
               variants={fadeUp}
-              className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/5 px-4 py-3 backdrop-blur-sm"
+              className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/5 px-4 py-3"
             >
               <span className="grid size-8 shrink-0 place-items-center rounded-full bg-violet font-mono font-bold">
                 {i + 1}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useGroups, useMyGroupPredictions, useSaveGroupPredictions, useFriendsGroups } from './hooks'
 import { isApiError } from '../../lib/errors'
@@ -33,15 +33,14 @@ export function GroupDeck({ onComplete }: { onComplete?: () => void }) {
       : current.teams.map((t) => t.id)
   }, [current, orders, mine.data])
 
+  const goTo = useCallback((i: number) => setIndex(Math.max(0, Math.min(list.length - 1, i))), [list.length])
+
   if (groups.isLoading || mine.isLoading) return <DeckSkeleton />
   if (groups.isError) return <DeckError onRetry={() => groups.refetch()} />
   if (!current) return null
 
   function setOrder(next: string[]) {
     setOrders((o) => ({ ...o, [current.id]: next }))
-  }
-  function goTo(i: number) {
-    setIndex(Math.max(0, Math.min(list.length - 1, i)))
   }
   function confirm(dir: 1 | -1) {
     setMessage('')
@@ -135,7 +134,15 @@ export function GroupDeck({ onComplete }: { onComplete?: () => void }) {
   )
 }
 
-function DeckDots({ total, index, onPick }: { total: number; index: number; onPick: (i: number) => void }) {
+const DeckDots = memo(function DeckDots({
+  total,
+  index,
+  onPick,
+}: {
+  total: number
+  index: number
+  onPick: (i: number) => void
+}) {
   return (
     <div className="flex gap-1.5">
       {Array.from({ length: total }).map((_, i) => (
@@ -148,7 +155,7 @@ function DeckDots({ total, index, onPick }: { total: number; index: number; onPi
       ))}
     </div>
   )
-}
+})
 
 function DeckSkeleton() {
   return <div className="h-[460px] animate-pulse rounded-2xl bg-surface-2" aria-busy />
