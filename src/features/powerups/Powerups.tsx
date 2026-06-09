@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react'
-import { TrendUp, TrendDown } from '@phosphor-icons/react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { motion } from 'framer-motion'
+import { TrendUp, TrendDown, Trophy } from '@phosphor-icons/react'
 import type { Team } from '../../types/api'
 import { useGroups } from '../groups/hooks'
 import { usePowerups, useSavePowerups, useFriendsPowerups } from './hooks'
@@ -7,6 +8,8 @@ import { isApiError } from '../../lib/errors'
 import { Button } from '../../ui/Button'
 import { Flag } from '../../ui/Flag'
 import { Confetti } from '../../ui/Confetti'
+import { NavyBackdrop } from '../../ui/Backdrop'
+import { fadeUp, spring, useReduced } from '../../ui/motion'
 import { WizardFooter } from '../onboarding/WizardFooter'
 import { TeamPickerSheet } from './TeamPickerSheet'
 
@@ -243,17 +246,105 @@ function PowerupCard({
   )
 }
 
+const GOLD = '#f1c75e'
+
 function PowerupsDone({ onHome }: { onHome: () => void }) {
+  const reduced = useReduced()
+  const [fire, setFire] = useState(false)
+
+  // El confeti se dispara justo cuando el trofeo aterriza, no al montar.
+  useEffect(() => {
+    const t = setTimeout(() => setFire(true), 350)
+    return () => clearTimeout(t)
+  }, [])
+
   return (
-    <div className="relative grid place-items-center py-16 text-center">
-      <Confetti />
-      <h2 className="font-display text-2xl font-black text-ink">¡Tu polla está lista!</h2>
-      <p className="mt-2 max-w-[34ch] text-ink-soft">
-        Ya hiciste todas tus predicciones. Puedes editarlas hasta el cierre.
-      </p>
-      <Button className="mt-6" onClick={onHome}>
-        Ir al inicio
-      </Button>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35 }}
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden text-white"
+    >
+      <NavyBackdrop />
+      {fire && <Confetti count={120} />}
+
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pt-[max(24px,env(safe-area-inset-top))] text-center">
+        <TrophyHero reduced={reduced} />
+
+        <motion.div
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12, delayChildren: reduced ? 0 : 0.5 } } }}
+          initial="hidden"
+          animate="show"
+          className="mt-9"
+        >
+          <motion.p
+            variants={fadeUp}
+            className="font-mono text-xs font-bold uppercase tracking-[0.18em]"
+            style={{ color: GOLD }}
+          >
+            Pronósticos completos
+          </motion.p>
+          <motion.h2 variants={fadeUp} className="mt-2 font-display text-[2rem] font-black leading-tight">
+            ¡Tu polla está lista!
+          </motion.h2>
+          <motion.p variants={fadeUp} className="mx-auto mt-3 max-w-[30ch] text-[15px] leading-relaxed text-white/75">
+            Ya hiciste todas tus predicciones. Puedes editarlas hasta el cierre.
+          </motion.p>
+        </motion.div>
+      </div>
+
+      <motion.div
+        initial={reduced ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={reduced ? { duration: 0 } : { ...spring, delay: 1 }}
+        className="relative z-10 px-6 pb-[max(24px,env(safe-area-inset-bottom))]"
+      >
+        <Button variant="light" fullWidth onClick={onHome}>
+          Ir al inicio
+        </Button>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function TrophyHero({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="relative grid place-items-center">
+      {!reduced &&
+        [0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            aria-hidden
+            className="absolute size-28 rounded-full border"
+            style={{ borderColor: 'rgba(241,199,94,0.4)' }}
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: [0.7, 2.1], opacity: [0.5, 0] }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: 'easeOut', delay: 0.5 + i * 0.85 }}
+          />
+        ))}
+
+      <motion.div
+        className="relative grid size-28 place-items-center overflow-hidden rounded-full"
+        style={{
+          background: 'radial-gradient(circle at 50% 32%, rgba(241,199,94,0.42), rgba(18,15,41,0.12) 70%)',
+          boxShadow: '0 0 70px rgba(241,199,94,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
+        }}
+        initial={reduced ? false : { scale: 0, rotate: -14 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 210, damping: 13, delay: 0.15 }}
+      >
+        <Trophy size={58} weight="fill" color={GOLD} style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.35))' }} />
+        {!reduced && (
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)' }}
+            initial={{ x: '-60%' }}
+            animate={{ x: ['-60%', '430%'] }}
+            transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 1.8, ease: 'easeInOut', delay: 1 }}
+          />
+        )}
+      </motion.div>
     </div>
   )
 }

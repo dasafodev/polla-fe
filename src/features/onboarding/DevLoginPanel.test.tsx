@@ -12,4 +12,13 @@ describe('DevLoginPanel', () => {
     await userEvent.click(juanBtn)
     await waitFor(() => expect(db.currentSessionId).toBe('p-juan'))
   })
+
+  it('«Mundo vacío» entra como usuario nuevo y vacía el mock', async () => {
+    renderWithProviders(<DevLoginPanel />)
+    const btn = await screen.findByRole('button', { name: /mundo vac/i })
+    await userEvent.click(btn)
+    await waitFor(() => expect(db.currentSessionId).toBe('p-nuevo'))
+    expect(db.participants).toHaveLength(1)
+    expect(db.groupPredictions).toHaveLength(0)
+  })
 })

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
-import { db } from './db'
-import { resetDb } from './seed'
+import { db, setDb } from './db'
+import { resetDb, makeEmptyWorldDb } from './seed'
 import { setNow, resetClock } from '../lib/clock'
 
 // Endpoints SOLO-DEV (prefijo /__dev__). Se montan únicamente en el worker del browser cuando
@@ -41,5 +41,14 @@ export const devHandlers = [
   http.post('/api/__dev__/reset', () => {
     resetDb()
     return HttpResponse.json({ ok: true }, { status: 200 })
+  }),
+
+  // "Mundo vacío": reemplaza el mock por un mundo recién creado y entra como el usuario nuevo.
+  // Para previsualizar el arranque en frío (Inicio vacío, Tabla vacía, Predicciones en 0).
+  http.post('/api/__dev__/empty-world', () => {
+    setDb(makeEmptyWorldDb())
+    const p = db.participants[0]
+    db.currentSessionId = p.id
+    return HttpResponse.json({ id: p.id, name: p.name, email: p.email, role: p.role }, { status: 200 })
   }),
 ]

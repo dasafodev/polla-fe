@@ -7,8 +7,8 @@ import { Button } from '../../ui/Button'
 import { Sheet } from '../../ui/Sheet'
 import { Podium } from './Podium'
 import { PlayerBreakdown } from './PlayerBreakdown'
-
-const NAVY_BG = 'radial-gradient(120% 80% at 50% -10%, #2a1d5e 0%, #150f33 55%, #0d0a22 100%)'
+import { ScoreboardEmpty } from './states/ScoreboardEmpty'
+import { NAVY_BG } from './theme'
 
 export function Scoreboard() {
   const q = useScoreboard()
@@ -21,7 +21,7 @@ export function Scoreboard() {
 
   const data = q.data?.data ?? []
   const allZero = data.every((e) => e.total === 0)
-  if (data.length === 0 || allZero) return <ScoreboardEmpty />
+  if (data.length === 0 || allZero) return <ScoreboardEmpty entries={data} meId={meId} />
 
   const top3 = data.slice(0, 3)
   const rest = data.slice(3)
@@ -113,11 +113,3 @@ function ScoreboardError({ onRetry }: { onRetry: () => void }) {
   )
 }
 
-function ScoreboardEmpty() {
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-      <h1 className="font-display text-xl font-extrabold text-ink">Tabla</h1>
-      <p className="mt-2 text-ink-soft">La tabla se llena cuando empiecen los partidos.</p>
-    </div>
-  )
-}

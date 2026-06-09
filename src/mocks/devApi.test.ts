@@ -37,6 +37,20 @@ describe('dev-bypass (__dev__)', () => {
     expect(body.data.map((p: { id: string }) => p.id)).toContain('p-juan')
   })
 
+  it('empty-world deja el mundo vacío y entra como usuario nuevo', async () => {
+    const res = await post('/__dev__/empty-world')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({ name: 'Nuevo', role: 'participant' })
+    expect(db.currentSessionId).toBe('p-nuevo')
+    expect(db.participants).toHaveLength(1) // sin otros jugadores
+    expect(db.groupPredictions).toHaveLength(0) // sin polla
+    expect(db.koMatches).toHaveLength(0) // sin partidos
+    expect(db.groups.length).toBeGreaterThan(0) // catálogo presente para poder jugar
+    // tabla vacía: el único participante está en 0 (la UI lo trata como "sin puntos")
+    const sb = await (await get('/scoreboard')).json()
+    expect(sb.data.every((e: { total: number }) => e.total === 0)).toBe(true)
+  })
+
   it('reset restaura la semilla', async () => {
     await post('/__dev__/login-as', { participantId: 'p-luis' })
     await post('/powerups/predictions', { darkHorseTeamId: 'tB4', disappointmentTeamId: 'tB1' })

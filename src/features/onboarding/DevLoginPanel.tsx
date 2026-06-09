@@ -53,6 +53,18 @@ export function DevLoginPanel() {
     setStatus('Mock reseteado')
   }
 
+  async function emptyWorld() {
+    try {
+      const me = await request<ParticipantMe>('POST', '/__dev__/empty-world')
+      saveSession(me)
+      qc.setQueryData(keys.me(), me)
+      await qc.invalidateQueries()
+      navigate('/')
+    } catch {
+      setStatus('No se pudo crear el mundo vacío')
+    }
+  }
+
   return (
     <div>
       <hr />
@@ -65,6 +77,8 @@ export function DevLoginPanel() {
           </li>
         ))}
       </ul>
+      <p>O empezar de cero:</p>
+      <button onClick={emptyWorld}>Mundo vacío (usuario nuevo)</button>
       <p>Reloj simulado (candados):</p>
       <button onClick={() => applyClock('2026-06-06T12:00:00.000Z')}>Antes del torneo (grupos abiertos)</button>
       <button onClick={() => applyClock('2026-06-11T16:00:00.000Z')}>Torneo iniciado (candado)</button>

@@ -1,4 +1,4 @@
-import { setDb, type Db, type DbTeam, type DbGroup, type DbKoMatch } from './db'
+import { setDb, type Db, type DbTeam, type DbGroup, type DbKoMatch, type DbKoRound, type DbParticipant } from './db'
 import type { ScoringParams } from '../types/enums'
 
 const GROUP_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'] as const
@@ -69,6 +69,12 @@ function buildKoMatches(): DbKoMatch[] {
   ]
 }
 
+const KO_ROUNDS: DbKoRound[] = [
+  { slug: 'r32', name: 'Dieciseisavos', order: 1 }, { slug: 'r16', name: 'Octavos', order: 2 },
+  { slug: 'qf', name: 'Cuartos', order: 3 }, { slug: 'sf', name: 'Semifinal', order: 4 },
+  { slug: '3rd', name: 'Tercer puesto', order: 5 }, { slug: 'final', name: 'Final', order: 6 },
+]
+
 export function makeDb(): Db {
   const { teams, groups } = buildCatalog()
   const koMatches = buildKoMatches()
@@ -137,13 +143,32 @@ export function makeDb(): Db {
       { id: 'inv-exp', code: 'EXP000', usedByParticipantId: null, usedAt: null, expiresAt: '2026-06-05T15:00:00.000Z', createdAt: '2026-06-04T15:00:00.000Z' },
     ],
     teams, groups, groupPredictions, thirdsSelections, powerups,
-    koRounds: [
-      { slug: 'r32', name: 'Dieciseisavos', order: 1 }, { slug: 'r16', name: 'Octavos', order: 2 },
-      { slug: 'qf', name: 'Cuartos', order: 3 }, { slug: 'sf', name: 'Semifinal', order: 4 },
-      { slug: '3rd', name: 'Tercer puesto', order: 5 }, { slug: 'final', name: 'Final', order: 6 },
-    ],
+    koRounds: [...KO_ROUNDS],
     koMatches, koPredictions, scoringParams: SCORING,
     officialGroupStandings, officialBestThirds, teamRoundsAdvanced,
+  }
+}
+
+// "Mundo vacío": un usuario nuevo recién entrando, lo más vacío posible. Conserva el catálogo
+// (equipos/grupos/rondas) para poder armar la polla, pero sin predicciones, sin partidos KO, sin
+// resultados, sin otros jugadores → Inicio "Vacía", Tabla vacía, Predicciones en 0.
+const NEW_USER: DbParticipant = {
+  id: 'p-nuevo', googleSub: 'sub-nuevo', name: 'Nuevo', email: 'nuevo@gmail.com', phone: null, role: 'participant',
+}
+
+export function makeEmptyWorldDb(): Db {
+  const { teams, groups } = buildCatalog()
+  return {
+    currentSessionId: null,
+    tournamentStartAt: '2026-06-11T16:00:00.000Z',
+    participants: [{ ...NEW_USER }],
+    invitations: [],
+    teams, groups,
+    groupPredictions: [], thirdsSelections: [], powerups: [],
+    koRounds: [...KO_ROUNDS],
+    koMatches: [], koPredictions: [],
+    scoringParams: SCORING,
+    officialGroupStandings: null, officialBestThirds: null, teamRoundsAdvanced: null,
   }
 }
 
