@@ -278,6 +278,12 @@ img {
   isolation: isolate;
 }
 
+.navy__bg,
+.navy__blob,
+.navy__grain {
+  pointer-events: none;
+}
+
 .navy__bg {
   position: absolute;
   inset: 0;
