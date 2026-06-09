@@ -86,8 +86,8 @@ export function Thirds({ onComplete }: { onComplete?: () => void }) {
         <>
           <BackButton />
           <header className="mb-5">
-            <h1 className="font-display text-2xl font-extrabold text-ink">Mejores terceros</h1>
-            <p className="mt-1 text-ink-soft">Elige los 8 que crees que clasifican.</p>
+            <h1 className="font-display text-2xl font-extrabold text-ink">Los 8 mejores terceros</h1>
+            <p className="mt-1 text-ink-soft">De los 12 que dejaste en 3° puesto, elige los 8 que crees que clasifican.</p>
           </header>
         </>
       )}

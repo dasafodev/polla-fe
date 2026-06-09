@@ -17,6 +17,9 @@ export function TercerosPanel({ locked }: { locked: boolean }) {
   return (
     <div className="space-y-3">
       <PhaseSummary label="Terceros" value={value} />
+      <p className="px-1 text-xs text-ink-soft">
+        En el Mundial, además de los 2 primeros de cada grupo, avanzan los 8 mejores terceros. Aquí eliges los que crees que clasifican.
+      </p>
       {selected.length === 0 ? (
         <Link
           to="/predicciones/terceros"

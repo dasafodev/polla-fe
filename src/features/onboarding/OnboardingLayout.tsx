@@ -17,8 +17,8 @@ const META: Record<StepKey, { kicker: string; title: string; help: string }> = {
   },
   thirds: {
     kicker: 'PASO 2 DE 3 · TERCEROS',
-    title: 'Mejores terceros',
-    help: 'Elige los 8 mejores terceros entre todos los grupos.',
+    title: 'Los 8 mejores terceros',
+    help: 'En el Mundial avanzan los 2 primeros de cada grupo y, además, los 8 mejores terceros. De los 12 equipos que dejaste en 3° puesto, elige los 8 que crees que clasifican.',
   },
   powerups: {
     kicker: 'PASO 3 DE 3 · PÁLPITOS',
