@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { renderWithProviders, seedSession } from '../../test/utils'
 import { GruposPanel } from './GruposPanel'
 
@@ -15,7 +16,7 @@ describe('GruposPanel', () => {
     expect(screen.getAllByText(/^Grupo [A-L]$/)).toHaveLength(12)
     expect(screen.getByText('Equipo A1')).toBeInTheDocument()
     expect(screen.getAllByText('EXACTO')).toHaveLength(48) // 12 grupos × 4
-    expect(screen.getByRole('link', { name: 'Editar Grupo A' })).toHaveAttribute('href', '/predicciones/grupos')
+    expect(screen.getByRole('button', { name: 'Editar Grupo A' })).toBeInTheDocument()
   })
 
   it('sin cierre: muestra avance y oculta marcas', async () => {
@@ -31,5 +32,17 @@ describe('GruposPanel', () => {
     await screen.findByText('Grupo A')
     expect(screen.getByText('3/12 completos')).toBeInTheDocument()
     expect(screen.getAllByText('Sin ordenar')).toHaveLength(9)
+  })
+
+  it('tap en un grupo editable abre el editor de solo ese grupo', async () => {
+    renderWithProviders(<GruposPanel locked={false} />)
+    await screen.findByText('Grupo A')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar Grupo A' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'Grupo A' })
+    expect(within(dialog).getByText('Equipo A1')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: /guardar grupo/i })).toBeInTheDocument()
   })
 })
