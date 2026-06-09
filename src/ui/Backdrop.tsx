@@ -5,7 +5,7 @@ import { useReduced } from './motion'
 export const NavyBackdrop = memo(function NavyBackdrop() {
   const reduced = useReduced()
   return (
-    <div className="absolute inset-0 overflow-hidden bg-navy" aria-hidden>
+    <div className="absolute inset-0 overflow-hidden rounded-[inherit] bg-navy [transform:translateZ(0)]" aria-hidden>
       <div
         className="absolute inset-0"
         style={{ background: 'radial-gradient(120% 80% at 50% -10%, #1a1540 0%, #120f29 60%)' }}
