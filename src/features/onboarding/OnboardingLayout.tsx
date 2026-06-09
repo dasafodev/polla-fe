@@ -21,9 +21,9 @@ const META: Record<StepKey, { kicker: string; title: string; help: string }> = {
     help: 'Elige los 8 mejores terceros entre todos los grupos.',
   },
   powerups: {
-    kicker: 'PASO 3 DE 3 · POWERUPS',
-    title: 'Tus powerups',
-    help: 'Activa tu caballo oscuro y tu decepción del torneo.',
+    kicker: 'PASO 3 DE 3 · PÁLPITOS',
+    title: 'Tus pálpitos',
+    help: 'Dos corazonadas para el torneo: una te suma y la otra te resta.',
   },
 }
 

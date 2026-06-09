@@ -5,12 +5,12 @@ import { renderWithProviders, seedSession } from '../../test/utils'
 import { Powerups } from './Powerups'
 
 describe('Powerups', () => {
-  it('crea powerups eligiendo caballo oscuro y decepción (usuario sin powerups)', async () => {
+  it('crea powerups eligiendo la revelación y la decepción (usuario sin powerups)', async () => {
     seedSession('p-luis') // sin powerups → modo create
     renderWithProviders(<Powerups />)
 
-    await userEvent.click(await screen.findByRole('button', { name: /Caballo oscuro/i }))
-    const dhSheet = await screen.findByRole('dialog', { name: 'Caballo oscuro' })
+    await userEvent.click(await screen.findByRole('button', { name: /La revelación/i }))
+    const dhSheet = await screen.findByRole('dialog', { name: 'La revelación' })
     await userEvent.click(within(dhSheet).getByRole('button', { name: /Equipo A2/i })) // A2 no es top8
 
     await userEvent.click(screen.getByRole('button', { name: /La decepción/i }))

@@ -56,7 +56,7 @@ export function deriveOnboardingState(i: DeriveInput): OnboardingState {
   }
   const powerups: OnboardingStep = {
     key: 'powerups',
-    label: 'Powerups',
+    label: 'Pálpitos',
     current: powerupsCount,
     total: 2,
     detail: `${powerupsCount} de 2 elegidos`,

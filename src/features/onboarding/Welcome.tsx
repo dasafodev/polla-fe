@@ -5,7 +5,7 @@ import { Confetti } from '../../ui/Confetti'
 import { Button } from '../../ui/Button'
 import { fadeUp, stagger } from '../../ui/motion'
 
-const STEPS = ['Ordena los 12 grupos', 'Elige los 8 mejores terceros', 'Activa tus 2 powerups']
+const STEPS = ['Ordena los 12 grupos', 'Elige los 8 mejores terceros', 'Elige tus 2 pálpitos']
 
 export function Welcome({ onStart }: { onStart: () => void }) {
   const { participant } = useAuth()

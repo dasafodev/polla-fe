@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Horse, TrendDown } from '@phosphor-icons/react'
+import { TrendUp, TrendDown } from '@phosphor-icons/react'
 import type { Team } from '../../types/api'
 import { useGroups } from '../groups/hooks'
 import { usePowerups, useSavePowerups, useFriendsPowerups } from './hooks'
@@ -61,7 +61,7 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
   const cta = (
     <div>
       <Button fullWidth loading={save.isPending} disabled={!ready || locked} onClick={onSave}>
-        {wizard ? 'Activar powerups' : 'Guardar'}
+        {wizard ? 'Guardar mis pálpitos' : 'Guardar'}
       </Button>
       {error && (
         <p role="alert" className="mt-2 text-center text-sm text-danger">
@@ -79,32 +79,36 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
   return (
     <>
       {!wizard && (
-        <header className="mb-5">
-          <h1 className="font-display text-2xl font-extrabold text-ink">Tus powerups</h1>
-          <p className="mt-1 text-ink-soft">Activa tu caballo oscuro y tu decepción del torneo.</p>
+        <header className="mb-4">
+          <h1 className="font-display text-2xl font-extrabold text-ink">Tus pálpitos</h1>
+          <p className="mt-1 text-ink-soft">Dos corazonadas que mueven tu puntaje.</p>
         </header>
       )}
 
+      <PalpitosIntro />
+
       <div className="flex flex-col gap-3">
         <PowerupCard
-          tone="dh"
-          icon={<Horse size={22} weight="bold" />}
-          title="Caballo oscuro"
-          desc="Un equipo fuera del top 8. Suma puntos por cada ronda que avanza."
+          tone="up"
+          icon={<TrendUp size={22} weight="bold" />}
+          title="La revelación"
+          desc="Un equipo de los que casi nadie tiene fe. Si te sorprende y avanza, ganas puntos: cuanto más lejos llegue, más sumas."
+          cue="Hazle fuerza para que llegue lejos"
           team={dhTeam}
           groupLabel={dhTeam ? groupOf[dhTeam.id] : ''}
-          hint="fuera del top 8"
+          hint="fuera de los favoritos"
           disabled={locked}
           onPick={() => setSheet('dh')}
         />
         <PowerupCard
-          tone="dis"
+          tone="down"
           icon={<TrendDown size={22} weight="bold" />}
           title="La decepción"
-          desc="Un equipo del top 8. Suma puntos por cada ronda en que cae antes."
+          desc="Uno de los grandes favoritos que crees que va a quedar mal. Cada ronda que avanza te cuesta puntos. Lo ideal: que caiga pronto y no te quite nada."
+          cue="Hazle fuerza para que caiga pronto"
           team={disTeam}
           groupLabel={disTeam ? groupOf[disTeam.id] : ''}
-          hint="del top 8"
+          hint="uno de los favoritos"
           disabled={locked}
           onPick={() => setSheet('dis')}
         />
@@ -121,8 +125,8 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
       <TeamPickerSheet
         open={sheet === 'dh'}
         onClose={() => setSheet(null)}
-        title="Caballo oscuro"
-        subtitle="Equipos fuera del top 8 · elige 1"
+        title="La revelación"
+        subtitle="Equipos por fuera de los 8 favoritos · elige 1"
         teams={notTop8}
         groupOf={groupOf}
         selectedId={dh}
@@ -135,7 +139,7 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
         open={sheet === 'dis'}
         onClose={() => setSheet(null)}
         title="La decepción"
-        subtitle="Equipos del top 8 · elige 1"
+        subtitle="Los 8 grandes favoritos · elige 1"
         teams={top8}
         groupOf={groupOf}
         selectedId={dis}
@@ -148,28 +152,58 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
   )
 }
 
+function PalpitosIntro() {
+  return (
+    <div className="mb-4 rounded-card border border-border bg-surface-2 p-4">
+      <p className="text-sm font-bold text-ink">Elige 2 equipos con el instinto</p>
+      <ul className="mt-2.5 space-y-2">
+        <li className="flex items-start gap-2.5 text-sm text-ink-soft">
+          <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-success/10 text-success">
+            <TrendUp size={13} weight="bold" />
+          </span>
+          <span>
+            Uno que crees que va a <b className="font-bold text-ink">sorprender</b>. Te suma puntos.
+          </span>
+        </li>
+        <li className="flex items-start gap-2.5 text-sm text-ink-soft">
+          <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-danger/10 text-danger">
+            <TrendDown size={13} weight="bold" />
+          </span>
+          <span>
+            Uno que crees que va a <b className="font-bold text-ink">fallar</b>. Te resta puntos.
+          </span>
+        </li>
+      </ul>
+    </div>
+  )
+}
+
 function PowerupCard({
   tone,
   icon,
   title,
   desc,
+  cue,
   team,
   groupLabel,
   hint,
   disabled,
   onPick,
 }: {
-  tone: 'dh' | 'dis'
+  tone: 'up' | 'down'
   icon: ReactNode
   title: string
   desc: string
+  cue: string
   team: Team | null
   groupLabel: string
   hint: string
   disabled: boolean
   onPick: () => void
 }) {
-  const iconBg = tone === 'dh' ? 'bg-tint text-violet' : 'bg-[#fdeede] text-lock'
+  const up = tone === 'up'
+  const accent = up ? 'text-success' : 'text-danger'
+  const chip = up ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
   return (
     <button
       type="button"
@@ -177,9 +211,18 @@ function PowerupCard({
       disabled={disabled}
       className="rounded-card border border-border bg-surface p-4 text-left shadow-card transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet disabled:opacity-60"
     >
-      <span className={`mb-2.5 grid size-10 place-items-center rounded-xl ${iconBg}`}>{icon}</span>
-      <span className="block font-display text-lg font-extrabold text-ink">{title}</span>
-      <span className="mt-0.5 block text-sm text-ink-soft">{desc}</span>
+      <span className="flex items-center gap-2.5">
+        <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${chip}`}>{icon}</span>
+        <span className="flex-1 font-display text-lg font-extrabold text-ink">{title}</span>
+        <span className={`rounded-full px-2.5 py-1 font-mono text-xs font-bold ${chip}`}>
+          {up ? '+ Suma' : '− Resta'}
+        </span>
+      </span>
+      <span className="mt-2 block text-sm text-ink-soft">{desc}</span>
+      <span className={`mt-2 flex items-center gap-1.5 text-sm font-semibold ${accent}`}>
+        {up ? <TrendUp size={15} weight="bold" /> : <TrendDown size={15} weight="bold" />}
+        {cue}
+      </span>
       {team ? (
         <span className="mt-3 flex items-center gap-3 rounded-control border border-border bg-surface-2 p-2.5">
           <Flag code={team.code} flag={team.flag} />

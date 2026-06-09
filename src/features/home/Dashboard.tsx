@@ -123,7 +123,7 @@ export function Dashboard() {
 function nextLabel(key: StepKey | null): string {
   if (key === 'groups') return 'Sigue: ordena los grupos'
   if (key === 'thirds') return 'Sigue: elige los terceros'
-  if (key === 'powerups') return 'Sigue: activa tus powerups'
+  if (key === 'powerups') return 'Sigue: elige tus pálpitos'
   return 'Todo en orden'
 }
 

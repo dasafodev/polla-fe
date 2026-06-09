@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { SquaresFour, Sword, Medal, Horse, TrendDown } from '@phosphor-icons/react'
+import { SquaresFour, Sword, Medal, TrendUp, TrendDown } from '@phosphor-icons/react'
 import { useBreakdown } from './hooks'
 import { Avatar } from '../../ui/Avatar'
 import { formatCOP } from './format'
@@ -56,8 +56,8 @@ export function PlayerBreakdown({ participantId, rank }: { participantId: string
       <CategoryRow icon={<Sword size={18} weight="bold" />} label="Eliminatorias" display={`${bd.ko}`} pct={(bd.ko / maxPos) * 100} />
       <CategoryRow icon={<Medal size={18} weight="bold" />} label="Terceros" display={`${bd.thirds}`} pct={(bd.thirds / maxPos) * 100} />
       <CategoryRow
-        icon={<Horse size={18} weight="bold" />}
-        label="Caballo oscuro"
+        icon={<TrendUp size={18} weight="bold" />}
+        label="La revelación"
         display={bd.darkHorse > 0 ? `+${bd.darkHorse}` : `${bd.darkHorse}`}
         pct={(Math.max(0, bd.darkHorse) / maxPos) * 100}
       />
@@ -65,11 +65,11 @@ export function PlayerBreakdown({ participantId, rank }: { participantId: string
       <div className="my-2 h-px bg-border" />
 
       <div className="flex items-center gap-3 py-2">
-        <span className="grid size-9 place-items-center rounded-[10px] bg-[#fdeede] text-lock">
+        <span className="grid size-9 place-items-center rounded-[10px] bg-danger/10 text-danger">
           <TrendDown size={18} weight="bold" />
         </span>
-        <span className="flex-1 font-display font-bold text-ink">Decepción</span>
-        <span className="w-16 text-right font-mono font-bold text-lock">{bd.disappointment}</span>
+        <span className="flex-1 font-display font-bold text-ink">La decepción</span>
+        <span className="w-16 text-right font-mono font-bold text-danger">{bd.disappointment}</span>
       </div>
     </div>
   )
