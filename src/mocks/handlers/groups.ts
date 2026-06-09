@@ -28,10 +28,17 @@ function validateRankings(group: DbGroup, rankings: { teamId: string; position: 
   }
   return positions.size === 4 && teamIds.size === 4
 }
-function serializeRankings(pred?: DbGroupPrediction) {
+function serializeRankings(pred?: DbGroupPrediction, official?: string[]) {
   return (pred?.rankings ?? []).slice().sort((a, b) => a.position - b.position).map((r) => {
     const t = teamById(r.teamId)!
-    return { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, position: r.position }
+    const result: 'exact' | 'partial' | null = !official
+      ? null
+      : official.indexOf(t.id) === r.position - 1
+        ? 'exact'
+        : official.includes(t.id)
+          ? 'partial'
+          : null
+    return { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, position: r.position, result }
   })
 }
 
@@ -79,7 +86,7 @@ export const groupsHandlers = [
       const pred = predOf(pid, g.id), complete = isComplete(pred)
       return {
         groupId: g.id, label: g.label, name: g.name, groupComplete: complete,
-        rankings: serializeRankings(pred), pointsEarned: complete ? groupPointsFor(db, pid, g.id) : null,
+        rankings: serializeRankings(pred, db.officialGroupStandings?.[g.id]), pointsEarned: complete ? groupPointsFor(db, pid, g.id) : null,
       }
     })
     return HttpResponse.json({ data, completedGroups: data.filter((d) => d.groupComplete).length }, { status: 200 })

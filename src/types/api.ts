@@ -46,7 +46,7 @@ export interface Team { id: string; name: string; code: string; isTop8: boolean 
 export interface Group { id: string; label: string; name: string; teams: Team[] }
 
 // ── Grupos: predicciones ─────────────────────────────────────────────────────
-export interface GroupRanking { teamId: string; name: string; code: string; isTop8: boolean; position: number }
+export interface GroupRanking { teamId: string; name: string; code: string; isTop8: boolean; position: number; result: 'exact' | 'partial' | null }
 export interface GroupPointsEarned {
   pts_group_position_exact: number; pts_group_position_partial: number; bonus_group_complete: number; total: number
 }

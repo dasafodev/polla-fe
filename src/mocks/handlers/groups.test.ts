@@ -7,7 +7,7 @@ const URL = (p: string) => `http://localhost/api${p}`
 const get = (p: string) => fetch(URL(p), { credentials: 'include' })
 const post = (p: string, body: unknown) =>
   fetch(URL(p), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'include' })
-const login = () => post('/auth/login', { credential: makeFakeIdToken({ sub: 'sub-juan', email: 'juan@gmail.com', name: 'Juan' }) })
+const login = () => post('/auth/google', { credential: makeFakeIdToken({ sub: 'sub-juan', email: 'juan@gmail.com', name: 'Juan' }) })
 const rankingsFor = (order: string[]) => order.map((teamId, i) => ({ teamId, position: i + 1 }))
 
 beforeEach(async () => { await login() })
@@ -130,5 +130,32 @@ describe('POST /groups/predictions — groupId duplicado en el body', () => {
     const res = await post('/groups/predictions', { predictions: [{ groupId: g.id, rankings: r }, { groupId: g.id, rankings: r }] })
     expect(res.status).toBe(400)
     expect(await res.json()).toMatchObject({ code: 'INVALID_RANKINGS' })
+  })
+})
+
+describe('GET /groups/predictions/me — result por ranking', () => {
+  it('orden exacto → cada ranking trae result "exact"', async () => {
+    const body = await (await get('/groups/predictions/me')).json()
+    const groupA = body.data.find((d: { label: string }) => d.label === 'A')
+    expect(groupA.rankings.map((r: { result: string }) => r.result)).toEqual(['exact', 'exact', 'exact', 'exact'])
+  })
+
+  it('dos posiciones intercambiadas → esas dos "partial", el resto "exact"', async () => {
+    const g = db.groups[0] // g-A, teamIds [tA1,tA2,tA3,tA4]; standing oficial = orden natural
+    const swapped = [g.teamIds[1], g.teamIds[0], g.teamIds[2], g.teamIds[3]] // tA2,tA1,tA3,tA4
+    await post('/groups/predictions', { predictions: [{ groupId: g.id, rankings: rankingsFor(swapped) }] })
+    const body = await (await get('/groups/predictions/me')).json()
+    const groupA = body.data.find((d: { label: string }) => d.label === 'A')
+    const byTeam = Object.fromEntries(groupA.rankings.map((r: { teamId: string; result: string }) => [r.teamId, r.result]))
+    expect(byTeam[g.teamIds[0]]).toBe('partial') // tA1 quedó en pos 2
+    expect(byTeam[g.teamIds[1]]).toBe('partial') // tA2 quedó en pos 1
+    expect(byTeam[g.teamIds[2]]).toBe('exact')
+    expect(byTeam[g.teamIds[3]]).toBe('exact')
+  })
+
+  it('sin standings oficiales → result null', async () => {
+    db.officialGroupStandings = null
+    const body = await (await get('/groups/predictions/me')).json()
+    expect(body.data[0].rankings[0].result).toBeNull()
   })
 })
