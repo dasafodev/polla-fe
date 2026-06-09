@@ -7,7 +7,7 @@ import { powerupsPointsFor } from '../scoring'
 const teamById = (id: string) => db.teams.find((t) => t.id === id)
 function powerupTeam(id: string | null) {
   if (!id) return null
-  const t = teamById(id); return t ? { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8 } : null
+  const t = teamById(id); return t ? { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag } : null
 }
 function serializeMine(pid: string) {
   const pw = db.powerups.find((x) => x.participantId === pid)

@@ -4,6 +4,9 @@ import type { ScoringParams } from '../types/enums'
 const GROUP_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'] as const
 // 8 top8 = el equipo "1" de los primeros 8 grupos
 const TOP8 = new Set(['tA1', 'tB1', 'tC1', 'tD1', 'tE1', 'tF1', 'tG1', 'tH1'])
+// 48 códigos ISO (1 por equipo) para sembrar banderas reales en el demo con mocks.
+const FLAG_CODES = ['mx', 'ca', 'us', 'ar', 'br', 'fr', 'es', 'de', 'pt', 'nl', 'be', 'hr', 'ma', 'jp', 'kr', 'sn', 'au', 'co', 'uy', 'ec', 'ch', 'dk', 'rs', 'gh', 'cm', 'tn', 'sa', 'ir', 'qa', 'cr', 'pl', 'ng', 'eg', 'dz', 'ci', 'no', 'se', 'it', 'gb', 'cl', 'pe', 'py', 've', 'bo', 'pa', 'jm', 'nz', 'za']
+const flagUrl = (i: number) => `https://flagcdn.com/w80/${FLAG_CODES[i % FLAG_CODES.length]}.png`
 
 function buildCatalog(): { teams: DbTeam[]; groups: DbGroup[] } {
   const teams: DbTeam[] = []
@@ -13,7 +16,7 @@ function buildCatalog(): { teams: DbTeam[]; groups: DbGroup[] } {
     const teamIds: string[] = []
     for (let i = 1; i <= 4; i++) {
       const id = `t${L}${i}`
-      teams.push({ id, name: `Equipo ${L}${i}`, code: `${L}${i}`, isTop8: TOP8.has(id), groupId })
+      teams.push({ id, name: `Equipo ${L}${i}`, code: `${L}${i}`, isTop8: TOP8.has(id), flag: flagUrl(teams.length), groupId })
       teamIds.push(id)
     }
     groups.push({ id: groupId, label: L, name: `Grupo ${L}`, teamIds })

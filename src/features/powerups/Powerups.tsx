@@ -182,7 +182,7 @@ function PowerupCard({
       <span className="mt-0.5 block text-sm text-ink-soft">{desc}</span>
       {team ? (
         <span className="mt-3 flex items-center gap-3 rounded-control border border-border bg-surface-2 p-2.5">
-          <Flag code={team.code} />
+          <Flag code={team.code} flag={team.flag} />
           <span className="flex-1">
             <span className="block font-display text-sm font-bold text-ink">{team.name}</span>
             <span className="block text-xs text-ink-soft">

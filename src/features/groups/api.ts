@@ -8,7 +8,7 @@ import type {
 // `pts_group_position_partial`. Adaptamos a la forma interna del FE. Tolerante a ambos nombres
 // para que los mocks (que ya usan `position`) y el API real funcionen por el mismo camino. ──
 interface RawRanking {
-  teamId: string; name: string; code: string; isTop8: boolean
+  teamId: string; name: string; code: string; isTop8: boolean; flag?: string | null
   predictedPosition?: number; position?: number
   result?: 'exact' | 'partial' | null
 }
@@ -25,7 +25,7 @@ interface RawParticipantPredictions { participant: { id: string; name: string };
 interface RawFriendsGroups { available: boolean; availableAt?: string | null; data?: RawParticipantPredictions[] | null }
 
 function adaptRanking(r: RawRanking): GroupRanking {
-  return { teamId: r.teamId, name: r.name, code: r.code, isTop8: r.isTop8, position: r.predictedPosition ?? r.position ?? 0, result: r.result ?? null }
+  return { teamId: r.teamId, name: r.name, code: r.code, isTop8: r.isTop8, flag: r.flag ?? null, position: r.predictedPosition ?? r.position ?? 0, result: r.result ?? null }
 }
 function adaptPoints(p: RawPointsEarned | null): GroupPointsEarned | null {
   if (!p) return null

@@ -13,7 +13,7 @@ const predOf = (pid: string, mid: string) => db.koPredictions.find((p) => p.part
 const tripleUsed = (pid: string) => db.koPredictions.filter((p) => p.participantId === pid && p.tripleActive).length
 function koTeam(id: string | null) {
   if (!id) return null
-  const t = db.teams.find((x) => x.id === id); return t ? { id: t.id, name: t.name, code: t.code } : null
+  const t = db.teams.find((x) => x.id === id); return t ? { id: t.id, name: t.name, code: t.code, flag: t.flag } : null
 }
 function serializeMatch(m: DbKoMatch, pid: string) {
   const mp = predOf(pid, m.id)

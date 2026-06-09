@@ -6,7 +6,7 @@ export interface DbParticipant {
 export interface DbInvitation {
   id: string; code: string; usedByParticipantId: string | null; usedAt: string | null; expiresAt: string; createdAt: string
 }
-export interface DbTeam { id: string; name: string; code: string; isTop8: boolean; groupId: string }
+export interface DbTeam { id: string; name: string; code: string; isTop8: boolean; flag: string | null; groupId: string }
 export interface DbGroup { id: string; label: string; name: string; teamIds: string[] }
 export interface DbGroupRanking { teamId: string; position: number }
 export interface DbGroupPrediction { participantId: string; groupId: string; rankings: DbGroupRanking[] }

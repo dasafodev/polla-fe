@@ -42,11 +42,11 @@ export interface SignupBody {
 }
 
 // ── Catálogo ───────────────────────────────────────────────────────────────
-export interface Team { id: string; name: string; code: string; isTop8: boolean }
+export interface Team { id: string; name: string; code: string; isTop8: boolean; flag: string | null }
 export interface Group { id: string; label: string; name: string; teams: Team[] }
 
 // ── Grupos: predicciones ─────────────────────────────────────────────────────
-export interface GroupRanking { teamId: string; name: string; code: string; isTop8: boolean; position: number; result: 'exact' | 'partial' | null }
+export interface GroupRanking { teamId: string; name: string; code: string; isTop8: boolean; flag: string | null; position: number; result: 'exact' | 'partial' | null }
 export interface GroupPointsEarned {
   pts_group_position_exact: number; pts_group_position_partial: number; bonus_group_complete: number; total: number
 }
@@ -64,14 +64,14 @@ export interface FriendsGroups { available: boolean; availableAt?: string; data?
 // ── Terceros ─────────────────────────────────────────────────────────────────
 export interface ThirdPointsEarned { pts_third_correct: number; total: number }
 export interface ThirdCandidate {
-  teamId: string; name: string; code: string; groupId: string; label: string
+  teamId: string; name: string; code: string; flag: string | null; groupId: string; label: string
   selected: boolean; pointsEarned: ThirdPointsEarned | null
 }
 export interface ThirdsResponse { data: ThirdCandidate[]; selectedCount: number }
 export interface SaveThirdsBody { teamIds: string[] }
 
 // ── Powerups ──────────────────────────────────────────────────────────────────
-export interface PowerupTeam { teamId: string; name: string; code: string; isTop8: boolean }
+export interface PowerupTeam { teamId: string; name: string; code: string; isTop8: boolean; flag: string | null }
 export interface PowerupsPointsEarned {
   pts_dark_horse_per_round: number; pts_disappointment_per_round: number
   dark_horse_rounds_advanced: number; disappointment_rounds_advanced: number; total: number
@@ -86,7 +86,7 @@ export interface FriendPowerups {
 export interface FriendsPowerups { available: boolean; availableAt?: string; data?: FriendPowerups[] }
 
 // ── KO ──────────────────────────────────────────────────────────────────────
-export interface KoTeam { id: string; name: string; code: string }
+export interface KoTeam { id: string; name: string; code: string; flag: string | null }
 export interface KoResult { scoreHome: number; scoreAway: number; winnerTeamId: string }
 export interface KoPointsEarned {
   pts_ko_advances: number; pts_ko_exact_score: number; mult_triple: number

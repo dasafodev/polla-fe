@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { adaptMyGroupPredictions, adaptFriendsGroups } from './api'
 
-// Forma cruda del backend real: predictedPosition (no position), sin pts_group_position_partial,
-// con campos extra (flag, totalGroupPoints) que deben ignorarse.
+// Forma cruda del backend real: predictedPosition (no position), sin pts_group_position_partial.
+// `flag` se conserva (puede ser null); `totalGroupPoints` se ignora.
 const rawGroupPrediction = {
   groupId: 'g-A',
   label: 'A',
@@ -21,6 +21,11 @@ describe('adaptMyGroupPredictions', () => {
     const out = adaptMyGroupPredictions({ data: [rawGroupPrediction], completedGroups: 1 })
     expect(out.data[0].rankings[0].position).toBe(1)
     expect(out.data[0].rankings[1].position).toBe(2)
+  })
+  it('conserva flag (incluido null)', () => {
+    const out = adaptMyGroupPredictions({ data: [rawGroupPrediction], completedGroups: 1 })
+    expect(out.data[0].rankings[0].flag).toBe('🇦🇷')
+    expect(out.data[0].rankings[1].flag).toBeNull()
   })
   it('rellena pts_group_position_partial ausente con 0', () => {
     const out = adaptMyGroupPredictions({ data: [rawGroupPrediction], completedGroups: 1 })

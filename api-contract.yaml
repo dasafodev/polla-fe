@@ -667,10 +667,10 @@ paths:
                     label: "A"
                     name: "Grupo A"
                     teams:
-                      - { id: "uuid-mex", name: "México",         code: "MEX", isTop8: false }
-                      - { id: "uuid-usa", name: "Estados Unidos", code: "USA", isTop8: true  }
-                      - { id: "uuid-col", name: "Colombia",       code: "COL", isTop8: false }
-                      - { id: "uuid-ecu", name: "Ecuador",        code: "ECU", isTop8: false }
+                      - { id: "uuid-mex", name: "México",         code: "MEX", isTop8: false, flag: "https://flagcdn.com/w80/mx.png" }
+                      - { id: "uuid-usa", name: "Estados Unidos", code: "USA", isTop8: true,  flag: "https://flagcdn.com/w80/us.png" }
+                      - { id: "uuid-col", name: "Colombia",       code: "COL", isTop8: false, flag: "https://flagcdn.com/w80/co.png" }
+                      - { id: "uuid-ecu", name: "Ecuador",        code: "ECU", isTop8: false, flag: "https://flagcdn.com/w80/ec.png" }
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -782,10 +782,10 @@ paths:
                     name: "Grupo A"
                     groupComplete: true
                     rankings:
-                      - { teamId: "uuid-mex", name: "México",         code: "MEX", isTop8: false, position: 1 }
-                      - { teamId: "uuid-usa", name: "Estados Unidos", code: "USA", isTop8: true,  position: 2 }
-                      - { teamId: "uuid-col", name: "Colombia",       code: "COL", isTop8: false, position: 3 }
-                      - { teamId: "uuid-ecu", name: "Ecuador",        code: "ECU", isTop8: false, position: 4 }
+                      - { teamId: "uuid-mex", name: "México",         code: "MEX", isTop8: false, flag: "https://flagcdn.com/w80/mx.png", position: 1 }
+                      - { teamId: "uuid-usa", name: "Estados Unidos", code: "USA", isTop8: true,  flag: "https://flagcdn.com/w80/us.png", position: 2 }
+                      - { teamId: "uuid-col", name: "Colombia",       code: "COL", isTop8: false, flag: "https://flagcdn.com/w80/co.png", position: 3 }
+                      - { teamId: "uuid-ecu", name: "Ecuador",        code: "ECU", isTop8: false, flag: "https://flagcdn.com/w80/ec.png", position: 4 }
                   - groupId: "uuid-B"
                     label: "B"
                     name: "Grupo B"
@@ -828,7 +828,7 @@ paths:
                             name: "Grupo A"
                             groupComplete: true
                             rankings:
-                              - { teamId: "uuid-bra", name: "Brasil", code: "BRA", isTop8: true, position: 1 }
+                              - { teamId: "uuid-bra", name: "Brasil", code: "BRA", isTop8: true, flag: "https://flagcdn.com/w80/br.png", position: 1 }
                 no_disponible:
                   value:
                     available: false
@@ -997,8 +997,8 @@ paths:
                     scheduledAt: "2026-06-28T16:00:00Z"
                     lockedAt: "2026-06-28T15:30:00Z"
                     status: "finished"
-                    homeTeam: { id: "uuid-col", name: "Colombia", code: "COL" }
-                    awayTeam: { id: "uuid-bra", name: "Brasil",   code: "BRA" }
+                    homeTeam: { id: "uuid-col", name: "Colombia", code: "COL", flag: "https://flagcdn.com/w80/co.png" }
+                    awayTeam: { id: "uuid-bra", name: "Brasil",   code: "BRA", flag: "https://flagcdn.com/w80/br.png" }
                     homeTeamLabel: null
                     awayTeamLabel: null
                     result: { scoreHome: 1, scoreAway: 1, winnerTeamId: "uuid-col" }
@@ -1323,8 +1323,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MyPowerups'
               example:
-                darkHorse:      { teamId: "uuid-col", name: "Colombia", code: "COL", isTop8: false }
-                disappointment: { teamId: "uuid-bra", name: "Brasil",   code: "BRA", isTop8: true }
+                darkHorse:      { teamId: "uuid-col", name: "Colombia", code: "COL", isTop8: false, flag: "https://flagcdn.com/w80/co.png" }
+                disappointment: { teamId: "uuid-bra", name: "Brasil",   code: "BRA", isTop8: true,  flag: "https://flagcdn.com/w80/br.png" }
         '400':
           description: Validación de elegibilidad fallida
           content:
@@ -1388,8 +1388,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MyPowerups'
               example:
-                darkHorse:      { teamId: "uuid-mar", name: "Marruecos", code: "MAR", isTop8: false }
-                disappointment: { teamId: "uuid-fra", name: "Francia",   code: "FRA", isTop8: true }
+                darkHorse:      { teamId: "uuid-mar", name: "Marruecos", code: "MAR", isTop8: false, flag: "https://flagcdn.com/w80/ma.png" }
+                disappointment: { teamId: "uuid-fra", name: "Francia",   code: "FRA", isTop8: true,  flag: "https://flagcdn.com/w80/fr.png" }
         '400':
           description: Validación de elegibilidad fallida
           content:
@@ -1436,8 +1436,8 @@ paths:
               examples:
                 con_powerups:
                   value:
-                    darkHorse:      { teamId: "uuid-col", name: "Colombia", code: "COL", isTop8: false }
-                    disappointment: { teamId: "uuid-bra", name: "Brasil",   code: "BRA", isTop8: true }
+                    darkHorse:      { teamId: "uuid-col", name: "Colombia", code: "COL", isTop8: false, flag: "https://flagcdn.com/w80/co.png" }
+                    disappointment: { teamId: "uuid-bra", name: "Brasil",   code: "BRA", isTop8: true,  flag: "https://flagcdn.com/w80/br.png" }
                 sin_powerups:
                   value:
                     darkHorse:      null
@@ -1481,8 +1481,8 @@ paths:
                     availableAt: null
                     data:
                       - participant: { id: "uuid-juan", name: "Juan" }
-                        darkHorse:      { teamId: "uuid-mar", name: "Marruecos", code: "MAR", isTop8: false }
-                        disappointment: { teamId: "uuid-fra", name: "Francia",   code: "FRA", isTop8: true }
+                        darkHorse:      { teamId: "uuid-mar", name: "Marruecos", code: "MAR", isTop8: false, flag: "https://flagcdn.com/w80/ma.png" }
+                        disappointment: { teamId: "uuid-fra", name: "Francia",   code: "FRA", isTop8: true,  flag: "https://flagcdn.com/w80/fr.png" }
                       - participant: { id: "uuid-maria", name: "María" }
                         darkHorse:      null
                         disappointment: null
@@ -1693,6 +1693,7 @@ components:
         name:   { type: string }
         code:   { type: string, description: "Código ISO 3 letras, ej: COL" }
         isTop8: { type: boolean }
+        flag:   { type: [string, 'null'], description: "URL de la bandera, ej: https://flagcdn.com/w80/co.png" }
 
     GroupInput:
       type: object
@@ -1740,12 +1741,13 @@ components:
 
     Team:
       type: object
-      required: [id, name, code, isTop8]
+      required: [id, name, code, isTop8, flag]
       properties:
         id:     { type: string, format: uuid }
         name:   { type: string }
         code:   { type: string, description: "Código ISO 3 letras, ej: COL" }
         isTop8: { type: boolean }
+        flag:   { type: [string, 'null'], description: "URL de la bandera, ej: https://flagcdn.com/w80/co.png" }
 
     Group:
       type: object
@@ -1762,12 +1764,13 @@ components:
     GroupRanking:
       type: object
       description: Posición predicha de un equipo dentro de su grupo
-      required: [teamId, name, code, isTop8, position]
+      required: [teamId, name, code, isTop8, flag, position]
       properties:
         teamId:   { type: string, format: uuid }
         name:     { type: string }
         code:     { type: string }
         isTop8:   { type: boolean }
+        flag:     { type: [string, 'null'], description: "URL de la bandera, ej: https://flagcdn.com/w80/co.png" }
         position: { type: integer, minimum: 1, maximum: 4 }
 
     GroupPrediction:
@@ -1818,11 +1821,12 @@ components:
       description: >
         Equipo que el participante predijo en posición 3 de su grupo.
         Solo aparece si el grupo tiene predicción completa.
-      required: [teamId, name, code, groupId, label, selected]
+      required: [teamId, name, code, flag, groupId, label, selected]
       properties:
         teamId:   { type: string, format: uuid }
         name:     { type: string }
         code:     { type: string }
+        flag:     { type: [string, 'null'], description: "URL de la bandera, ej: https://flagcdn.com/w80/co.png" }
         groupId:  { type: string, format: uuid }
         label:    { type: string, description: "Letra del grupo al que pertenece" }
         selected: { type: boolean, description: "true si fue marcado como mejor tercero" }
@@ -1910,11 +1914,12 @@ components:
     KoTeam:
       type: object
       description: Equipo del partido. Null si el cruce aún no está definido.
-      required: [id, name, code]
+      required: [id, name, code, flag]
       properties:
         id:   { type: string, format: uuid }
         name: { type: string }
         code: { type: string }
+        flag: { type: [string, 'null'], description: "URL de la bandera, ej: https://flagcdn.com/w80/co.png" }
 
     KoMatch:
       type: object
@@ -1993,12 +1998,13 @@ components:
     PowerupTeam:
       type: object
       description: Equipo seleccionado como powerup. Null si aún no se ha guardado.
-      required: [teamId, name, code, isTop8]
+      required: [teamId, name, code, isTop8, flag]
       properties:
         teamId: { type: string, format: uuid }
         name:   { type: string }
         code:   { type: string }
         isTop8: { type: boolean }
+        flag:   { type: [string, 'null'], description: "URL de la bandera, ej: https://flagcdn.com/w80/co.png" }
 
     MyPowerups:
       type: object

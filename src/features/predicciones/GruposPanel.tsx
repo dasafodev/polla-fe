@@ -73,7 +73,7 @@ function RankingRow({ r, index, showResult }: { r: GroupRanking; index: number; 
   return (
     <div className={`flex items-center gap-2.5 rounded-lg px-1.5 py-1.5 ${tint}`}>
       <span className={`grid size-5 place-items-center rounded-full font-mono text-[11px] font-bold ${posClass}`}>{r.position}</span>
-      <Flag code={r.code} className="size-4" />
+      <Flag code={r.code} flag={r.flag} className="size-4" />
       <span className="flex-1 text-sm font-medium text-ink">{r.name}</span>
       {result === 'exact' && (
         <span className="rounded-full bg-[#d8efe3] px-2 py-0.5 font-mono text-[10px] font-bold text-success">EXACTO</span>

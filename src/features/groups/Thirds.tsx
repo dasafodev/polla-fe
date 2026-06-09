@@ -116,7 +116,7 @@ export function Thirds({ onComplete }: { onComplete?: () => void }) {
               >
                 {isSel && <Check size={13} weight="bold" />}
               </span>
-              <Flag code={c.code} />
+              <Flag code={c.code} flag={c.flag} />
               <span className="font-display text-sm font-bold leading-tight text-ink">{c.name}</span>
               <span className="text-xs text-ink-soft">Grupo {c.label}</span>
             </button>

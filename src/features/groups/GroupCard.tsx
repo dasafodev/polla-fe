@@ -50,7 +50,7 @@ export function GroupCard({
               >
                 {idx + 1}
               </span>
-              <Flag code={t.code} />
+              <Flag code={t.code} flag={t.flag} />
               <span className="flex-1 font-medium text-ink">{t.name}</span>
               {!readOnly && (
                 <span className="flex flex-col">

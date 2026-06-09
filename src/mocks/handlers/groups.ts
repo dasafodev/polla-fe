@@ -38,7 +38,7 @@ function serializeRankings(pred?: DbGroupPrediction, official?: string[]) {
         : official.includes(t.id)
           ? 'partial'
           : null
-    return { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, position: r.position, result }
+    return { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag, position: r.position, result }
   })
 }
 
@@ -47,7 +47,7 @@ export const groupsHandlers = [
     const s = requireSession(); if (s.response) return s.response
     const data = db.groups.map((g) => ({
       id: g.id, label: g.label, name: g.name,
-      teams: g.teamIds.map((id) => { const t = teamById(id)!; return { id: t.id, name: t.name, code: t.code, isTop8: t.isTop8 } }),
+      teams: g.teamIds.map((id) => { const t = teamById(id)!; return { id: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag } }),
     }))
     return HttpResponse.json({ data }, { status: 200 })
   }),
@@ -101,7 +101,7 @@ export const groupsHandlers = [
     const data = db.groups.map((g) => {
       const tId = thirdTeamId(predOf(pid, g.id)); if (!tId) return null
       const t = teamById(tId)!
-      return { teamId: t.id, name: t.name, code: t.code, groupId: g.id, label: g.label, selected: selectedSet.has(t.id), pointsEarned: thirdPointsFor(db, pid, t.id) }
+      return { teamId: t.id, name: t.name, code: t.code, flag: t.flag, groupId: g.id, label: g.label, selected: selectedSet.has(t.id), pointsEarned: thirdPointsFor(db, pid, t.id) }
     }).filter((x): x is NonNullable<typeof x> => x !== null)
     return HttpResponse.json({ data, selectedCount: selectedSet.size }, { status: 200 })
   }),

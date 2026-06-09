@@ -46,7 +46,7 @@ function ThirdRow({ c, showResult }: { c: ThirdCandidate; showResult: boolean })
       aria-label="Editar terceros"
       className={`flex items-center gap-3 rounded-card border border-border px-3 py-2.5 ${tint}`}
     >
-      <Flag code={c.code} className="size-6" />
+      <Flag code={c.code} flag={c.flag} className="size-6" />
       <span className="flex-1">
         <span className="block text-sm font-bold text-ink">{c.name}</span>
         <span className="block text-xs text-ink-soft">Grupo {c.label}</span>

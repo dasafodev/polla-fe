@@ -25,6 +25,9 @@ describe('adaptKoMatch', () => {
   it('coacciona externalMatchId null → 0', () => {
     expect(adaptKoMatch(rawMatch).externalMatchId).toBe(0)
   })
+  it('conserva el flag del equipo', () => {
+    expect(adaptKoMatch(rawMatch).homeTeam?.flag).toBe('🇦🇷')
+  })
 })
 
 describe('adaptKoMatchesResponse', () => {

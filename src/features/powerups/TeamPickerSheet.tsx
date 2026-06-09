@@ -55,7 +55,7 @@ export function TeamPickerSheet({
                   sel ? 'border-violet bg-tint' : 'border-transparent hover:bg-surface-2'
                 }`}
               >
-                <Flag code={t.code} />
+                <Flag code={t.code} flag={t.flag} />
                 <span className="flex-1">
                   <span className="block font-display text-sm font-bold text-ink">{t.name}</span>
                   <span className="block text-xs text-ink-soft">Grupo {groupOf[t.id]}</span>
