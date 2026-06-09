@@ -4,6 +4,7 @@ import { useThirds, useSaveThirds, useFriendsGroups } from './hooks'
 import { isApiError } from '../../lib/errors'
 import { Button } from '../../ui/Button'
 import { Flag } from '../../ui/Flag'
+import { BackButton, useGoBack } from '../../ui/BackButton'
 import { WizardFooter } from '../onboarding/WizardFooter'
 
 const TARGET = 8
@@ -12,13 +13,13 @@ export function Thirds({ onComplete }: { onComplete?: () => void }) {
   const thirds = useThirds()
   const friends = useFriendsGroups()
   const save = useSaveThirds()
+  const goBack = useGoBack()
   const wizard = !!onComplete
   const locked = friends.data?.available === true
 
   // null = sin ediciones (usa la selección del server); [] = el usuario deseleccionó todo (válido).
   const [picked, setPicked] = useState<string[] | null>(null)
   const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
 
   if (thirds.isLoading) return <ThirdsSkeleton wizard={wizard} />
   if (thirds.isError) return <ThirdsError onRetry={() => thirds.refetch()} />
@@ -34,7 +35,6 @@ export function Thirds({ onComplete }: { onComplete?: () => void }) {
 
   function toggle(teamId: string) {
     setError('')
-    setSaved(false)
     setPicked((prev) => {
       const base = prev ?? serverSelected
       if (base.includes(teamId)) return base.filter((x) => x !== teamId)
@@ -45,13 +45,12 @@ export function Thirds({ onComplete }: { onComplete?: () => void }) {
 
   function onSave() {
     setError('')
-    setSaved(false)
     save.mutate(
       { teamIds: selected },
       {
         onSuccess: () => {
           if (wizard) onComplete!()
-          else setSaved(true)
+          else goBack()
         },
         onError: (e) => setError(isApiError(e) ? e.message : 'No se pudo guardar'),
       },
@@ -78,21 +77,19 @@ export function Thirds({ onComplete }: { onComplete?: () => void }) {
           {error}
         </p>
       )}
-      {saved && (
-        <p role="status" className="mt-2 text-center text-sm text-success">
-          Guardado
-        </p>
-      )}
     </div>
   )
 
   return (
     <>
       {!wizard && (
-        <header className="mb-5">
-          <h1 className="font-display text-2xl font-extrabold text-ink">Mejores terceros</h1>
-          <p className="mt-1 text-ink-soft">Elige los 8 que crees que clasifican.</p>
-        </header>
+        <>
+          <BackButton />
+          <header className="mb-5">
+            <h1 className="font-display text-2xl font-extrabold text-ink">Mejores terceros</h1>
+            <p className="mt-1 text-ink-soft">Elige los 8 que crees que clasifican.</p>
+          </header>
+        </>
       )}
 
       <div className="grid grid-cols-2 gap-2.5">

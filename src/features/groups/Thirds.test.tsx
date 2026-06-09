@@ -1,8 +1,20 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { Link, Route, Routes } from 'react-router-dom'
 import { renderWithProviders, seedSession } from '../../test/utils'
 import { Thirds } from './Thirds'
+
+// Hub con un link al editor: navegar por PUSH deja historial para que el back/guardar vuelvan atrás.
+function renderRouted() {
+  return renderWithProviders(
+    <Routes>
+      <Route path="/predicciones" element={<Link to="/predicciones/terceros">ir a terceros</Link>} />
+      <Route path="/predicciones/terceros" element={<Thirds />} />
+    </Routes>,
+    { route: '/predicciones' },
+  )
+}
 
 describe('Thirds', () => {
   beforeEach(() => {
@@ -26,12 +38,22 @@ describe('Thirds', () => {
     for (const b of unselected) expect(b).toBeDisabled()
   })
 
-  it('guarda los 8 terceros y muestra confirmación (modo standalone)', async () => {
-    renderWithProviders(<Thirds />)
+  it('guarda los 8 terceros y vuelve atrás (modo standalone)', async () => {
+    renderRouted()
+    await userEvent.click(screen.getByRole('link', { name: 'ir a terceros' }))
     await screen.findByText('8 de 8 elegidos')
     const save = screen.getByRole('button', { name: 'Guardar' })
     expect(save).toBeEnabled()
     await userEvent.click(save)
-    await screen.findByText('Guardado')
+    await screen.findByRole('link', { name: 'ir a terceros' }) // volvió al hub
+    expect(screen.queryByRole('button', { name: 'Guardar' })).toBeNull()
+  })
+
+  it('el botón de volver regresa al hub (modo standalone)', async () => {
+    renderRouted()
+    await userEvent.click(screen.getByRole('link', { name: 'ir a terceros' }))
+    await screen.findByText('8 de 8 elegidos')
+    await userEvent.click(screen.getByRole('button', { name: 'Volver' }))
+    await screen.findByRole('link', { name: 'ir a terceros' })
   })
 })

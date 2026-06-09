@@ -7,6 +7,7 @@ import { usePowerups, useSavePowerups, useFriendsPowerups } from './hooks'
 import { isApiError } from '../../lib/errors'
 import { Button } from '../../ui/Button'
 import { Flag } from '../../ui/Flag'
+import { BackButton, useGoBack } from '../../ui/BackButton'
 import { Confetti } from '../../ui/Confetti'
 import { NavyBackdrop } from '../../ui/Backdrop'
 import { fadeUp, spring, useReduced } from '../../ui/motion'
@@ -21,12 +22,12 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
   const locked = friends.data?.available === true
   const hasPowerups = !!(mine.data?.darkHorse || mine.data?.disappointment)
   const save = useSavePowerups(hasPowerups ? 'update' : 'create')
+  const goBack = useGoBack()
 
   const [darkHorse, setDarkHorse] = useState<string | null>(null)
   const [disappointment, setDisappointment] = useState<string | null>(null)
   const [sheet, setSheet] = useState<null | 'dh' | 'dis'>(null)
   const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
   const [done, setDone] = useState(false)
 
   const listData = groups.data?.data
@@ -48,13 +49,12 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
 
   function onSave() {
     setError('')
-    setSaved(false)
     save.mutate(
       { darkHorseTeamId: dh, disappointmentTeamId: dis },
       {
         onSuccess: () => {
           if (wizard) setDone(true)
-          else setSaved(true)
+          else goBack()
         },
         onError: (e) => setError(isApiError(e) ? e.message : 'No se pudo guardar'),
       },
@@ -73,21 +73,19 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
           {error}
         </p>
       )}
-      {saved && (
-        <p role="status" className="mt-2 text-center text-sm text-success">
-          Guardado
-        </p>
-      )}
     </div>
   )
 
   return (
     <>
       {!wizard && (
-        <header className="mb-4">
-          <h1 className="font-display text-2xl font-extrabold text-ink">Tus pálpitos</h1>
-          <p className="mt-1 text-ink-soft">Dos corazonadas que mueven tu puntaje.</p>
-        </header>
+        <>
+          <BackButton />
+          <header className="mb-4">
+            <h1 className="font-display text-2xl font-extrabold text-ink">Tus pálpitos</h1>
+            <p className="mt-1 text-ink-soft">Dos corazonadas que mueven tu puntaje.</p>
+          </header>
+        </>
       )}
 
       <PalpitosIntro />

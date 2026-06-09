@@ -1,13 +1,26 @@
 import { describe, it, expect } from 'vitest'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { Link, Route, Routes } from 'react-router-dom'
 import { renderWithProviders, seedSession } from '../../test/utils'
 import { Powerups } from './Powerups'
 
+// Hub con un link al editor: navegar por PUSH deja historial para que el guardar vuelva atrás.
+function renderRouted() {
+  return renderWithProviders(
+    <Routes>
+      <Route path="/predicciones" element={<Link to="/predicciones/powerups">ir a powerups</Link>} />
+      <Route path="/predicciones/powerups" element={<Powerups />} />
+    </Routes>,
+    { route: '/predicciones' },
+  )
+}
+
 describe('Powerups', () => {
-  it('crea powerups eligiendo la revelación y la decepción (usuario sin powerups)', async () => {
+  it('crea powerups eligiendo la revelación y la decepción y vuelve atrás (usuario sin powerups)', async () => {
     seedSession('p-luis') // sin powerups → modo create
-    renderWithProviders(<Powerups />)
+    renderRouted()
+    await userEvent.click(screen.getByRole('link', { name: 'ir a powerups' }))
 
     await userEvent.click(await screen.findByRole('button', { name: /La revelación/i }))
     const dhSheet = await screen.findByRole('dialog', { name: 'La revelación' })
@@ -20,15 +33,17 @@ describe('Powerups', () => {
     const save = screen.getByRole('button', { name: 'Guardar' })
     expect(save).toBeEnabled()
     await userEvent.click(save)
-    await screen.findByText('Guardado')
+    await screen.findByRole('link', { name: 'ir a powerups' }) // volvió al hub
+    expect(screen.queryByRole('button', { name: 'Guardar' })).toBeNull()
   })
 
-  it('habilita guardar de entrada cuando ya hay powerups (usuario con powerups)', async () => {
+  it('actualiza y vuelve atrás cuando ya hay powerups (usuario con powerups)', async () => {
     seedSession('p-juan') // darkHorse tA4 + disappointment tA1 → modo update
-    renderWithProviders(<Powerups />)
+    renderRouted()
+    await userEvent.click(screen.getByRole('link', { name: 'ir a powerups' }))
     const save = await screen.findByRole('button', { name: 'Guardar' })
     expect(save).toBeEnabled()
     await userEvent.click(save)
-    await screen.findByText('Guardado')
+    await screen.findByRole('link', { name: 'ir a powerups' }) // volvió al hub
   })
 })
