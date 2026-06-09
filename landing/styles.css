@@ -509,6 +509,229 @@ img {
   color: #6fe3ad;
 }
 
+/* ---------- Tarjeta interactiva de grupo (hero) ---------- */
+.hero__visual {
+  position: relative;
+}
+
+.groupCard {
+  position: relative;
+  border-radius: var(--radius-2xl);
+  padding: 26px 24px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    var(--shadow-diffuse),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.groupCard__title {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.groupCard__sub {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 34ch;
+}
+
+.groupList {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.gTeam {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--radius-control);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.gTeam.is-qualify {
+  background: rgba(139, 109, 255, 0.12);
+  border-color: rgba(139, 109, 255, 0.45);
+}
+
+.gTeam.is-dragging {
+  cursor: grabbing;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 18px 34px -14px rgba(0, 0, 0, 0.55);
+  z-index: 5;
+}
+
+.gTeam__pos {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.gTeam.is-qualify .gTeam__pos {
+  background: var(--violet-light);
+  color: var(--navy);
+}
+
+.gTeam__flag {
+  width: 30px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.gTeam__name {
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
+}
+
+.gTeam__handle {
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.34);
+  cursor: grab;
+  touch-action: none;
+  padding: 2px;
+}
+
+.gTeam.is-dragging .gTeam__handle {
+  cursor: grabbing;
+}
+
+.gTeam__arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gTeam__arrow {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    transform 0.1s ease,
+    background 0.15s ease;
+}
+
+.gTeam__arrow:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gTeam__arrow:active:not(:disabled) {
+  transform: scale(0.85);
+}
+
+.gTeam__arrow:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.gTeam__arrow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--violet-light);
+}
+
+/* Toast del easter egg */
+.vamos {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 16px;
+  white-space: nowrap;
+  color: #0b2a6b;
+  background: #fcd116;
+  box-shadow: 0 14px 30px -10px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -10px) scale(0.92);
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.vamos.is-on {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.vamos__flag {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Confetti host */
+.confetti {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.confetti span {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  border-radius: 1px;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vamos {
+    transition: opacity 0.28s ease;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
 @media (max-width: 860px) {
   .hero__inner {
     grid-template-columns: 1fr;

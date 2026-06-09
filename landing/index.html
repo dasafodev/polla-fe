@@ -103,34 +103,132 @@
           </div>
 
           <div class="hero__visual reveal" style="--d: 160ms">
-            <div class="heroCard">
-              <div class="heroCard__top">
-                <div class="ring" role="img" aria-label="Polla 72% completa">
-                  <div class="ring__hole">
-                    <div>
-                      <div class="ring__num">72%</div>
-                      <div class="ring__lbl">completa</div>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <span class="kicker kicker--light">Tu polla</span>
-                  <div class="heroCard__title">Casi lista</div>
-                  <div class="heroCard__sub">Te falta un paso antes del cierre.</div>
-                </div>
+            <div class="groupCard" id="groupCard">
+              <span class="kicker kicker--light">Grupo K · Tu polla</span>
+              <div class="groupCard__title">Ordena tu grupo</div>
+              <div class="groupCard__sub">
+                Arrastra cada selección al puesto en que crees que va a terminar. Los 2 primeros
+                clasifican.
               </div>
-              <div class="heroCard__steps">
-                <div class="miniStep miniStep--done">
-                  <span class="miniStep__n">✓</span> Grupos ordenados
-                </div>
-                <div class="miniStep miniStep--done">
-                  <span class="miniStep__n">✓</span> Terceros elegidos
-                </div>
-                <div class="miniStep">
-                  <span class="miniStep__n">3</span> Activa tus powerups
-                </div>
-              </div>
+              <ul class="groupList" id="groupList">
+                <li class="gTeam is-qualify" data-id="pt" data-name="Portugal">
+                  <span class="gTeam__pos">1</span>
+                  <img
+                    class="gTeam__flag"
+                    src="https://flagcdn.com/w40/pt.png"
+                    srcset="https://flagcdn.com/w80/pt.png 2x"
+                    width="30"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                  />
+                  <span class="gTeam__name">Portugal</span>
+                  <span class="gTeam__handle" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
+                      <circle cx="5.5" cy="3.5" r="1.4" /><circle cx="10.5" cy="3.5" r="1.4" />
+                      <circle cx="5.5" cy="8" r="1.4" /><circle cx="10.5" cy="8" r="1.4" />
+                      <circle cx="5.5" cy="12.5" r="1.4" /><circle cx="10.5" cy="12.5" r="1.4" />
+                    </svg>
+                  </span>
+                  <span class="gTeam__arrows">
+                    <button type="button" class="gTeam__arrow" data-dir="up" aria-label="Subir Portugal">
+                      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4" /></svg>
+                    </button>
+                    <button type="button" class="gTeam__arrow" data-dir="down" aria-label="Bajar Portugal">
+                      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4" /></svg>
+                    </button>
+                  </span>
+                </li>
+                <li class="gTeam is-qualify" data-id="co" data-name="Colombia">
+                  <span class="gTeam__pos">2</span>
+                  <img
+                    class="gTeam__flag"
+                    src="https://flagcdn.com/w40/co.png"
+                    srcset="https://flagcdn.com/w80/co.png 2x"
+                    width="30"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                  />
+                  <span class="gTeam__name">Colombia</span>
+                  <span class="gTeam__handle" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
+                      <circle cx="5.5" cy="3.5" r="1.4" /><circle cx="10.5" cy="3.5" r="1.4" />
+                      <circle cx="5.5" cy="8" r="1.4" /><circle cx="10.5" cy="8" r="1.4" />
+                      <circle cx="5.5" cy="12.5" r="1.4" /><circle cx="10.5" cy="12.5" r="1.4" />
+                    </svg>
+                  </span>
+                  <span class="gTeam__arrows">
+                    <button type="button" class="gTeam__arrow" data-dir="up" aria-label="Subir Colombia">
+                      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4" /></svg>
+                    </button>
+                    <button type="button" class="gTeam__arrow" data-dir="down" aria-label="Bajar Colombia">
+                      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4" /></svg>
+                    </button>
+                  </span>
+                </li>
+                <li class="gTeam" data-id="uz" data-name="Uzbekistán">
+                  <span class="gTeam__pos">3</span>
+                  <img
+                    class="gTeam__flag"
+                    src="https://flagcdn.com/w40/uz.png"
+                    srcset="https://flagcdn.com/w80/uz.png 2x"
+                    width="30"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                  />
+                  <span class="gTeam__name">Uzbekistán</span>
+                  <span class="gTeam__handle" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
+                      <circle cx="5.5" cy="3.5" r="1.4" /><circle cx="10.5" cy="3.5" r="1.4" />
+                      <circle cx="5.5" cy="8" r="1.4" /><circle cx="10.5" cy="8" r="1.4" />
+                      <circle cx="5.5" cy="12.5" r="1.4" /><circle cx="10.5" cy="12.5" r="1.4" />
+                    </svg>
+                  </span>
+                  <span class="gTeam__arrows">
+                    <button type="button" class="gTeam__arrow" data-dir="up" aria-label="Subir Uzbekistán">
+                      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4" /></svg>
+                    </button>
+                    <button type="button" class="gTeam__arrow" data-dir="down" aria-label="Bajar Uzbekistán">
+                      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4" /></svg>
+                    </button>
+                  </span>
+                </li>
+                <li class="gTeam" data-id="cd" data-name="R. D. Congo">
+                  <span class="gTeam__pos">4</span>
+                  <img
+                    class="gTeam__flag"
+                    src="https://flagcdn.com/w40/cd.png"
+                    srcset="https://flagcdn.com/w80/cd.png 2x"
+                    width="30"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                  />
+                  <span class="gTeam__name">R. D. Congo</span>
+                  <span class="gTeam__handle" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
+                      <circle cx="5.5" cy="3.5" r="1.4" /><circle cx="10.5" cy="3.5" r="1.4" />
+                      <circle cx="5.5" cy="8" r="1.4" /><circle cx="10.5" cy="8" r="1.4" />
+                      <circle cx="5.5" cy="12.5" r="1.4" /><circle cx="10.5" cy="12.5" r="1.4" />
+                    </svg>
+                  </span>
+                  <span class="gTeam__arrows">
+                    <button type="button" class="gTeam__arrow" data-dir="up" aria-label="Subir R. D. Congo">
+                      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4" /></svg>
+                    </button>
+                    <button type="button" class="gTeam__arrow" data-dir="down" aria-label="Bajar R. D. Congo">
+                      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4" /></svg>
+                    </button>
+                  </span>
+                </li>
+              </ul>
             </div>
+            <div class="vamos" id="vamos" aria-hidden="true">
+              <span class="vamos__flag">🇨🇴</span> ¡Vamos Colombia!
+            </div>
+            <div class="confetti" id="confetti" aria-hidden="true"></div>
           </div>
         </div>
       </section>
@@ -361,6 +459,7 @@
       </div>
     </footer>
 
+    <script src="group.js" defer></script>
     <script>
       (function () {
         var els = document.querySelectorAll('.reveal');
