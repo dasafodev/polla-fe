@@ -15,10 +15,14 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // D3: el API real se sirve same-origin bajo /api → cookie same-site sobre HTTP en dev
+      // El API real se sirve same-origin bajo /api: el navegador ve respuestas same-origin (sin CORS)
+      // y la cookie de sesión aterriza como cookie de primera parte de `localhost`. changeOrigin
+      // reescribe el Host hacia el API desplegado. Para apuntar a un backend local:
+      //   POLLA_DEV_API=http://localhost:3000 npm run dev
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.POLLA_DEV_API ?? 'https://api.paulpredice.com',
         changeOrigin: true,
+        secure: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },

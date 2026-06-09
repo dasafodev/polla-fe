@@ -26,7 +26,8 @@ export function Login() {
     login.mutate(resp.credential, {
       onSuccess: () => navigate('/'),
       onError: (e) => {
-        if (isApiError(e) && e.code === 'USER_NOT_FOUND') setShowSignup(true)
+        // El backend responde 403 NEEDS_SIGNUP cuando el email de Google aún no está inscrito.
+        if (isApiError(e) && e.code === 'NEEDS_SIGNUP') setShowSignup(true)
         else setMessage(isApiError(e) ? e.message : 'Error al iniciar sesión')
       },
     })

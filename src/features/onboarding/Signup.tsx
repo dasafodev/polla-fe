@@ -38,7 +38,8 @@ export function Signup({
       {
         onSuccess: () => navigate('/onboarding'),
         onError: (err) => {
-          if (isApiError(err) && err.code === 'INVALID_GOOGLE_TOKEN') onNeedRelogin()
+          // El backend responde 401 INVALID_CREDENTIAL si el ID token de Google ya expiró.
+          if (isApiError(err) && err.code === 'INVALID_CREDENTIAL') onNeedRelogin()
           else setMessage(isApiError(err) ? err.message : 'No se pudo crear la cuenta')
         },
       },

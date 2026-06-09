@@ -24,5 +24,7 @@ beforeEach(() => {
   resetDb()
   resetClock()
   setNow('2026-06-06T12:00:00.000Z') // grupos abiertos, torneo no iniciado
+  localStorage.clear() // la sesión ahora se cachea en localStorage: evita fugas entre tests
+  sessionStorage.clear()
 })
 afterEach(() => server.resetHandlers())

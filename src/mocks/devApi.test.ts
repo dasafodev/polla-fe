@@ -7,10 +7,11 @@ const post = (p: string, body?: unknown) =>
   fetch(URL(p), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}), credentials: 'include' })
 
 describe('dev-bypass (__dev__)', () => {
-  it('login-as abre sesión; /me devuelve ese participante', async () => {
+  it('login-as abre sesión y devuelve ese participante', async () => {
     const res = await post('/__dev__/login-as', { participantId: 'p-maria' })
     expect(res.status).toBe(200)
-    expect(await (await get('/me')).json()).toMatchObject({ id: 'p-maria', name: 'María' })
+    expect(await res.json()).toMatchObject({ id: 'p-maria', name: 'María' })
+    expect(db.currentSessionId).toBe('p-maria')
   })
 
   it('login-as con id inexistente → 404', async () => {
@@ -21,7 +22,7 @@ describe('dev-bypass (__dev__)', () => {
   it('logout cierra la sesión', async () => {
     await post('/__dev__/login-as', { participantId: 'p-juan' })
     await post('/__dev__/logout')
-    expect((await get('/me')).status).toBe(401)
+    expect(db.currentSessionId).toBeNull()
   })
 
   it('set-now simula el reloj → candado de grupos/powerups se activa', async () => {

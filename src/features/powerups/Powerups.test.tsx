@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { renderWithProviders } from '../../test/utils'
-import { db } from '../../mocks/db'
+import { renderWithProviders, seedSession } from '../../test/utils'
 import { Powerups } from './Powerups'
 
 describe('Powerups', () => {
   it('crea powerups eligiendo caballo oscuro y decepción (usuario sin powerups)', async () => {
-    db.currentSessionId = 'p-luis' // sin powerups → modo create
+    seedSession('p-luis') // sin powerups → modo create
     renderWithProviders(<Powerups />)
 
     await userEvent.click(await screen.findByRole('button', { name: /Caballo oscuro/i }))
@@ -25,7 +24,7 @@ describe('Powerups', () => {
   })
 
   it('habilita guardar de entrada cuando ya hay powerups (usuario con powerups)', async () => {
-    db.currentSessionId = 'p-juan' // darkHorse tA4 + disappointment tA1 → modo update
+    seedSession('p-juan') // darkHorse tA4 + disappointment tA1 → modo update
     renderWithProviders(<Powerups />)
     const save = await screen.findByRole('button', { name: 'Guardar' })
     expect(save).toBeEnabled()

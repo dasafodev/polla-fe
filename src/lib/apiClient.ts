@@ -9,6 +9,14 @@ interface Options {
   timeoutMs?: number
 }
 
+// Handler global invocado cuando una petición real recibe 401 (cookie de sesión vencida/inválida).
+// Lo registra AuthProvider para limpiar la sesión local. El bootstrap de `me` no pasa por aquí
+// (lee localStorage sin red), así que sólo se dispara con un 401 del API real.
+let unauthorizedHandler: (() => void) | null = null
+export function setUnauthorizedHandler(fn: (() => void) | null): void {
+  unauthorizedHandler = fn
+}
+
 function buildUrl(path: string, query?: Options['query']): string {
   const base = env.apiBaseUrl.replace(/\/$/, '')
   const url = `${base}${path}`
@@ -50,8 +58,10 @@ export async function request<T = unknown>(method: Method, path: string, opts: O
   }
 
   if (!res.ok) {
-    const err = data as { error?: string; code?: string }
-    throw new ApiError(err.code ?? 'NETWORK_ERROR', err.error ?? 'Error', res.status)
+    if (res.status === 401) unauthorizedHandler?.()
+    // El backend real responde { code, message }; los mocks/contrato viejo usaban { error }.
+    const err = data as { error?: string; code?: string; message?: string }
+    throw new ApiError(err.code ?? 'NETWORK_ERROR', err.error ?? err.message ?? 'Error', res.status)
   }
   return data as T
 }

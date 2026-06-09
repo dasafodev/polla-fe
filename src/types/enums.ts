@@ -8,18 +8,29 @@ export type MatchStatus = 'scheduled' | 'live' | 'finished'
 // Rol del participante (contrato)
 export type Role = 'participant' | 'admin'
 
-// Catálogo exhaustivo de códigos de error (§10 del spec)
+// Catálogo de códigos de error. Alineado con los AppError reales del backend desplegado
+// (polla-be/src). Se conservan algunos códigos legacy del contrato viejo por compatibilidad.
 export const ERROR_CODES = [
-  'UNAUTHORIZED', 'FORBIDDEN', 'VALIDATION_ERROR', 'INVALID_GOOGLE_TOKEN',
-  'INVITE_NOT_FOUND', 'INVITE_ALREADY_USED', 'INVITE_EXPIRED',
-  'USER_NOT_FOUND', 'USER_ALREADY_EXISTS',
-  'INVALID_PHONE', 'PHONE_ALREADY_EXISTS',
-  'PREDICTIONS_LOCKED', 'INVALID_RANKINGS', 'INVALID_THIRD_CANDIDATE', 'INVALID_THIRDS_COUNT',
+  'UNAUTHORIZED', 'FORBIDDEN', 'VALIDATION_ERROR',
+  // auth (backend real)
+  'INVALID_CREDENTIAL', 'NEEDS_SIGNUP', 'ALREADY_REGISTERED',
+  'INVITE_NOT_FOUND', 'INVITE_EXPIRED', 'INVITE_USED_OR_EXPIRED',
+  'INVALID_PHONE',
+  // predicciones / candados
+  'PREDICTIONS_LOCKED', 'INVALID_RANKINGS', 'INVALID_THIRD_CANDIDATE', 'INVALID_THIRD_TEAM',
+  'INVALID_THIRDS_COUNT', 'GROUP_NOT_FOUND',
   'INVALID_DARK_HORSE', 'INVALID_DISAPPOINTMENT', 'POWERUPS_ALREADY_EXISTS', 'POWERUPS_NOT_FOUND',
+  'MISSING_FIELDS',
   'MATCH_LOCKED', 'MATCH_FINISHED', 'INVALID_TEAM_ADVANCES', 'TRIPLE_USES_EXHAUSTED',
   'PREDICTION_ALREADY_EXISTS', 'PREDICTION_NOT_FOUND',
-  'MATCH_NOT_FOUND', 'ROUND_NOT_FOUND', 'PARAM_NOT_FOUND', 'GROUPS_ALREADY_LOADED',
+  'MATCH_NOT_FOUND', 'ROUND_NOT_FOUND', 'INVALID_ROUND', 'TEAM_NOT_FOUND',
+  // admin
+  'GROUPS_ALREADY_LOADED', 'INVALID_GROUPS_PAYLOAD', 'INVALID_TOP8_COUNT', 'INVALID_WINNER',
+  'SCORING_PARAM_NOT_FOUND',
   'PARTICIPANT_NOT_FOUND', 'NETWORK_ERROR',
+  // legacy (contrato anterior; aún referenciados por algún mock/dev tooling)
+  'INVALID_GOOGLE_TOKEN', 'USER_NOT_FOUND', 'USER_ALREADY_EXISTS', 'INVITE_ALREADY_USED',
+  'PHONE_ALREADY_EXISTS', 'PARAM_NOT_FOUND',
 ] as const
 export type ErrorCode = (typeof ERROR_CODES)[number]
 

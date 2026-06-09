@@ -5,7 +5,7 @@ const URL = (p: string) => `http://localhost/api${p}`
 const get = (p: string) => fetch(URL(p), { credentials: 'include' })
 const post = (p: string, body: unknown) =>
   fetch(URL(p), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'include' })
-const loginAs = (sub: string, name: string) => post('/auth/login', { credential: makeFakeIdToken({ sub, email: `${name}@x.com`, name }) })
+const loginAs = (sub: string, name: string) => post('/auth/google', { credential: makeFakeIdToken({ sub, email: `${name}@x.com`, name }) })
 
 describe('GET /admin/participants', () => {
   it('401 sin sesión', async () => {

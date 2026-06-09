@@ -21,12 +21,12 @@ describe('useLogin', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toMatchObject({ id: 'p-juan' })
   })
-  it('rechaza con USER_NOT_FOUND si no existe', async () => {
+  it('rechaza con NEEDS_SIGNUP si el usuario no está inscrito', async () => {
     const { result } = renderHook(() => useLogin(), { wrapper: wrapper() })
     result.current.mutate(makeFakeIdToken({ sub: 'sub-x', email: 'x@x.com', name: 'X' }))
     await waitFor(() => expect(result.current.isError).toBe(true))
     const err = result.current.error
-    expect(isApiError(err) && err.code).toBe('USER_NOT_FOUND')
+    expect(isApiError(err) && err.code).toBe('NEEDS_SIGNUP')
   })
 })
 

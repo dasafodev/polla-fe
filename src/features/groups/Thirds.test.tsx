@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { renderWithProviders } from '../../test/utils'
-import { db } from '../../mocks/db'
+import { renderWithProviders, seedSession } from '../../test/utils'
 import { Thirds } from './Thirds'
 
 describe('Thirds', () => {
   beforeEach(() => {
-    db.currentSessionId = 'p-juan' // 12 candidatos, 8 seleccionados en el seed
+    seedSession('p-juan') // 12 candidatos, 8 seleccionados en el seed
   })
 
   it('parte con 8 de 8 y deseleccionar todo deja 0 de 8 (no revierte al server)', async () => {

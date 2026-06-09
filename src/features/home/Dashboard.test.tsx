@@ -26,11 +26,19 @@ describe('Dashboard', () => {
     expect(await screen.findByText(/hola, juan/i)).toBeInTheDocument()
   })
 
-  it('NO persiste nada sensible en storage tras login', async () => {
+  it('cachea la identidad en localStorage tras login, pero NUNCA el token de Google', async () => {
+    // El API real no tiene /me, así que cacheamos la identidad para restaurar sesión tras un reload.
+    // Lo sensible (el credential/ID token de Google) jamás debe quedar en storage: la auth vive en la
+    // cookie HttpOnly.
+    const token = makeFakeIdToken({ sub: 'sub-juan', email: 'juan@gmail.com', name: 'Juan' })
     const { result } = renderHookLogin()
-    result.current.mutate(makeFakeIdToken({ sub: 'sub-juan', email: 'juan@gmail.com', name: 'Juan' }))
+    result.current.mutate(token)
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(localStorage.length).toBe(0)
+
+    const cached = localStorage.getItem('polla.participant')
+    expect(cached).toBeTruthy()
+    expect(cached).toContain('juan@gmail.com') // identidad cacheada
+    expect(cached).not.toContain(token) // pero nunca el token de Google
     expect(sessionStorage.length).toBe(0)
   })
 })

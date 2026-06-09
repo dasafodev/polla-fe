@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { renderWithProviders } from '../../test/utils'
-import { db } from '../../mocks/db'
+import { renderWithProviders, seedSession } from '../../test/utils'
 import { Scoreboard } from './Scoreboard'
 
 describe('Scoreboard', () => {
   beforeEach(() => {
-    db.currentSessionId = 'p-pedro' // pedro: #4 (fuera del podio) → fila resaltada "TÚ"
+    seedSession('p-pedro') // pedro: #4 (fuera del podio) → fila resaltada "TÚ"
   })
 
   it('muestra el podio con el top 3 y resalta mi fila en la lista', async () => {

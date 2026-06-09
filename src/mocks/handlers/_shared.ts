@@ -3,7 +3,9 @@ import { db, type DbParticipant } from '../db'
 import type { ErrorCode } from '../../types/enums'
 import { now } from '../../lib/clock'
 
-export const err = (code: ErrorCode, error: string, status: number) => HttpResponse.json({ error, code }, { status })
+// El backend real responde { code, message }. El apiClient lee ambos campos, pero los mocks imitan
+// el contrato real para que los tests ejerciten exactamente el mismo camino que producción.
+export const err = (code: ErrorCode, message: string, status: number) => HttpResponse.json({ code, message }, { status })
 
 type SessionResult = { participant: DbParticipant; response?: undefined } | { participant?: undefined; response: Response }
 

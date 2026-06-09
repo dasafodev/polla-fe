@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { request } from './apiClient'
+import { request, setUnauthorizedHandler } from './apiClient'
 import { ApiError } from './errors'
 
 function mockFetch(impl: typeof fetch) {
   vi.stubGlobal('fetch', impl)
 }
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  setUnauthorizedHandler(null)
+})
 
 describe('request', () => {
   it('devuelve JSON parseado en 2xx', async () => {
@@ -28,6 +31,31 @@ describe('request', () => {
   it('lanza ApiError con code/status del ErrorResponse en no-2xx', async () => {
     mockFetch(async () => new Response(JSON.stringify({ error: 'No autorizado', code: 'UNAUTHORIZED' }), { status: 401 }))
     await expect(request('GET', '/x')).rejects.toMatchObject({ code: 'UNAUTHORIZED', status: 401 })
+  })
+
+  it('lee message del envelope del backend real {code, message}', async () => {
+    mockFetch(async () => new Response(JSON.stringify({ code: 'NEEDS_SIGNUP', message: 'Necesitas invitación' }), { status: 403 }))
+    const err = await request('POST', '/auth/google').catch((e) => e)
+    expect(err).toBeInstanceOf(ApiError)
+    expect((err as ApiError).code).toBe('NEEDS_SIGNUP')
+    expect((err as ApiError).message).toBe('Necesitas invitación')
+    expect((err as ApiError).status).toBe(403)
+  })
+
+  it('invoca el handler de no-autorizado en 401 (y sigue lanzando)', async () => {
+    const onUnauthorized = vi.fn()
+    setUnauthorizedHandler(onUnauthorized)
+    mockFetch(async () => new Response(JSON.stringify({ code: 'UNAUTHORIZED', message: 'No autorizado' }), { status: 401 }))
+    await expect(request('GET', '/groups')).rejects.toMatchObject({ status: 401 })
+    expect(onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  it('no invoca el handler de no-autorizado en otros errores', async () => {
+    const onUnauthorized = vi.fn()
+    setUnauthorizedHandler(onUnauthorized)
+    mockFetch(async () => new Response(JSON.stringify({ code: 'MATCH_NOT_FOUND', message: 'x' }), { status: 404 }))
+    await request('GET', '/x').catch(() => {})
+    expect(onUnauthorized).not.toHaveBeenCalled()
   })
 
   it('normaliza fallo de red a NETWORK_ERROR', async () => {

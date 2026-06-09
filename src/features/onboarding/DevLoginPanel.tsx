@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { keys } from '../../lib/queryClient'
 import { request } from '../../lib/apiClient'
+import { saveSession } from '../../auth/session'
 import type { ParticipantMe } from '../../types/api'
 
 interface DevParticipant { id: string; name: string; role: string }
@@ -23,8 +24,9 @@ export function DevLoginPanel() {
 
   async function loginAs(participantId: string) {
     try {
-      // Igual que useLogin: sembramos el cache de `me` directamente (no dependemos de un refetch)…
+      // Igual que useLogin: cacheamos la identidad (para sobrevivir al refetch de `me`) y sembramos el cache…
       const me = await request<ParticipantMe>('POST', '/__dev__/login-as', { body: { participantId } })
+      saveSession(me)
       qc.setQueryData(keys.me(), me)
       // …pero además invalidamos todo: las queries no keyeadas por participante (scoreboard, friends, ko)
       // servirían datos del usuario anterior al cambiar de sesión sin pasar por logout (que hace resetQueries).

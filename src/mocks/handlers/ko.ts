@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { db, type DbKoMatch } from '../db'
-import { ROUND_SLUGS, type RoundSlug } from '../../types/enums'
+import { ROUND_SLUGS } from '../../types/enums'
+import { roundToFrontend } from '../../lib/contract'
 import { now } from '../../lib/clock'
 import { err, requireSession } from './_shared'
 import { koPointsFor } from '../scoring'
@@ -30,8 +31,10 @@ function serializeMatch(m: DbKoMatch, pid: string) {
 export const koHandlers = [
   http.get('/api/ko/matches', ({ request }) => {
     const s = requireSession(); if (s.response) return s.response
-    const slug = new URL(request.url).searchParams.get('roundSlug')
-    if (!slug || !ROUND_SLUGS.includes(slug as RoundSlug)) return err('VALIDATION_ERROR', 'roundSlug es requerido', 400)
+    // El cliente real envía el slug en MAYÚSCULAS (R32…/THIRD); lo normalizamos a la forma del seed.
+    const rawSlug = new URL(request.url).searchParams.get('roundSlug')
+    const slug = rawSlug ? roundToFrontend(rawSlug) : null
+    if (!slug || !ROUND_SLUGS.includes(slug)) return err('VALIDATION_ERROR', 'roundSlug es requerido', 400)
     const round = db.koRounds.find((r) => r.slug === slug)!
     const matches = db.koMatches.filter((m) => m.roundSlug === slug).sort((a, b) => a.matchNumber - b.matchNumber).map((m) => serializeMatch(m, s.participant.id))
     return HttpResponse.json({ round, matches }, { status: 200 })
