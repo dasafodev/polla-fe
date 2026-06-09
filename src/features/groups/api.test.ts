@@ -12,8 +12,8 @@ const rawGroupPrediction = {
     { teamId: 'tA1', name: 'Equipo A1', code: 'A1', isTop8: true, predictedPosition: 1, flag: '🇦🇷' },
     { teamId: 'tA2', name: 'Equipo A2', code: 'A2', isTop8: false, predictedPosition: 2, flag: null },
   ],
-  pointsEarned: { pts_group_position_exact: 5, bonus_group_complete: 10, total: 15 },
-  totalGroupPoints: 15,
+  pointsEarned: { pts_group_position_exact: 5, bonus_group_complete: 20, total: 25 },
+  totalGroupPoints: 25,
 }
 
 describe('adaptMyGroupPredictions', () => {

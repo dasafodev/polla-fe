@@ -22,11 +22,11 @@ describe('Scoreboard', () => {
     renderWithProviders(<Scoreboard />)
     await userEvent.click(await screen.findByRole('button', { name: /Juan/i }))
     const dialog = await screen.findByRole('dialog', { name: 'Juan' })
-    await within(dialog).findByText('463') // total
-    expect(within(dialog).getByText('360')).toBeInTheDocument() // grupos
-    expect(within(dialog).getByText('50')).toBeInTheDocument() // eliminatorias
-    expect(within(dialog).getByText('40')).toBeInTheDocument() // terceros
-    expect(within(dialog).getByText('+16')).toBeInTheDocument() // caballo oscuro
-    expect(within(dialog).getByText('-3')).toBeInTheDocument() // decepción
+    await within(dialog).findByText('584') // total
+    expect(within(dialog).getByText('480')).toBeInTheDocument() // grupos
+    expect(within(dialog).getByText('14')).toBeInTheDocument() // eliminatorias
+    expect(within(dialog).getByText('80')).toBeInTheDocument() // terceros
+    expect(within(dialog).getByText('+15')).toBeInTheDocument() // caballo oscuro
+    expect(within(dialog).getByText('-5')).toBeInTheDocument() // decepción
   })
 })

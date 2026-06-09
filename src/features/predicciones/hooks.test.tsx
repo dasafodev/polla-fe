@@ -27,7 +27,7 @@ describe('useMyTotals', () => {
   })
   it('devuelve el desglose del participante actual', async () => {
     const { result } = renderHook(() => useMyTotals(), { wrapper: makeWrapper() })
-    await waitFor(() => expect(result.current.data?.total).toBe(463))
-    expect(result.current.data?.breakdown.groups).toBe(360)
+    await waitFor(() => expect(result.current.data?.total).toBe(584))
+    expect(result.current.data?.breakdown.groups).toBe(480)
   })
 })

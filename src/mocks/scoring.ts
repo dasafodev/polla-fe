@@ -47,14 +47,27 @@ export function computeKoPoints(
   const scale_slug = ROUND_TO_SCALE[match.roundSlug]
   const scale_factor = params[scale_slug]
   const advancesHit = pred.teamAdvancesId === match.result.winnerTeamId
-  const exactHit = pred.scoreHome === match.result.scoreHome && pred.scoreAway === match.result.scoreAway
+  const exactHit = advancesHit && pred.scoreHome === match.result.scoreHome && pred.scoreAway === match.result.scoreAway
+  // Triple = todo o nada: si lo activaste y no clavas el marcador exacto, el partido queda en 0.
+  if (pred.tripleActive && !exactHit) {
+    return { pts_ko_advances: 0, pts_ko_exact_score: 0, mult_triple: 0, scale_factor, scale_slug, total: 0 }
+  }
   const pts_ko_advances = (advancesHit ? params.pts_ko_advances : 0) * scale_factor
   const pts_ko_exact_score = (exactHit ? params.pts_ko_exact_score : 0) * scale_factor
-  const mult_triple = (pred.tripleActive && advancesHit ? params.mult_triple : 0) * scale_factor
+  const mult_triple = pred.tripleActive && exactHit ? params.mult_triple : 0 // bono fijo, no escala por ronda
   return {
     pts_ko_advances, pts_ko_exact_score, mult_triple, scale_factor, scale_slug,
     total: pts_ko_advances + pts_ko_exact_score + mult_triple,
   }
+}
+
+// Escalas de la ruta principal KO en orden (R32→Final). Como el mock solo guarda cuántas rondas
+// avanzó cada equipo, los pálpitos suman la escala de esas primeras N rondas (igual que el backend).
+const KO_PATH_SCALES = ['scale_r32', 'scale_r16', 'scale_qf', 'scale_sf', 'scale_final'] as const
+function roundsScaleSum(rounds: number, params: ScoringParams): number {
+  let sum = 0
+  for (let i = 0; i < rounds && i < KO_PATH_SCALES.length; i += 1) sum += params[KO_PATH_SCALES[i]]
+  return sum
 }
 
 export function computePowerupsPoints(
@@ -64,8 +77,8 @@ export function computePowerupsPoints(
   if (!teamRoundsAdvanced) return null
   const dhRounds = darkHorseTeamId ? (teamRoundsAdvanced[darkHorseTeamId] ?? 0) : 0
   const dRounds = disappointmentTeamId ? (teamRoundsAdvanced[disappointmentTeamId] ?? 0) : 0
-  const pts_dark_horse_per_round = dhRounds * params.pts_dark_horse_per_round // ≥ 0
-  const pts_disappointment_per_round = -(dRounds * params.pts_disappointment_per_round) // ≤ 0
+  const pts_dark_horse_per_round = roundsScaleSum(dhRounds, params) * params.pts_dark_horse_per_round // ≥ 0
+  const pts_disappointment_per_round = -(roundsScaleSum(dRounds, params) * params.pts_disappointment_per_round) // ≤ 0
   return {
     pts_dark_horse_per_round, pts_disappointment_per_round,
     dark_horse_rounds_advanced: dhRounds, disappointment_rounds_advanced: dRounds,

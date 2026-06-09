@@ -1,15 +1,18 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../auth/useAuth'
 import { NavyBackdrop } from '../../ui/Backdrop'
 import { Confetti } from '../../ui/Confetti'
 import { Button } from '../../ui/Button'
 import { fadeUp, stagger } from '../../ui/motion'
+import { RulesSheet } from '../rules/RulesSheet'
 
-const STEPS = ['Ordena los 12 grupos', 'Elige los 8 mejores terceros', 'Elige tus 2 pálpitos']
+const STEPS = ['Ordena los 12 grupos', 'Elige los 8 terceros que clasifican', 'Elige tus 2 pálpitos']
 
 export function Welcome({ onStart }: { onStart: () => void }) {
   const { participant } = useAuth()
   const first = participant?.name?.split(' ')[0] ?? ''
+  const [rules, setRules] = useState(false)
   return (
     <div className="relative grid min-h-[100dvh] place-items-center overflow-hidden px-6 text-white">
       <NavyBackdrop />
@@ -39,11 +42,16 @@ export function Welcome({ onStart }: { onStart: () => void }) {
           <Button variant="light" fullWidth onClick={onStart}>
             Empezar
           </Button>
-          <button type="button" className="mt-4 text-sm text-white/70 underline underline-offset-2">
+          <button
+            type="button"
+            onClick={() => setRules(true)}
+            className="mt-4 text-sm text-white/70 underline underline-offset-2"
+          >
             ¿Cómo se juega?
           </button>
         </motion.div>
       </motion.div>
+      <RulesSheet open={rules} onClose={() => setRules(false)} />
     </div>
   )
 }

@@ -12,7 +12,7 @@ describe('TercerosPanel', () => {
   it('locked: subtotal, 8 elegidos y marca Clasificó', async () => {
     renderWithProviders(<TercerosPanel locked />)
     await screen.findByText('Equipo A3')
-    await screen.findByText('+40 pts') // subtotal (espera al breakdown)
+    await screen.findByText('+80 pts') // subtotal (espera al breakdown)
     expect(screen.getAllByText('Clasificó')).toHaveLength(8)
     expect(screen.getAllByRole('link')[0]).toHaveAttribute('href', '/predicciones/terceros')
   })

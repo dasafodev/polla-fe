@@ -11,10 +11,10 @@ describe('PowerupsPanel', () => {
   it('locked: subtotal y puntos de caballo y decepción', async () => {
     renderWithProviders(<PowerupsPanel locked />)
     await screen.findByText('Equipo A4') // caballo oscuro
-    expect(screen.getByText('+13 pts')).toBeInTheDocument()
-    expect(screen.getByText('+16')).toBeInTheDocument()
+    expect(screen.getByText('+10 pts')).toBeInTheDocument()
+    expect(screen.getByText('+15')).toBeInTheDocument()
     expect(screen.getByText('Equipo A1')).toBeInTheDocument() // decepción
-    expect(screen.getByText('-3')).toBeInTheDocument()
+    expect(screen.getByText('-5')).toBeInTheDocument()
     expect(screen.getAllByRole('link')[0]).toHaveAttribute('href', '/predicciones/powerups')
   })
 
@@ -22,6 +22,6 @@ describe('PowerupsPanel', () => {
     renderWithProviders(<PowerupsPanel locked={false} />)
     await screen.findByText('Equipo A4')
     expect(screen.getByText('2/2 elegidos')).toBeInTheDocument()
-    expect(screen.queryByText('+16')).not.toBeInTheDocument()
+    expect(screen.queryByText('+15')).not.toBeInTheDocument()
   })
 })

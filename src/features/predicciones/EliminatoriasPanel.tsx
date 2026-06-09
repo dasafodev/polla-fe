@@ -83,7 +83,7 @@ function MatchRow({ m, locked }: { m: KoMatch; locked: boolean }) {
         </span>
       </span>
       {pred?.tripleActive && (
-        <span className="rounded bg-tint px-1.5 py-0.5 font-mono text-[10px] font-bold text-violet">×3</span>
+        <span className="rounded bg-tint px-1.5 py-0.5 font-mono text-[10px] font-bold text-violet">Triple</span>
       )}
       {scored && <span className={`font-mono text-sm font-bold ${pe!.total > 0 ? 'text-success' : 'text-muted'}`}>{signed(pe!.total)}</span>}
     </Link>

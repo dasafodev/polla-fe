@@ -20,10 +20,10 @@ const toneClass: Record<Tone, string> = {
 const ROUND_SCALE: { label: string; mult: number }[] = [
   { label: 'Dieciseisavos', mult: 1 },
   { label: 'Octavos', mult: 2 },
-  { label: 'Cuartos', mult: 3 },
-  { label: 'Semifinal', mult: 4 },
-  { label: 'Tercer puesto', mult: 4 },
-  { label: 'Final', mult: 5 },
+  { label: 'Cuartos', mult: 5 },
+  { label: 'Semifinal', mult: 7 },
+  { label: 'Tercer puesto', mult: 7 },
+  { label: 'Final', mult: 10 },
 ]
 
 function Pts({ tone = 'violet', children }: { tone?: Tone; children: ReactNode }) {
@@ -66,17 +66,17 @@ export function RulesSheet({ open, onClose }: { open: boolean; onClose: () => vo
 
         <Section icon={<ListNumbers size={18} weight="bold" />} title="Fase de grupos">
           <Row label="Cada equipo en su posición exacta" pts="+5" />
-          <Row label="Equipo del grupo en otra posición" pts="+2" />
-          <Row label="Bonus si aciertas el grupo completo (4 de 4)" tone="success" pts="+10" />
+          <Row label="Bonus si aciertas el grupo completo (4 de 4)" tone="success" pts="+20" />
+          <p className="text-xs leading-snug text-muted">Solo suma la posición exacta: un equipo en otra posición no da puntos.</p>
         </Section>
 
         <Section icon={<Medal size={18} weight="bold" />} title="Mejores terceros">
-          <Row label="Por cada tercero que termine clasificando" pts="+5" />
+          <Row label="Por cada tercero que termine clasificando" pts="+10" />
         </Section>
 
         <Section icon={<Trophy size={18} weight="bold" />} title="Eliminatorias">
-          <Row label="Acertar quién avanza" pts="+10" />
-          <Row label="Marcador exacto (adicional)" pts="+5" />
+          <Row label="Acertar quién avanza" pts="+2" />
+          <Row label="Marcador exacto (adicional)" pts="+3" />
           <p className="pt-1 text-xs font-medium text-ink-soft">Los puntos se multiplican según la ronda:</p>
           <div className="flex flex-wrap gap-1.5">
             {ROUND_SCALE.map((r) => (
@@ -85,13 +85,14 @@ export function RulesSheet({ open, onClose }: { open: boolean; onClose: () => vo
               </span>
             ))}
           </div>
-          <p className="text-xs leading-snug text-muted">Ejemplo: acertar quién avanza en la Final = 10 × 5 = 50 pts.</p>
+          <p className="text-xs leading-snug text-muted">Ejemplo: acertar quién avanza en la Final = 2 × 10 = 20 pts.</p>
         </Section>
 
-        <Section icon={<Lightning size={18} weight="bold" />} title="Triple">
+        <Section icon={<Lightning size={18} weight="bold" />} title="Triple o nada">
           <Row label="Actívalo en hasta 3 partidos de eliminatorias" tone="neutral" pts="3 usos" />
-          <Row label="Bono extra si aciertas quién avanza" pts="+10" />
-          <p className="text-xs leading-snug text-muted">El bono también se multiplica por la ronda. No aplica al marcador exacto.</p>
+          <Row label="Solo suma si aciertas el marcador exacto; si no, ese partido queda en 0" tone="danger" />
+          <Row label="Bono extra al clavar el marcador exacto" tone="success" pts="+3" />
+          <p className="text-xs leading-snug text-muted">El bono es fijo: no se multiplica por la ronda.</p>
         </Section>
 
         <Section icon={<Sparkle size={18} weight="bold" />} title="Pálpitos">
@@ -102,7 +103,7 @@ export function RulesSheet({ open, onClose }: { open: boolean; onClose: () => vo
                 <span className="font-bold text-ink">La revelación</span>: por cada ronda que avance tu equipo sorpresa.
               </span>
             </span>
-            <Pts tone="success">+8</Pts>
+            <Pts tone="success">+5 ×ronda</Pts>
           </div>
           <div className="flex items-start justify-between gap-3">
             <span className="flex items-start gap-2 text-sm leading-snug text-ink-soft">
@@ -111,8 +112,9 @@ export function RulesSheet({ open, onClose }: { open: boolean; onClose: () => vo
                 <span className="font-bold text-ink">La decepción</span>: por cada ronda que avance el equipo que apostaste a que iba a fracasar.
               </span>
             </span>
-            <Pts tone="danger">−3</Pts>
+            <Pts tone="danger">−5 ×ronda</Pts>
           </div>
+          <p className="text-xs leading-snug text-muted">Cada ronda multiplica los puntos por su escala, igual que en eliminatorias.</p>
         </Section>
 
         <Section icon={<Crown size={18} weight="bold" />} title="Premios">

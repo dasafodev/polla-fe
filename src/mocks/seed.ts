@@ -32,11 +32,12 @@ function completeRankings(participantId: string, groups: DbGroup[]) {
   }))
 }
 
+// Valores del backend (polla-be/prisma/seed.ts). Grupos no paga posiciones parciales (partial = 0).
 const SCORING: ScoringParams = {
-  pts_group_position_exact: 5, pts_group_position_partial: 2, bonus_group_complete: 10,
-  pts_third_correct: 5, pts_ko_advances: 10, pts_ko_exact_score: 5,
-  pts_dark_horse_per_round: 8, pts_disappointment_per_round: 3, mult_triple: 10,
-  scale_r32: 1, scale_r16: 2, scale_qf: 3, scale_sf: 4, scale_final: 5,
+  pts_group_position_exact: 5, pts_group_position_partial: 0, bonus_group_complete: 20,
+  pts_third_correct: 10, pts_ko_advances: 2, pts_ko_exact_score: 3,
+  pts_dark_horse_per_round: 5, pts_disappointment_per_round: 5, mult_triple: 3,
+  scale_r32: 1, scale_r16: 2, scale_qf: 5, scale_sf: 7, scale_final: 10,
 }
 
 // lockedAt = scheduledAt − 30min
@@ -110,9 +111,9 @@ export function makeDb(): Db {
     // luis sin powerups (POST 201 test)
   ]
 
-  // KO desempate (escalas r32=1, r16=2; advances=10, exact=5):
-  // juan: r32-1 exacto(15)+r32-2 exacto(15)+r16-1 solo avanza(20) = 50, 2 exactos
-  // maria: r32-1 avanza(10)+r32-2 avanza(10)+r16-1 exacto(30) = 50, 1 exacto
+  // KO desempate (escalas r32=1, r16=2; advances=2, exact=3):
+  // juan: r32-1 exacto(5)+r32-2 exacto(5)+r16-1 solo avanza(4) = 14, 2 exactos
+  // maria: r32-1 avanza(2)+r32-2 avanza(2)+r16-1 exacto(10) = 14, 1 exacto
   const koPredictions = [
     { participantId: 'p-juan', matchId: 'ko-r32-1', scoreHome: 2, scoreAway: 1, teamAdvancesId: 'tA1', tripleActive: false },
     { participantId: 'p-juan', matchId: 'ko-r32-2', scoreHome: 1, scoreAway: 0, teamAdvancesId: 'tC1', tripleActive: false },
@@ -130,7 +131,8 @@ export function makeDb(): Db {
   const officialGroupStandings: Record<string, string[]> = {}
   for (const g of groups) officialGroupStandings[g.id] = [...g.teamIds]
 
-  // rondas avanzadas para powerups: darkHorse tA4 avanzó 2, disappointment tA1 avanzó 1
+  // rondas avanzadas para powerups (escalan por ronda): darkHorse tA4 avanzó 2 → +5×(1+2)=15;
+  // disappointment tA1 avanzó 1 → −5×1=−5
   const teamRoundsAdvanced: Record<string, number> = { tA4: 2, tA1: 1 }
 
   return {

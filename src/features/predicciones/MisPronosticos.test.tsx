@@ -31,6 +31,6 @@ describe('MisPronosticos', () => {
   it('torneo iniciado: header muestra el total de puntos', async () => {
     setNow(db.tournamentStartAt)
     renderWithProviders(<MisPronosticos />, { route: '/predicciones' })
-    await screen.findByText('463 pts')
+    await screen.findByText('584 pts')
   })
 })

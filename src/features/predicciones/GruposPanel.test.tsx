@@ -12,7 +12,7 @@ describe('GruposPanel', () => {
   it('locked: subtotal de puntos, 12 grupos en mi orden y marcas EXACTO', async () => {
     renderWithProviders(<GruposPanel locked />)
     await screen.findByText('Grupo A')
-    await screen.findByText('+360 pts') // subtotal (espera al breakdown)
+    await screen.findByText('+480 pts') // subtotal (espera al breakdown)
     expect(screen.getAllByText(/^Grupo [A-L]$/)).toHaveLength(12)
     expect(screen.getByText('Equipo A1')).toBeInTheDocument()
     expect(screen.getAllByText('EXACTO')).toHaveLength(48) // 12 grupos × 4
