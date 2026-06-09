@@ -7,11 +7,11 @@ import { ROUND_SLUGS, ROUND_TO_SCALE } from '../types/enums'
 beforeEach(() => resetDb())
 
 describe('computeScoreboard', () => {
-  it('ordena por total desc y asigna premios 700k/250k/50k, null del 4º en adelante', () => {
+  it('ordena por total desc y asigna premios 500k/200k/50k, null del 4º en adelante', () => {
     const sb = computeScoreboard(db)
     expect(sb.map((e) => e.total)).toEqual([...sb.map((e) => e.total)].sort((a, b) => b - a))
     expect(sb[0].rank).toBe(1)
-    expect([sb[0].prize, sb[1].prize, sb[2].prize]).toEqual([700_000, 250_000, 50_000])
+    expect([sb[0].prize, sb[1].prize, sb[2].prize]).toEqual([500_000, 200_000, 50_000])
     if (sb.length > 3) expect(sb[3].prize).toBeNull()
   })
 
