@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { Button } from '../../../ui/Button'
 import { NavyBackdrop } from '../../../ui/Backdrop'
 import { fadeUp, stagger } from '../../../ui/motion'
-import { FunFactCard } from '../components/FunFactCard'
 import { MatchCountdown } from '../components/MatchCountdown'
 
 export function EmptyHome({ closesAt }: { closesAt: string | null }) {
@@ -29,10 +28,6 @@ export function EmptyHome({ closesAt }: { closesAt: string | null }) {
           <MatchCountdown targetIso={closesAt} />
         </motion.div>
       )}
-
-      <motion.div variants={fadeUp}>
-        <FunFactCard />
-      </motion.div>
     </motion.div>
   )
 }

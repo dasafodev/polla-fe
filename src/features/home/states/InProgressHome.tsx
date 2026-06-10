@@ -5,7 +5,6 @@ import { Chip } from '../../../ui/Chip'
 import { ProgressRing } from '../../../ui/ProgressRing'
 import { NavyBackdrop } from '../../../ui/Backdrop'
 import { fadeUp, stagger } from '../../../ui/motion'
-import { FunFactCard } from '../components/FunFactCard'
 import { MatchCountdown } from '../components/MatchCountdown'
 import type { OnboardingState } from '../../onboarding/onboardingState'
 
@@ -54,10 +53,6 @@ export function InProgressHome({ state }: { state: OnboardingState }) {
           <MatchCountdown targetIso={state.closesAt} />
         </motion.div>
       )}
-
-      <motion.div variants={fadeUp}>
-        <FunFactCard />
-      </motion.div>
     </motion.div>
   )
 }
