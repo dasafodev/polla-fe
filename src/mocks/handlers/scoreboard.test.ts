@@ -18,7 +18,7 @@ describe('GET /scoreboard', () => {
     const iMaria = body.data.findIndex((e: { participant: { id: string } }) => e.participant.id === 'p-maria')
     expect(iJuan).toBeLessThan(iMaria)
     expect(body.data[0].rank).toBe(1)
-    expect(body.data[0].prize).toBe(500000)
+    expect(body.data[0].prize).toBe(700000)
   })
 })
 

@@ -118,8 +118,8 @@ export function RulesSheet({ open, onClose }: { open: boolean; onClose: () => vo
         </Section>
 
         <Section icon={<Crown size={18} weight="bold" />} title="Premios">
-          <Row label="🥇 Primer lugar" tone="gold" pts="$500.000" />
-          <Row label="🥈 Segundo lugar" tone="gold" pts="$200.000" />
+          <Row label="🥇 Primer lugar" tone="gold" pts="$700.000" />
+          <Row label="🥈 Segundo lugar" tone="gold" pts="$250.000" />
           <Row label="🥉 Tercer lugar" tone="gold" pts="$50.000" />
           <p className="text-xs leading-snug text-muted">
             En caso de empate de puntos, gana quien tenga más marcadores exactos en eliminatorias.
