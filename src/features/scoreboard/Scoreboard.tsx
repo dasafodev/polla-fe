@@ -23,8 +23,12 @@ export function Scoreboard() {
   const allZero = data.every((e) => e.total === 0)
   if (data.length === 0 || allZero) return <ScoreboardEmpty entries={data} meId={meId} />
 
-  const top3 = data.slice(0, 3)
-  const rest = data.slice(3)
+  // El backend solo trae el top; si quedo fuera me anexa al final con mi rank real (hueco de posiciones).
+  const hasGap = data.length >= 2 && data[data.length - 1].rank > data[data.length - 2].rank + 1
+  const outsider = hasGap ? data[data.length - 1] : null
+  const ranked = hasGap ? data.slice(0, -1) : data
+  const top3 = ranked.slice(0, 3)
+  const rest = ranked.slice(3)
 
   return (
     <div className="-mx-5 -mt-3">
@@ -39,13 +43,21 @@ export function Scoreboard() {
       </div>
 
       <div className="-mt-4 rounded-t-[22px] bg-bg px-5 pt-5">
-        {rest.length > 0 && (
+        {(rest.length > 0 || outsider) && (
           <p className="mb-2 font-mono text-[10.5px] font-bold tracking-wide text-muted">DEMÁS JUGADORES</p>
         )}
         <ul className="space-y-2">
           {rest.map((e) => (
             <ScoreboardRow key={e.participant.id} entry={e} meId={meId} onPick={setSelected} />
           ))}
+          {outsider && (
+            <>
+              <li aria-hidden="true" data-testid="rank-gap" className="flex justify-center py-0.5 text-muted">
+                <span className="font-mono text-lg leading-none tracking-[0.45em]">···</span>
+              </li>
+              <ScoreboardRow key={outsider.participant.id} entry={outsider} meId={meId} onPick={setSelected} />
+            </>
+          )}
         </ul>
       </div>
 

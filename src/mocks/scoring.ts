@@ -181,6 +181,15 @@ export function computeScoreboard(db: Db): ScoreboardEntry[] {
   }))
 }
 
+// El backend solo expone el top N; si el usuario de la sesión queda fuera, lo anexa al final
+// con su posición real para que siempre pueda verse en la tabla.
+export function topScoreboard(entries: ScoreboardEntry[], currentId: string | null, limit = 10): ScoreboardEntry[] {
+  const top = entries.slice(0, limit)
+  if (!currentId || top.some((e) => e.participant.id === currentId)) return top
+  const mine = entries.find((e) => e.participant.id === currentId)
+  return mine ? [...top, mine] : top
+}
+
 export function prizeForParticipant(db: Db, participantId: string): number | null {
   return computeScoreboard(db).find((e) => e.participant.id === participantId)?.prize ?? null
 }

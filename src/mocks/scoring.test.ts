@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { db, type DbKoMatch, type DbKoPrediction } from './db'
 import { resetDb } from './seed'
-import { computeScoreboard, computeBreakdown, countKoExact, koPointsFor, computeKoPoints } from './scoring'
+import { computeScoreboard, computeBreakdown, countKoExact, koPointsFor, computeKoPoints, topScoreboard } from './scoring'
 import { ROUND_SLUGS, ROUND_TO_SCALE } from '../types/enums'
+import type { ScoreboardEntry } from '../types/api'
 
 beforeEach(() => resetDb())
 
@@ -26,6 +27,32 @@ describe('computeScoreboard', () => {
     const iJuan = sb.findIndex((e) => e.participant.id === 'p-juan')
     const iMaria = sb.findIndex((e) => e.participant.id === 'p-maria')
     expect(iJuan).toBeLessThan(iMaria)
+  })
+})
+
+describe('topScoreboard (top-N + usuario fuera del top)', () => {
+  const entry = (rank: number, id: string): ScoreboardEntry => ({ rank, participant: { id, name: id }, total: 100 - rank, prize: null })
+  const list = Array.from({ length: 12 }, (_, i) => entry(i + 1, `p-${i + 1}`))
+
+  it('devuelve la lista tal cual cuando no supera el límite', () => {
+    const short = list.slice(0, 8)
+    expect(topScoreboard(short, 'p-3', 10)).toEqual(short)
+  })
+
+  it('recorta al top N sin anexar cuando el usuario está dentro del top', () => {
+    expect(topScoreboard(list, 'p-3', 10)).toEqual(list.slice(0, 10))
+  })
+
+  it('anexa al usuario con su posición real cuando está fuera del top', () => {
+    const res = topScoreboard(list, 'p-12', 10)
+    expect(res).toHaveLength(11)
+    expect(res.slice(0, 10)).toEqual(list.slice(0, 10))
+    expect(res[10]).toEqual(list[11]) // p-12 con su rank 12 real
+  })
+
+  it('no anexa nada cuando currentId es null o no aparece en la lista (p. ej. admin)', () => {
+    expect(topScoreboard(list, null, 10)).toEqual(list.slice(0, 10))
+    expect(topScoreboard(list, 'p-admin', 10)).toEqual(list.slice(0, 10))
   })
 })
 

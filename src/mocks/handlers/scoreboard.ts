@@ -2,12 +2,13 @@ import { http, HttpResponse } from 'msw'
 import { db } from '../db'
 import { now } from '../../lib/clock'
 import { err, requireSession } from './_shared'
-import { computeScoreboard, computeBreakdown, prizeForParticipant } from '../scoring'
+import { computeScoreboard, computeBreakdown, prizeForParticipant, topScoreboard } from '../scoring'
 
 export const scoreboardHandlers = [
   http.get('/api/scoreboard', () => {
     const s = requireSession(); if (s.response) return s.response
-    return HttpResponse.json({ updatedAt: new Date(now()).toISOString(), data: computeScoreboard(db) }, { status: 200 })
+    const data = topScoreboard(computeScoreboard(db), s.participant.id)
+    return HttpResponse.json({ updatedAt: new Date(now()).toISOString(), data }, { status: 200 })
   }),
 
   http.get('/api/scoreboard/:participantId/breakdown', ({ params }) => {
