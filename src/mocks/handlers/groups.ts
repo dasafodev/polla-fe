@@ -8,6 +8,19 @@ const predOf = (pid: string, gid: string) => db.groupPredictions.find((p) => p.p
 const isComplete = (p?: DbGroupPrediction) => !!p && p.rankings.length === 4
 const teamById = (id: string) => db.teams.find((t) => t.id === id)
 
+// Espeja al cron calculate-group-stats del backend: % que puso ese equipo en esa posición.
+// Sólo disponible una vez bloqueado (el cron corre al iniciar el torneo); null antes.
+function consensusStat(teamId: string, position: number): { pct: number } | null {
+  if (!groupsLocked()) return null
+  const total = db.participants.filter((p) => p.role !== 'admin').length
+  if (total === 0) return null
+  const count = db.groupPredictions.filter((gp) =>
+    gp.rankings.some((rr) => rr.teamId === teamId && rr.position === position),
+  ).length
+  if (count === 0) return null
+  return { pct: Math.round((count / total) * 100 * 100) / 100 }
+}
+
 function thirdTeamId(pred?: DbGroupPrediction): string | null {
   if (!pred || pred.rankings.length !== 4) return null
   return pred.rankings.find((r) => r.position === 3)?.teamId ?? null
@@ -38,7 +51,7 @@ function serializeRankings(pred?: DbGroupPrediction, official?: string[]) {
         : official.includes(t.id)
           ? 'partial'
           : null
-    return { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag, position: r.position, result }
+    return { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag, position: r.position, result, positionStats: consensusStat(t.id, r.position) }
   })
 }
 

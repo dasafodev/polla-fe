@@ -59,6 +59,9 @@ function PowerupCard({
       <span className="flex-1">
         <span className="block font-mono text-[10px] font-bold uppercase tracking-wide text-muted">{label}</span>
         <span className="block text-sm font-bold text-ink">{team?.name ?? '—'}</span>
+        {team?.stats?.chosenPct != null && (
+          <span className="block text-xs text-ink-soft">{Math.round(team.stats.chosenPct)}% lo eligió igual</span>
+        )}
         {rounds != null && <span className="block text-xs text-ink-soft">Avanzó {rounds} rondas</span>}
       </span>
       {points != null && (

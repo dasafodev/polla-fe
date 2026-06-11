@@ -39,6 +39,21 @@ describe('adaptMyGroupPredictions', () => {
   it('preserva completedGroups', () => {
     expect(adaptMyGroupPredictions({ data: [], completedGroups: 7 }).completedGroups).toBe(7)
   })
+  it('mapea positionStats.pct → consensusPct', () => {
+    const raw = {
+      ...rawGroupPrediction,
+      rankings: [
+        { teamId: 'tA1', name: 'Equipo A1', code: 'A1', isTop8: true, predictedPosition: 1, flag: '🇦🇷', positionStats: { pct: 78.5 } },
+        { teamId: 'tA2', name: 'Equipo A2', code: 'A2', isTop8: false, predictedPosition: 2, flag: null },
+      ],
+    }
+    const out = adaptMyGroupPredictions({ data: [raw], completedGroups: 1 })
+    expect(out.data[0].rankings[0].consensusPct).toBe(78.5)
+  })
+  it('consensusPct es null cuando no hay positionStats', () => {
+    const out = adaptMyGroupPredictions({ data: [rawGroupPrediction], completedGroups: 1 })
+    expect(out.data[0].rankings[0].consensusPct).toBeNull()
+  })
 })
 
 describe('adaptFriendsGroups', () => {

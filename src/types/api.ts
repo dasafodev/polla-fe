@@ -46,7 +46,7 @@ export interface Team { id: string; name: string; code: string; isTop8: boolean;
 export interface Group { id: string; label: string; name: string; teams: Team[] }
 
 // ── Grupos: predicciones ─────────────────────────────────────────────────────
-export interface GroupRanking { teamId: string; name: string; code: string; isTop8: boolean; flag: string | null; position: number; result: 'exact' | 'partial' | null }
+export interface GroupRanking { teamId: string; name: string; code: string; isTop8: boolean; flag: string | null; position: number; result: 'exact' | 'partial' | null; consensusPct: number | null }
 export interface GroupPointsEarned {
   pts_group_position_exact: number; pts_group_position_partial: number; bonus_group_complete: number; total: number
 }
@@ -71,7 +71,7 @@ export interface ThirdsResponse { data: ThirdCandidate[]; selectedCount: number 
 export interface SaveThirdsBody { teamIds: string[] }
 
 // ── Powerups ──────────────────────────────────────────────────────────────────
-export interface PowerupTeam { teamId: string; name: string; code: string; isTop8: boolean; flag: string | null }
+export interface PowerupTeam { teamId: string; name: string; code: string; isTop8: boolean; flag: string | null; stats?: { chosenPct: number | null } }
 export interface PowerupsPointsEarned {
   pts_dark_horse_per_round: number; pts_disappointment_per_round: number
   dark_horse_rounds_advanced: number; disappointment_rounds_advanced: number; total: number

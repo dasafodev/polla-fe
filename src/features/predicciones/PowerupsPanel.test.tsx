@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { screen } from '@testing-library/react'
 import { renderWithProviders, seedSession } from '../../test/utils'
+import { setNow } from '../../lib/clock'
 import { PowerupsPanel } from './PowerupsPanel'
 
 describe('PowerupsPanel', () => {
@@ -23,5 +24,18 @@ describe('PowerupsPanel', () => {
     await screen.findByText('Equipo A4')
     expect(screen.getByText('2/2 elegidos')).toBeInTheDocument()
     expect(screen.queryByText('+15')).not.toBeInTheDocument()
+  })
+
+  it('post-lock: muestra el % de consenso en ambos slots', async () => {
+    setNow('2026-06-12T00:00:00.000Z')
+    renderWithProviders(<PowerupsPanel locked />)
+    await screen.findByText('Equipo A4')
+    expect(screen.getAllByText(/lo eligió igual/)).toHaveLength(2)
+  })
+
+  it('pre-lock: no muestra el % de consenso (dato null)', async () => {
+    renderWithProviders(<PowerupsPanel locked />)
+    await screen.findByText('Equipo A4')
+    expect(screen.queryByText(/lo eligió igual/)).not.toBeInTheDocument()
   })
 })

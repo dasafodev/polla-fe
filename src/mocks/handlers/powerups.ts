@@ -5,15 +5,30 @@ import { err, requireSession, groupsLocked } from './_shared'
 import { powerupsPointsFor } from '../scoring'
 
 const teamById = (id: string) => db.teams.find((t) => t.id === id)
-function powerupTeam(id: string | null) {
+
+// Espeja al cron calculate-powerup-stats del backend: % que eligió ese equipo en ese slot.
+// Sólo disponible una vez bloqueado (el cron corre al iniciar el torneo); null antes.
+function chosenPct(teamId: string, kind: 'dark' | 'down'): number | null {
+  if (!groupsLocked()) return null
+  const total = db.participants.filter((p) => p.role !== 'admin').length
+  if (total === 0) return null
+  const count = db.powerups.filter(
+    (pw) => (kind === 'dark' ? pw.darkHorseTeamId : pw.disappointmentTeamId) === teamId,
+  ).length
+  if (count === 0) return null
+  return Math.round((count / total) * 100 * 100) / 100
+}
+
+function powerupTeam(id: string | null, kind: 'dark' | 'down') {
   if (!id) return null
-  const t = teamById(id); return t ? { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag } : null
+  const t = teamById(id)
+  return t ? { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag, stats: { chosenPct: chosenPct(t.id, kind) } } : null
 }
 function serializeMine(pid: string) {
   const pw = db.powerups.find((x) => x.participantId === pid)
   return {
-    darkHorse: powerupTeam(pw?.darkHorseTeamId ?? null),
-    disappointment: powerupTeam(pw?.disappointmentTeamId ?? null),
+    darkHorse: powerupTeam(pw?.darkHorseTeamId ?? null, 'dark'),
+    disappointment: powerupTeam(pw?.disappointmentTeamId ?? null, 'down'),
     pointsEarned: powerupsPointsFor(db, pid),
   }
 }
@@ -62,7 +77,7 @@ export const powerupsHandlers = [
     const meId = s.participant.id
     const data = db.participants.filter((p) => p.id !== meId && p.role !== 'admin').map((p) => {
       const pw = db.powerups.find((x) => x.participantId === p.id)
-      return { participant: { id: p.id, name: p.name }, darkHorse: powerupTeam(pw?.darkHorseTeamId ?? null), disappointment: powerupTeam(pw?.disappointmentTeamId ?? null) }
+      return { participant: { id: p.id, name: p.name }, darkHorse: powerupTeam(pw?.darkHorseTeamId ?? null, 'dark'), disappointment: powerupTeam(pw?.disappointmentTeamId ?? null, 'down') }
     })
     return HttpResponse.json({ available: true, data }, { status: 200 })
   }),
