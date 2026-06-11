@@ -4,6 +4,7 @@ import { TrendUp, TrendDown, Trophy } from '@phosphor-icons/react'
 import type { Team } from '../../types/api'
 import { useGroups } from '../groups/hooks'
 import { usePowerups, useSavePowerups, useFriendsPowerups } from './hooks'
+import { predictionsLocked } from '../../lib/predictionsLock'
 import { isApiError } from '../../lib/errors'
 import { Button } from '../../ui/Button'
 import { Flag } from '../../ui/Flag'
@@ -19,7 +20,7 @@ export function Powerups({ onComplete }: { onComplete?: () => void }) {
   const mine = usePowerups()
   const friends = useFriendsPowerups()
   const wizard = !!onComplete
-  const locked = friends.data?.available === true
+  const locked = predictionsLocked(friends.data?.available)
   const hasPowerups = !!(mine.data?.darkHorse || mine.data?.disappointment)
   const save = useSavePowerups(hasPowerups ? 'update' : 'create')
   const goBack = useGoBack()

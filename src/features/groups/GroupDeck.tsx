@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useGroups, useMyGroupPredictions, useSaveGroupPredictions, useFriendsGroups } from './hooks'
+import { predictionsLocked } from '../../lib/predictionsLock'
 import { isApiError } from '../../lib/errors'
 import { Button } from '../../ui/Button'
 import { Confetti } from '../../ui/Confetti'
@@ -13,7 +14,7 @@ export function GroupDeck({ onComplete }: { onComplete?: () => void }) {
   const save = useSaveGroupPredictions()
   const friends = useFriendsGroups()
   const reduced = useReduced()
-  const locked = friends.data?.available === true
+  const locked = predictionsLocked(friends.data?.available)
 
   const [index, setIndex] = useState(0)
   const [orders, setOrders] = useState<Record<string, string[]>>({})

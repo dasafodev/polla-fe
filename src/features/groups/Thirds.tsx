@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check } from '@phosphor-icons/react'
 import { useThirds, useSaveThirds, useFriendsGroups } from './hooks'
+import { predictionsLocked } from '../../lib/predictionsLock'
 import { isApiError } from '../../lib/errors'
 import { Button } from '../../ui/Button'
 import { Flag } from '../../ui/Flag'
@@ -15,7 +16,7 @@ export function Thirds({ onComplete }: { onComplete?: () => void }) {
   const save = useSaveThirds()
   const goBack = useGoBack()
   const wizard = !!onComplete
-  const locked = friends.data?.available === true
+  const locked = predictionsLocked(friends.data?.available)
 
   // null = sin ediciones (usa la selección del server); [] = el usuario deseleccionó todo (válido).
   const [picked, setPicked] = useState<string[] | null>(null)

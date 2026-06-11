@@ -1,5 +1,6 @@
 import { useMyGroupPredictions, useThirds, useFriendsGroups } from '../groups/hooks'
 import { usePowerups } from '../powerups/hooks'
+import { predictionsLocked, PREDICTIONS_CLOSE_AT } from '../../lib/predictionsLock'
 
 export type StepKey = 'groups' | 'thirds' | 'powerups'
 export type StepStatus = 'done' | 'in_progress' | 'pending' | 'disabled'
@@ -79,14 +80,15 @@ export function useOnboardingState(): OnboardingState {
   const powerups = usePowerups()
   const friends = useFriendsGroups()
   const completedGroups = groups.data?.completedGroups ?? 0
+  const locked = predictionsLocked(friends.data?.available)
   return deriveOnboardingState({
     completedGroups,
     thirdsCount: thirds.data?.selectedCount ?? 0,
     groupsDone: completedGroups >= 12,
     hasDarkHorse: !!powerups.data?.darkHorse,
     hasDisappointment: !!powerups.data?.disappointment,
-    locked: friends.data?.available === true,
-    closesAt: friends.data?.available === false ? friends.data.availableAt ?? null : null,
+    locked,
+    closesAt: locked ? null : friends.data?.availableAt ?? PREDICTIONS_CLOSE_AT,
     loading: groups.isLoading || thirds.isLoading || powerups.isLoading,
   })
 }
