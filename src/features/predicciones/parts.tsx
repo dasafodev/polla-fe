@@ -1,6 +1,6 @@
 import { Users } from '@phosphor-icons/react'
 import { Flag } from '../../ui/Flag'
-import type { GroupRanking } from '../../types/api'
+import type { GroupRanking, TeamStanding } from '../../types/api'
 
 export function ConsensusLegend({ kind }: { kind: 'groups' | 'powerups' }) {
   const who = kind === 'groups' ? 'de la polla que coincidió contigo' : 'que eligió lo mismo que tú'
@@ -60,6 +60,33 @@ export function RankingRow({ r, index }: { r: GroupRanking; index: number }) {
       {result === 'partial' && (
         <span className="rounded-full bg-[#f7e7cb] px-2 py-0.5 font-mono text-[10px] font-bold text-[#9a6a16]">PARCIAL</span>
       )}
+    </div>
+  )
+}
+
+export interface RealTableRow { code: string; flag: string | null; standing: TeamStanding }
+
+// Mini-tabla real del grupo (datos de standing en GET /groups), debajo del pronóstico.
+export function GroupRealTable({ rows }: { rows: RealTableRow[] }) {
+  if (rows.length === 0) return null
+  return (
+    <div className="mt-2 rounded-lg bg-surface-2 px-2.5 py-2">
+      <div className="mb-1 flex items-center justify-between">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-muted">Tabla real</span>
+        <span className="font-mono text-[10px] text-muted">PJ · DIF · PTS</span>
+      </div>
+      {rows.map((r) => {
+        const gd = r.standing.goalDiff
+        return (
+          <div key={r.code} className="flex items-center gap-2 py-0.5">
+            <span className="w-4 text-center font-mono text-[11px] font-bold text-ink-soft">{r.standing.realPosition ?? '–'}</span>
+            <Flag code={r.code} flag={r.flag} className="size-4" />
+            <span className="flex-1 text-xs font-medium text-ink">{r.code}</span>
+            <span className="font-mono text-[11px] text-muted">{`${r.standing.matchesPlayed} · ${gd > 0 ? `+${gd}` : gd}`}</span>
+            <span className="w-6 text-right font-mono text-[11px] font-bold text-ink">{r.standing.pts}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }
