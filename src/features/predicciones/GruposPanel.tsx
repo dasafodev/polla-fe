@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { useMyGroupPredictions } from '../groups/hooks'
+import { useGroups, useMyGroupPredictions } from '../groups/hooks'
 import { useMyTotals } from './hooks'
 import { signed } from './format'
-import { PhaseSummary, PanelSkeleton, RankingRow, ConsensusLegend } from './parts'
+import { PhaseSummary, PanelSkeleton, RankingRow, ConsensusLegend, GroupRealTable, type RealTableRow } from './parts'
 import { GroupEditSheet } from './GroupEditSheet'
-import type { GroupPrediction } from '../../types/api'
+import type { Group, GroupPrediction } from '../../types/api'
 
 export function GruposPanel({ locked }: { locked: boolean }) {
   const groups = useMyGroupPredictions()
+  const catalog = useGroups()
   const totals = useMyTotals()
   const [openId, setOpenId] = useState<string | null>(null)
   if (groups.isLoading) return <PanelSkeleton />
@@ -15,20 +16,39 @@ export function GruposPanel({ locked }: { locked: boolean }) {
   const completed = groups.data?.completedGroups ?? 0
   const value = locked && totals.data ? `${signed(totals.data.breakdown.groups)} pts` : `${completed}/12 completos`
   const hasConsensus = list.some((g) => g.rankings.some((r) => r.consensusPct != null))
+  const catalogById = new Map((catalog.data?.data ?? []).map((g) => [g.id, g]))
 
   return (
     <div className="space-y-3">
       <PhaseSummary label="Grupos" value={value} />
       {hasConsensus && <ConsensusLegend kind="groups" />}
       {list.map((g) => (
-        <GroupRow key={g.groupId} g={g} locked={locked} onOpen={setOpenId} />
+        <GroupRow
+          key={g.groupId}
+          g={g}
+          locked={locked}
+          onOpen={setOpenId}
+          realTable={locked ? realTableFor(catalogById.get(g.groupId)) : null}
+        />
       ))}
       <GroupEditSheet groupId={openId} locked={locked} onClose={() => setOpenId(null)} />
     </div>
   )
 }
 
-function GroupRow({ g, locked, onOpen }: { g: GroupPrediction; locked: boolean; onOpen: (groupId: string) => void }) {
+// La tabla real sale del standing embebido en GET /groups (la actualiza el cron del BE cada 5 min).
+function realTableFor(group: Group | undefined): RealTableRow[] | null {
+  if (!group) return null
+  const rows = group.teams
+    .filter((t) => t.standing != null)
+    .map((t) => ({ code: t.code, flag: t.flag, standing: t.standing! }))
+    .sort((a, b) => (a.standing.realPosition ?? 99) - (b.standing.realPosition ?? 99))
+  return rows.length > 0 ? rows : null
+}
+
+function GroupRow({ g, locked, onOpen, realTable }: {
+  g: GroupPrediction; locked: boolean; onOpen: (groupId: string) => void; realTable: RealTableRow[] | null
+}) {
   if (!g.groupComplete) {
     return (
       <button
@@ -60,6 +80,7 @@ function GroupRow({ g, locked, onOpen }: { g: GroupPrediction; locked: boolean; 
       {g.rankings.map((r, i) => (
         <RankingRow key={r.teamId} r={r} index={i} />
       ))}
+      {realTable && <GroupRealTable rows={realTable} />}
     </button>
   )
 }
