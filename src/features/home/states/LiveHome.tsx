@@ -3,9 +3,7 @@ import { fadeUp, stagger } from '../../../ui/motion'
 import { useLiveHome } from '../liveHome'
 import { PendingKoAlert } from '../components/PendingKoAlert'
 import { PositionCard } from '../components/PositionCard'
-import { NextMatchCard } from '../components/NextMatchCard'
-import { TodayMatchesCard } from '../components/TodayMatches'
-import { PalpitosBar } from '../components/PalpitosBar'
+import { MatchCards } from '../components/MatchCards'
 
 export function LiveHome() {
   const live = useLiveHome()
@@ -23,15 +21,7 @@ export function LiveHome() {
           <PositionCard info={live.position} />
         </motion.div>
       )}
-      <TodayMatchesCard />
-      {live.nextMatch && (
-        <motion.div variants={fadeUp}>
-          <NextMatchCard match={live.nextMatch} />
-        </motion.div>
-      )}
-      <motion.div variants={fadeUp}>
-        <PalpitosBar info={live.palpitos} />
-      </motion.div>
+      <MatchCards koNext={live.nextMatch} />
     </motion.div>
   )
 }
@@ -40,8 +30,8 @@ function LiveSkeleton() {
   return (
     <div className="space-y-4">
       <div className="h-32 animate-pulse rounded-card bg-surface-2" aria-busy />
-      <div className="h-16 animate-pulse rounded-card bg-surface-2" />
-      <div className="h-20 animate-pulse rounded-card bg-surface-2" />
+      <div className="h-24 animate-pulse rounded-card bg-surface-2" />
+      <div className="h-24 animate-pulse rounded-card bg-surface-2" />
     </div>
   )
 }

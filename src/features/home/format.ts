@@ -26,9 +26,11 @@ export function formatKickoff(iso: string): string {
   return new Date(iso).toLocaleString('es-CO', { weekday: 'short', hour: 'numeric', minute: '2-digit' })
 }
 
-// "4:00 p. m." — hora Colombia de un partido de hoy (sin día: la franja ya es "hoy").
-export function formatHour(iso: string): string {
-  return new Date(iso).toLocaleString('es-CO', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Bogota' })
+// "vie, 7:30 p. m." — día y hora Colombia de un partido por jugar.
+export function formatKickoffBogota(iso: string): string {
+  return new Date(iso).toLocaleString('es-CO', {
+    weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Bogota',
+  })
 }
 
 // "sáb 28 jun, 11:30 a. m." — cierre de pronósticos.

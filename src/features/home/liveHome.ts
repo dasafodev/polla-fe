@@ -1,4 +1,4 @@
-// Estado "en vivo" del Inicio: posición/puntos, KO pendientes, próximo partido y barra de pálpitos.
+// Estado "en vivo" del Inicio: posición/puntos, KO pendientes y próximo partido KO.
 // Función pura (deriveLiveHome) + hook (useLiveHome), espejando el patrón de onboarding/onboardingState.
 // Todo sale de hooks existentes; ningún endpoint nuevo.
 
@@ -6,8 +6,7 @@ import { useMemo } from 'react'
 import { useAuth } from '../../auth/useAuth'
 import { useScoreboard } from '../scoreboard/hooks'
 import { useAllKoPredictions } from '../predicciones/hooks'
-import { usePowerups } from '../powerups/hooks'
-import type { KoMatch, KoMatchesResponse, MyPowerups, PowerupTeam, ScoreboardEntry } from '../../types/api'
+import type { KoMatch, KoMatchesResponse, ScoreboardEntry } from '../../types/api'
 
 export interface PositionInfo {
   rank: number
@@ -25,30 +24,17 @@ export interface PendingKoInfo {
   deadline: string
 }
 
-export interface PalpitosInfo {
-  revelacion: PowerupTeam | null
-  decepcion: PowerupTeam | null
-  won: number
-  lost: number
-  net: number
-  greenPct: number
-  redPct: number
-  isEmpty: boolean
-}
-
 export interface LiveHomeState {
   loading: boolean
   position: PositionInfo | null
   pendingKo: PendingKoInfo | null
   nextMatch: KoMatch | null
-  palpitos: PalpitosInfo
 }
 
 interface DeriveInput {
   myId: string
   scoreboard: ScoreboardEntry[]
   rounds: KoMatchesResponse[]
-  powerups: MyPowerups | null
   now: number
   loading: boolean
 }
@@ -103,36 +89,12 @@ function deriveNextMatch(rounds: KoMatchesResponse[], now: number): KoMatch | nu
   })[0]
 }
 
-function derivePalpitos(pw: MyPowerups | null): PalpitosInfo {
-  const revelacion = pw?.darkHorse ?? null
-  const decepcion = pw?.disappointment ?? null
-  const pe = pw?.pointsEarned ?? null
-  if (!pe) {
-    return { revelacion, decepcion, won: 0, lost: 0, net: 0, greenPct: 0, redPct: 0, isEmpty: true }
-  }
-  const won = Math.max(0, pe.pts_dark_horse_per_round)
-  const lost = Math.abs(pe.pts_disappointment_per_round)
-  const magnitude = won + lost
-  const isEmpty = magnitude === 0
-  return {
-    revelacion,
-    decepcion,
-    won,
-    lost,
-    net: pe.total,
-    greenPct: isEmpty ? 0 : Math.round((won / magnitude) * 100),
-    redPct: isEmpty ? 0 : Math.round((lost / magnitude) * 100),
-    isEmpty,
-  }
-}
-
 export function deriveLiveHome(i: DeriveInput): LiveHomeState {
   return {
     loading: i.loading,
     position: derivePosition(i.myId, i.scoreboard),
     pendingKo: derivePendingKo(i.rounds),
     nextMatch: deriveNextMatch(i.rounds, i.now),
-    palpitos: derivePalpitos(i.powerups),
   }
 }
 
@@ -140,19 +102,16 @@ export function useLiveHome(): LiveHomeState {
   const { participant } = useAuth()
   const scoreboard = useScoreboard()
   const ko = useAllKoPredictions()
-  const powerups = usePowerups()
 
   const myId = participant?.id ?? ''
   const boardData = scoreboard.data?.data
   const rounds = ko.rounds
-  const pwData = powerups.data
-  const loading = scoreboard.isLoading || ko.isLoading || powerups.isLoading
+  const loading = scoreboard.isLoading || ko.isLoading
 
   // `now` se captura solo cuando cambian los datos (no en cada render): así los sorts/derivaciones
   // no se recalculan en cada refetch de cualquier query del Dashboard.
   return useMemo(
-    () =>
-      deriveLiveHome({ myId, scoreboard: boardData ?? [], rounds, powerups: pwData ?? null, now: Date.now(), loading }),
-    [myId, boardData, rounds, pwData, loading],
+    () => deriveLiveHome({ myId, scoreboard: boardData ?? [], rounds, now: Date.now(), loading }),
+    [myId, boardData, rounds, loading],
   )
 }

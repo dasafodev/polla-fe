@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { deriveLiveHome } from './liveHome'
-import type { KoMatch, KoMatchesResponse, MyPowerups, ScoreboardEntry } from '../../types/api'
+import type { KoMatch, KoMatchesResponse, ScoreboardEntry } from '../../types/api'
 
 function entry(id: string, rank: number, total: number, prize: number | null = null): ScoreboardEntry {
   return { rank, participant: { id, name: id }, total, prize }
@@ -34,7 +34,7 @@ function round(slug: KoMatchesResponse['round']['slug'], name: string, order: nu
 }
 
 const NOW = Date.parse('2026-06-20T00:00:00Z')
-const base = { myId: 'me', scoreboard: [] as ScoreboardEntry[], rounds: [] as KoMatchesResponse[], powerups: null as MyPowerups | null, now: NOW, loading: false }
+const base = { myId: 'me', scoreboard: [] as ScoreboardEntry[], rounds: [] as KoMatchesResponse[], now: NOW, loading: false }
 
 describe('deriveLiveHome · posición', () => {
   it('calcula gap al líder y gap al podio cuando estoy fuera del podio', () => {
@@ -131,52 +131,5 @@ describe('deriveLiveHome · próximo partido', () => {
   it('sin candidatos → null', () => {
     const rounds = [round('r32', 'Dieciseisavos', 1, [match({ status: 'finished' })])]
     expect(deriveLiveHome({ ...base, rounds }).nextMatch).toBe(null)
-  })
-})
-
-describe('deriveLiveHome · barra de pálpitos', () => {
-  const teams: MyPowerups = {
-    darkHorse: { teamId: 'col', name: 'Colombia', code: 'COL', isTop8: false, flag: null },
-    disappointment: { teamId: 'bra', name: 'Brasil', code: 'BRA', isTop8: true, flag: null },
-  }
-
-  it('reparte verde/rojo por magnitud y muestra el neto', () => {
-    const pw: MyPowerups = {
-      ...teams,
-      pointsEarned: {
-        pts_dark_horse_per_round: 13,
-        pts_disappointment_per_round: -3,
-        dark_horse_rounds_advanced: 3,
-        disappointment_rounds_advanced: 1,
-        total: 10,
-      },
-    }
-    const p = deriveLiveHome({ ...base, powerups: pw }).palpitos
-    expect(p.won).toBe(13)
-    expect(p.lost).toBe(3)
-    expect(p.net).toBe(10)
-    expect(p.greenPct).toBe(81)
-    expect(p.redPct).toBe(19)
-    expect(p.isEmpty).toBe(false)
-  })
-
-  it('sin pointsEarned → vacío, pero conserva los equipos', () => {
-    const p = deriveLiveHome({ ...base, powerups: teams }).palpitos
-    expect(p.isEmpty).toBe(true)
-    expect(p.revelacion?.name).toBe('Colombia')
-  })
-
-  it('magnitud 0 (0 ganados, 0 perdidos) → vacío', () => {
-    const pw: MyPowerups = {
-      ...teams,
-      pointsEarned: {
-        pts_dark_horse_per_round: 0,
-        pts_disappointment_per_round: 0,
-        dark_horse_rounds_advanced: 0,
-        disappointment_rounds_advanced: 0,
-        total: 0,
-      },
-    }
-    expect(deriveLiveHome({ ...base, powerups: pw }).palpitos.isEmpty).toBe(true)
   })
 })
