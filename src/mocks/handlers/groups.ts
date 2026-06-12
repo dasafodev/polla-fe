@@ -65,6 +65,42 @@ export const groupsHandlers = [
     return HttpResponse.json({ data }, { status: 200 })
   }),
 
+  http.get('/api/groups/matches', ({ request }) => {
+    const s = requireSession(); if (s.response) return s.response
+    const url = new URL(request.url)
+    const date = url.searchParams.get('date')
+    const groupId = url.searchParams.get('groupId')
+
+    let list = db.groupMatches
+    if (groupId) list = list.filter((m) => m.groupId === groupId)
+    if (date) {
+      // Espeja colombiaDayRange del BE: día calendario de Colombia = [dateT05:00Z, +24h)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err('INVALID_DATE', 'date must be in YYYY-MM-DD format', 400)
+      const start = Date.parse(`${date}T05:00:00.000Z`)
+      if (Number.isNaN(start)) return err('INVALID_DATE', `Invalid date: ${date}`, 400)
+      const end = start + 24 * 60 * 60 * 1000
+      list = list.filter((m) => { const t = Date.parse(m.scheduledAt); return t >= start && t < end })
+    }
+
+    const data = list
+      .slice()
+      .sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt) || a.matchNumber - b.matchNumber)
+      .map((m) => {
+        const g = db.groups.find((x) => x.id === m.groupId)!
+        const home = teamById(m.homeTeamId)!
+        const away = teamById(m.awayTeamId)!
+        return {
+          id: m.id, matchNumber: m.matchNumber, groupId: m.groupId, groupLabel: g.label,
+          scheduledAt: m.scheduledAt, status: m.status.toUpperCase(),
+          homeTeam: { id: home.id, name: home.name, code: home.code, flag: home.flag },
+          awayTeam: { id: away.id, name: away.name, code: away.code, flag: away.flag },
+          homeTeamLabel: home.name, awayTeamLabel: away.name,
+          scoreHome: m.scoreHome, scoreAway: m.scoreAway,
+        }
+      })
+    return HttpResponse.json({ data }, { status: 200 })
+  }),
+
   http.post('/api/groups/predictions', async ({ request }) => {
     const s = requireSession(); if (s.response) return s.response
     if (groupsLocked()) return err('PREDICTIONS_LOCKED', 'Las predicciones de grupos están cerradas', 423)

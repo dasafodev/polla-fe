@@ -1,4 +1,4 @@
-import { setDb, type Db, type DbTeam, type DbGroup, type DbKoMatch, type DbKoRound, type DbParticipant } from './db'
+import { setDb, type Db, type DbTeam, type DbGroup, type DbKoMatch, type DbKoRound, type DbParticipant, type DbGroupMatch } from './db'
 import type { ScoringParams } from '../types/enums'
 
 const GROUP_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'] as const
@@ -67,6 +67,27 @@ function buildKoMatches(): DbKoMatch[] {
     m('ko-r32-open-5', 'r32', 8, '2026-07-03T16:00:00.000Z', 'scheduled', 'tG2', 'tH2', null),
     // placeholder sin cruce definido (homeTeam null)
     m('ko-r16-1', 'r16', 1, '2026-06-03T16:00:00.000Z', 'finished', 'tA1', 'tC1', { scoreHome: 0, scoreAway: 0, winnerTeamId: 'tA1' }),
+  ]
+}
+
+// Partidos de fase de grupos (informativos). Resultados consistentes con officialGroupStandings
+// (orden natural tX1..tX4): los grupos A y B ya tienen tabla, el resto no ha jugado.
+function buildGroupMatches(): DbGroupMatch[] {
+  const gm = (
+    id: string, groupId: string, n: number, scheduledAt: string,
+    status: DbGroupMatch['status'], homeTeamId: string, awayTeamId: string,
+    scoreHome: number | null, scoreAway: number | null,
+  ): DbGroupMatch => ({ id, matchNumber: n, groupId, scheduledAt, status, homeTeamId, awayTeamId, scoreHome, scoreAway })
+  return [
+    // 11-jun (día inaugural): grupo A jugó la fecha 1 completa
+    gm('gm-a1', 'g-A', 1, '2026-06-11T16:00:00.000Z', 'finished', 'tA1', 'tA4', 3, 0),
+    gm('gm-a2', 'g-A', 2, '2026-06-11T20:00:00.000Z', 'finished', 'tA2', 'tA3', 1, 0),
+    // 12-jun Colombia: uno terminado, uno EN VIVO y uno programado (00:30Z del 13 = 7:30 p. m. del 12 en Bogotá)
+    gm('gm-b1', 'g-B', 3, '2026-06-12T16:00:00.000Z', 'finished', 'tB1', 'tB4', 2, 1),
+    gm('gm-b2', 'g-B', 4, '2026-06-12T20:00:00.000Z', 'live', 'tB2', 'tB3', 1, 1),
+    gm('gm-c1', 'g-C', 5, '2026-06-13T00:30:00.000Z', 'scheduled', 'tC1', 'tC2', null, null),
+    // 13-jun: para ejercitar el filtro por fecha
+    gm('gm-d1', 'g-D', 6, '2026-06-13T16:00:00.000Z', 'scheduled', 'tD1', 'tD2', null, null),
   ]
 }
 
@@ -146,7 +167,7 @@ export function makeDb(): Db {
     ],
     teams, groups, groupPredictions, thirdsSelections, powerups,
     koRounds: [...KO_ROUNDS],
-    koMatches, koPredictions, scoringParams: SCORING,
+    koMatches, koPredictions, groupMatches: buildGroupMatches(), scoringParams: SCORING,
     officialGroupStandings, officialBestThirds, teamRoundsAdvanced,
   }
 }
@@ -168,7 +189,7 @@ export function makeEmptyWorldDb(): Db {
     teams, groups,
     groupPredictions: [], thirdsSelections: [], powerups: [],
     koRounds: [...KO_ROUNDS],
-    koMatches: [], koPredictions: [],
+    koMatches: [], koPredictions: [], groupMatches: [],
     scoringParams: SCORING,
     officialGroupStandings: null, officialBestThirds: null, teamRoundsAdvanced: null,
   }

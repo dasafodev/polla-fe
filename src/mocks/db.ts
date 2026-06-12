@@ -23,6 +23,12 @@ export interface DbKoMatch {
 export interface DbKoPrediction {
   participantId: string; matchId: string; scoreHome: number; scoreAway: number; teamAdvancesId: string; tripleActive: boolean
 }
+export interface DbGroupMatch {
+  id: string; matchNumber: number; groupId: string; scheduledAt: string
+  status: 'scheduled' | 'live' | 'finished'
+  homeTeamId: string; awayTeamId: string
+  scoreHome: number | null; scoreAway: number | null
+}
 
 export interface Db {
   currentSessionId: string | null
@@ -37,6 +43,7 @@ export interface Db {
   koRounds: DbKoRound[]
   koMatches: DbKoMatch[]
   koPredictions: DbKoPrediction[]
+  groupMatches: DbGroupMatch[]
   scoringParams: ScoringParams
   // Estado oficial interno (solo seed; NO expuesto por el contrato participante)
   officialGroupStandings: Record<string, string[]> | null // groupId → [pos1,pos2,pos3,pos4] teamIds
@@ -50,7 +57,7 @@ function makeEmptyDb(): Db {
   return {
     currentSessionId: null, participants: [], invitations: [], tournamentStartAt: '2026-06-11T16:00:00.000Z',
     teams: [], groups: [], groupPredictions: [], thirdsSelections: [], powerups: [],
-    koRounds: [], koMatches: [], koPredictions: [],
+    koRounds: [], koMatches: [], koPredictions: [], groupMatches: [],
     scoringParams: {
       pts_group_position_exact: 0, pts_group_position_partial: 0, bonus_group_complete: 0,
       pts_third_correct: 0, pts_ko_advances: 0, pts_ko_exact_score: 0,
