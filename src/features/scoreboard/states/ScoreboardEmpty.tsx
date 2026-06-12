@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import type { ScoreboardEntry } from '../../../types/api'
 import { Avatar } from '../../../ui/Avatar'
+import { displayName } from '../../../lib/names'
 import { fadeUp, stagger } from '../../../ui/motion'
 import { FunFactCard } from '../../home/components/FunFactCard'
 import { NAVY_BG } from '../theme'
@@ -45,7 +46,7 @@ export function ScoreboardEmpty({ entries, meId }: { entries: ScoreboardEntry[];
                   >
                     <Avatar name={e.participant.name} size={30} />
                     <span data-testid="player-name" className="flex-1 font-display font-bold text-ink">
-                      {e.participant.name}
+                      {displayName(e.participant.name)}
                     </span>
                     {isMe && (
                       <span className="rounded-full border border-violet bg-surface px-2 py-0.5 font-display text-[10px] font-bold text-violet">

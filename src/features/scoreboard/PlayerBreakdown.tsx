@@ -2,6 +2,7 @@ import { type ReactNode } from 'react'
 import { SquaresFour, Sword, Medal, TrendUp, TrendDown } from '@phosphor-icons/react'
 import { useBreakdown } from './hooks'
 import { Avatar } from '../../ui/Avatar'
+import { displayName } from '../../lib/names'
 import { formatCOP } from './format'
 
 export function PlayerBreakdown({ participantId, rank }: { participantId: string; rank?: number }) {
@@ -24,7 +25,7 @@ export function PlayerBreakdown({ participantId, rank }: { participantId: string
       <div className="flex items-center gap-3 pt-1">
         <Avatar name={b.participant.name} size={46} />
         <div className="flex-1">
-          <p className="font-display text-lg font-extrabold text-ink">{b.participant.name}</p>
+          <p className="font-display text-lg font-extrabold text-ink">{displayName(b.participant.name)}</p>
           {rank != null && (
             <span
               className={`inline-block rounded-full border px-2 py-0.5 font-mono text-xs font-bold ${

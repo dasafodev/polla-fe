@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Avatar } from '../../ui/Avatar'
+import { displayName } from '../../lib/names'
 import { Button } from '../../ui/Button'
 import { Chip } from '../../ui/Chip'
 import { fadeUp, stagger, useReduced } from '../../ui/motion'
@@ -56,7 +57,7 @@ function ParticipantRow({ p }: { p: AdminParticipant }) {
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3 py-2.5">
       <Avatar name={p.name} size={36} />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-display font-bold text-ink">{p.name}</p>
+        <p className="truncate font-display font-bold text-ink">{displayName(p.name)}</p>
         <p className="truncate text-xs text-ink-soft">
           {p.email}
           {p.phone && <span className="text-muted"> · {p.phone}</span>}

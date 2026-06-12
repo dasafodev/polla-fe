@@ -4,6 +4,7 @@ import { SignOut, Question } from '@phosphor-icons/react'
 import { useAuth } from '../../../auth/useAuth'
 import { useLogout } from '../../../auth/hooks'
 import { Avatar } from '../../../ui/Avatar'
+import { displayName } from '../../../lib/names'
 import { RulesSheet } from '../../rules/RulesSheet'
 
 export function DashboardHeader({ subtitle }: { subtitle: string }) {
@@ -12,7 +13,7 @@ export function DashboardHeader({ subtitle }: { subtitle: string }) {
   const nav = useNavigate()
   const [menu, setMenu] = useState(false)
   const [rules, setRules] = useState(false)
-  const name = participant?.name ?? '…'
+  const name = participant?.name ? displayName(participant.name) : '…'
 
   return (
     <header className="flex items-center justify-between pt-2">

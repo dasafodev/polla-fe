@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useKoMatch, useSaveKoPrediction, useFriendsKo } from './hooks'
 import { isApiError } from '../../lib/errors'
+import { displayName } from '../../lib/names'
 import type { KoMatch } from '../../types/api'
 
 export function KoMatchDetail() {
@@ -24,7 +25,7 @@ export function KoMatchDetail() {
         : <p>Cruce aún no definido.</p>}
       <h2>Amigos</h2>
       {friends.isLoading ? <p>Cargando…</p> : friends.data?.available
-        ? <ul>{friends.data.data?.map((f) => <li key={f.participant.id}>{f.participant.name}: {f.prediction ? `${f.prediction.scoreHome}-${f.prediction.scoreAway}` : 'sin predicción'}</li>)}</ul>
+        ? <ul>{friends.data.data?.map((f) => <li key={f.participant.id}>{displayName(f.participant.name)}: {f.prediction ? `${f.prediction.scoreHome}-${f.prediction.scoreAway}` : 'sin predicción'}</li>)}</ul>
         : <p>Disponible el {friends.data?.availableAt}</p>}
     </div>
   )

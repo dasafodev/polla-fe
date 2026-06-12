@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { renderWithProviders, seedSession } from '../../test/utils'
 import { server } from '../../mocks/server'
+import { db } from '../../mocks/db'
 import { Scoreboard } from './Scoreboard'
 
 describe('Scoreboard', () => {
@@ -30,6 +31,18 @@ describe('Scoreboard', () => {
     expect(within(dialog).getByText('80')).toBeInTheDocument() // terceros
     expect(within(dialog).getByText('+15')).toBeInTheDocument() // caballo oscuro
     expect(within(dialog).getByText('-5')).toBeInTheDocument() // decepción
+  })
+
+  it('normaliza a Título los nombres que vienen en mayúsculas o minúsculas crudas', async () => {
+    const maria = db.participants.find((p) => p.id === 'p-maria')!
+    maria.name = 'MARÍA LÓPEZ'
+    const luis = db.participants.find((p) => p.id === 'p-luis')!
+    luis.name = 'luis gómez'
+    renderWithProviders(<Scoreboard />)
+    await screen.findByRole('button', { name: /Juan/i })
+    expect(screen.getByText('María López')).toBeInTheDocument()
+    expect(screen.getByText('Luis Gómez')).toBeInTheDocument()
+    expect(screen.queryByText('MARÍA LÓPEZ')).not.toBeInTheDocument()
   })
 
   it('el switch alterna entre provisionales (default) y oficiales en 0', async () => {

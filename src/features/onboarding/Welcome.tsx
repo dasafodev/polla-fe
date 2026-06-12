@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../auth/useAuth'
+import { displayName } from '../../lib/names'
 import { NavyBackdrop } from '../../ui/Backdrop'
 import { Confetti } from '../../ui/Confetti'
 import { Button } from '../../ui/Button'
@@ -11,7 +12,7 @@ const STEPS = ['Ordena los 12 grupos', 'Elige los 8 terceros que clasifican', 'E
 
 export function Welcome({ onStart }: { onStart: () => void }) {
   const { participant } = useAuth()
-  const first = participant?.name?.split(' ')[0] ?? ''
+  const first = participant?.name ? displayName(participant.name).split(' ')[0] : ''
   const [rules, setRules] = useState(false)
   return (
     <div className="relative grid min-h-[100dvh] place-items-center overflow-hidden px-6 text-white">

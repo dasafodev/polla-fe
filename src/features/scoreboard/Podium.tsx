@@ -1,6 +1,7 @@
 import { Crown } from '@phosphor-icons/react'
 import type { ScoreboardEntry } from '../../types/api'
 import { Avatar } from '../../ui/Avatar'
+import { displayName } from '../../lib/names'
 import { formatCOP } from './format'
 
 const FIRST_BG = 'linear-gradient(180deg, #7d54e6, #5a28bf)'
@@ -41,7 +42,7 @@ export function Podium({
               <Avatar name={e.participant.name} size={isFirst ? 54 : 42} />
             </span>
             <span className="text-center font-display text-[13px] font-bold leading-tight text-white">
-              {e.participant.name}
+              {displayName(e.participant.name)}
             </span>
             <span className="font-mono text-xs font-bold text-violet-light">{view === 'provisional' ? e.total : 0} pts</span>
             {isMe && (

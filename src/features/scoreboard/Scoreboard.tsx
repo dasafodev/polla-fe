@@ -3,6 +3,7 @@ import { useScoreboard } from './hooks'
 import { useAuth } from '../../auth/useAuth'
 import type { ScoreboardEntry } from '../../types/api'
 import { Avatar } from '../../ui/Avatar'
+import { displayName } from '../../lib/names'
 import { Button } from '../../ui/Button'
 import { Sheet } from '../../ui/Sheet'
 import { Podium } from './Podium'
@@ -76,7 +77,7 @@ export function Scoreboard() {
         </ul>
       </div>
 
-      <Sheet open={selected !== null} onClose={() => setSelected(null)} ariaLabel={selected?.participant.name}>
+      <Sheet open={selected !== null} onClose={() => setSelected(null)} ariaLabel={selected ? displayName(selected.participant.name) : undefined}>
         {selected && <PlayerBreakdown participantId={selected.participant.id} rank={selected.rank} />}
       </Sheet>
     </div>
@@ -132,7 +133,7 @@ const ScoreboardRow = memo(function ScoreboardRow({
       >
         <span className="w-5 text-center font-mono text-sm font-bold text-muted">{entry.rank}</span>
         <Avatar name={entry.participant.name} size={30} />
-        <span className="flex-1 font-display font-bold text-ink">{entry.participant.name}</span>
+        <span className="flex-1 font-display font-bold text-ink">{displayName(entry.participant.name)}</span>
         {isMe && (
           <span className="rounded-full border border-violet bg-surface px-2 py-0.5 font-display text-[10px] font-bold text-violet">
             TÚ
