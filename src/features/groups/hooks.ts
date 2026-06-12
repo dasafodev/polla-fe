@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { keys } from '../../lib/queryClient'
 import { useAuth } from '../../auth/useAuth'
-import { getGroups, getMyGroupPredictions, saveGroupPredictions, getThirds, saveThirds, getFriendsGroups } from './api'
+import { getGroups, getMyGroupPredictions, saveGroupPredictions, getThirds, saveThirds, getFriendsGroups, getGroupMatches } from './api'
 
 export function useGroups() {
   return useQuery({ queryKey: keys.groups.all(), queryFn: getGroups })
@@ -30,4 +30,11 @@ export function useSaveThirds() {
 }
 export function useFriendsGroups() {
   return useQuery({ queryKey: keys.groups.friends(), queryFn: getFriendsGroups })
+}
+export function useGroupMatches(filters: { date?: string; groupId?: string } = {}, opts: { pollMs?: number } = {}) {
+  return useQuery({
+    queryKey: keys.groups.matches(filters.date ?? null, filters.groupId ?? null),
+    queryFn: () => getGroupMatches(filters),
+    refetchInterval: opts.pollMs ?? false,
+  })
 }

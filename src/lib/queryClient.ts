@@ -19,6 +19,7 @@ export const keys = {
   me: () => ['me'] as const,
   groups: {
     all: () => ['groups'] as const,
+    matches: (date: string | null, groupId: string | null) => ['groups', 'matches', date, groupId] as const,
     predictionsMe: (pid: string) => ['groups', 'predictions', 'me', pid] as const,
     thirds: (pid: string) => ['groups', 'thirds', pid] as const,
     friends: () => ['groups', 'friends'] as const,

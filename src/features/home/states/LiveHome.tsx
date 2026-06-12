@@ -4,6 +4,7 @@ import { useLiveHome } from '../liveHome'
 import { PendingKoAlert } from '../components/PendingKoAlert'
 import { PositionCard } from '../components/PositionCard'
 import { NextMatchCard } from '../components/NextMatchCard'
+import { TodayMatchesCard } from '../components/TodayMatches'
 import { PalpitosBar } from '../components/PalpitosBar'
 
 export function LiveHome() {
@@ -22,6 +23,7 @@ export function LiveHome() {
           <PositionCard info={live.position} />
         </motion.div>
       )}
+      <TodayMatchesCard />
       {live.nextMatch && (
         <motion.div variants={fadeUp}>
           <NextMatchCard match={live.nextMatch} />
