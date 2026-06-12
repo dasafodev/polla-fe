@@ -21,6 +21,31 @@ function consensusStat(teamId: string, position: number): { pct: number } | null
   return { pct: Math.round((count / total) * 100 * 100) / 100 }
 }
 
+// Espeja recalculateGroupStandings del BE: FINISHED y LIVE suman pts/goles (tabla en tiempo real),
+// matchesPlayed solo cuenta FINISHED. Desempate: pts → dif. gol → goles a favor.
+function computeStandings(group: DbGroup) {
+  const played = db.groupMatches.filter(
+    (m) => m.groupId === group.id && m.scoreHome != null && m.scoreAway != null && (m.status === 'finished' || m.status === 'live'),
+  )
+  if (played.length === 0) return null
+  const tally = new Map(group.teamIds.map((id) => [id, { pts: 0, gf: 0, ga: 0, pj: 0 }]))
+  for (const m of played) {
+    const h = tally.get(m.homeTeamId), a = tally.get(m.awayTeamId)
+    if (!h || !a) continue
+    h.gf += m.scoreHome!; h.ga += m.scoreAway!; a.gf += m.scoreAway!; a.ga += m.scoreHome!
+    if (m.scoreHome! > m.scoreAway!) h.pts += 3
+    else if (m.scoreHome! < m.scoreAway!) a.pts += 3
+    else { h.pts += 1; a.pts += 1 }
+    if (m.status === 'finished') { h.pj += 1; a.pj += 1 }
+  }
+  const ranked = [...tally.entries()]
+    .map(([teamId, t]) => ({ teamId, ...t, gd: t.gf - t.ga }))
+    .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf)
+  return new Map(ranked.map((r, i) => [r.teamId, {
+    realPosition: i + 1, pts: r.pts, matchesPlayed: r.pj, goalsFor: r.gf, goalsAgainst: r.ga, goalDiff: r.gd,
+  }]))
+}
+
 function thirdTeamId(pred?: DbGroupPrediction): string | null {
   if (!pred || pred.rankings.length !== 4) return null
   return pred.rankings.find((r) => r.position === 3)?.teamId ?? null
@@ -58,10 +83,16 @@ function serializeRankings(pred?: DbGroupPrediction, official?: string[]) {
 export const groupsHandlers = [
   http.get('/api/groups', () => {
     const s = requireSession(); if (s.response) return s.response
-    const data = db.groups.map((g) => ({
-      id: g.id, label: g.label, name: g.name,
-      teams: g.teamIds.map((id) => { const t = teamById(id)!; return { id: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag } }),
-    }))
+    const data = db.groups.map((g) => {
+      const standings = computeStandings(g)
+      const teams = g.teamIds.map((id) => {
+        const t = teamById(id)!
+        return { id: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag, standing: standings?.get(id) ?? null }
+      })
+      // Como el BE: con tabla, ordena por realPosition; sin tabla, conserva el orden del catálogo.
+      teams.sort((a, b) => (a.standing?.realPosition ?? Number.MAX_SAFE_INTEGER) - (b.standing?.realPosition ?? Number.MAX_SAFE_INTEGER))
+      return { id: g.id, label: g.label, name: g.name, teams }
+    })
     return HttpResponse.json({ data }, { status: 200 })
   }),
 

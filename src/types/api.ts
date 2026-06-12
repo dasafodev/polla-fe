@@ -42,7 +42,11 @@ export interface SignupBody {
 }
 
 // ── Catálogo ───────────────────────────────────────────────────────────────
-export interface Team { id: string; name: string; code: string; isTop8: boolean; flag: string | null }
+export interface TeamStanding {
+  realPosition: number | null; pts: number; matchesPlayed: number
+  goalsFor: number; goalsAgainst: number; goalDiff: number
+}
+export interface Team { id: string; name: string; code: string; isTop8: boolean; flag: string | null; standing?: TeamStanding | null }
 export interface Group { id: string; label: string; name: string; teams: Team[] }
 
 // ── Partidos de fase de grupos (GET /groups/matches — informativo, no paga puntos) ──

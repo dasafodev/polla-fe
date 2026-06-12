@@ -42,3 +42,31 @@ describe('GET /groups/matches', () => {
     expect(res.status).toBe(401)
   })
 })
+
+describe('GET /groups — standing por equipo', () => {
+  it('grupo con partidos jugados trae standing con tabla real', async () => {
+    const { data } = await (await get('/groups')).json()
+    const groupA = data.find((g: { id: string }) => g.id === 'g-A')
+    const tA1 = groupA.teams.find((t: { id: string }) => t.id === 'tA1')
+    expect(tA1.standing).toEqual({
+      realPosition: 1, pts: 3, matchesPlayed: 1, goalsFor: 3, goalsAgainst: 0, goalDiff: 3,
+    })
+  })
+  it('un partido EN VIVO suma pts/goles pero no matchesPlayed (como el BE)', async () => {
+    const { data } = await (await get('/groups')).json()
+    const groupB = data.find((g: { id: string }) => g.id === 'g-B')
+    const tB2 = groupB.teams.find((t: { id: string }) => t.id === 'tB2')
+    expect(tB2.standing.pts).toBe(1) // empate 1-1 en vivo
+    expect(tB2.standing.matchesPlayed).toBe(0)
+  })
+  it('grupo sin resultados → standing null en todos los equipos', async () => {
+    const { data } = await (await get('/groups')).json()
+    const groupE = data.find((g: { id: string }) => g.id === 'g-E')
+    expect(groupE.teams.every((t: { standing: unknown }) => t.standing === null)).toBe(true)
+  })
+  it('los equipos vienen ordenados por realPosition cuando hay tabla', async () => {
+    const { data } = await (await get('/groups')).json()
+    const groupA = data.find((g: { id: string }) => g.id === 'g-A')
+    expect(groupA.teams.map((t: { id: string }) => t.id)).toEqual(['tA1', 'tA2', 'tA3', 'tA4'])
+  })
+})
