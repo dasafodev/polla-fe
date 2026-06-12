@@ -99,7 +99,7 @@ function ReadOnlyGroup({ prediction, name }: { prediction: GroupPrediction | und
         </div>
       )}
       {prediction.rankings.map((r, i) => (
-        <RankingRow key={r.teamId} r={r} index={i} showResult />
+        <RankingRow key={r.teamId} r={r} index={i} />
       ))}
       <p className="mt-3 text-center text-sm font-medium text-lock">
         Las predicciones están cerradas. Solo lectura.

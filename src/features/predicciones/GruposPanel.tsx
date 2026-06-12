@@ -58,7 +58,7 @@ function GroupRow({ g, locked, onOpen }: { g: GroupPrediction; locked: boolean; 
         )}
       </div>
       {g.rankings.map((r, i) => (
-        <RankingRow key={r.teamId} r={r} index={i} showResult={locked} />
+        <RankingRow key={r.teamId} r={r} index={i} />
       ))}
     </button>
   )

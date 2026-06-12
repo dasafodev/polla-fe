@@ -33,11 +33,11 @@ describe('GruposPanel', () => {
     expect(screen.getByRole('button', { name: 'Editar Grupo A' })).toBeInTheDocument()
   })
 
-  it('sin cierre: muestra avance y oculta marcas', async () => {
+  it('sin cierre: muestra avance y las marcas aparecen apenas hay resultado', async () => {
     renderWithProviders(<GruposPanel locked={false} />)
     await screen.findByText('Grupo A')
     expect(screen.getByText('12/12 completos')).toBeInTheDocument()
-    expect(screen.queryByText('EXACTO')).not.toBeInTheDocument()
+    expect(screen.getAllByText('EXACTO')).toHaveLength(48) // las marcas ya no dependen del candado
   })
 
   it('grupo sin ordenar muestra estado vacío', async () => {

@@ -31,9 +31,9 @@ export function PanelSkeleton() {
   )
 }
 
-export function RankingRow({ r, index, showResult }: { r: GroupRanking; index: number; showResult: boolean }) {
+export function RankingRow({ r, index }: { r: GroupRanking; index: number }) {
   const top = index < 2
-  const result = showResult ? r.result : null
+  const result = r.result
   const tint = result === 'exact' ? 'bg-[#eaf6f0]' : result === 'partial' ? 'bg-[#fdf4e7]' : ''
   const posClass =
     result === 'exact'

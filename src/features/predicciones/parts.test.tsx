@@ -11,24 +11,29 @@ const baseR = (over: Partial<GroupRanking> = {}): GroupRanking => ({
 
 describe('RankingRow · consenso', () => {
   it('muestra el % cuando hay consenso', () => {
-    renderWithProviders(<RankingRow r={baseR({ consensusPct: 78 })} index={0} showResult={false} />)
+    renderWithProviders(<RankingRow r={baseR({ consensusPct: 78 })} index={0} />)
     expect(screen.getByText('78%')).toBeInTheDocument()
   })
 
   it('redondea el porcentaje a entero', () => {
-    renderWithProviders(<RankingRow r={baseR({ consensusPct: 78.6 })} index={0} showResult={false} />)
+    renderWithProviders(<RankingRow r={baseR({ consensusPct: 78.6 })} index={0} />)
     expect(screen.getByText('79%')).toBeInTheDocument()
   })
 
   it('no muestra chip cuando consensusPct es null', () => {
-    renderWithProviders(<RankingRow r={baseR({ consensusPct: null })} index={0} showResult={false} />)
+    renderWithProviders(<RankingRow r={baseR({ consensusPct: null })} index={0} />)
     expect(screen.queryByText(/\d+%/)).not.toBeInTheDocument()
   })
 
   it('con resultado: el badge y el % conviven', () => {
-    renderWithProviders(<RankingRow r={baseR({ consensusPct: 78, result: 'exact' })} index={0} showResult />)
+    renderWithProviders(<RankingRow r={baseR({ consensusPct: 78, result: 'exact' })} index={0} />)
     expect(screen.getByText('EXACTO')).toBeInTheDocument()
     expect(screen.getByText('78%')).toBeInTheDocument()
+  })
+
+  it('pinta el badge desde r.result sin gate de candado', () => {
+    renderWithProviders(<RankingRow r={baseR({ result: 'partial' })} index={0} />)
+    expect(screen.getByText('PARCIAL')).toBeInTheDocument()
   })
 })
 
