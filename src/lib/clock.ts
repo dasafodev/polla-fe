@@ -17,6 +17,13 @@ export function resetClock(): void {
   fixedEpochMs = null
 }
 
+/** Fecha calendario de "hoy" en Colombia (YYYY-MM-DD). Usa now() para respetar el reloj simulado. */
+export function todayBogota(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date(now()))
+}
+
 /** Solo display: formatea un ISO a hora Colombia. La lógica de candado NO usa esto. */
 export function formatDateLocal(iso: string): string {
   return new Intl.DateTimeFormat('es-CO', {

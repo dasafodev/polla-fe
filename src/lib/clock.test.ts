@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { now, setNow, resetClock } from './clock'
+import { now, setNow, resetClock, todayBogota } from './clock'
 
 afterEach(() => resetClock())
 
@@ -19,5 +19,16 @@ describe('clock', () => {
   it('setNow rechaza un ISO inválido (no deja now()=NaN, que desactivaría los candados)', () => {
     expect(() => setNow('no-es-fecha')).toThrow()
     expect(Number.isNaN(now())).toBe(false)
+  })
+})
+
+describe('todayBogota', () => {
+  it('devuelve la fecha calendario de Colombia, no la UTC', () => {
+    setNow('2026-06-13T02:00:00.000Z') // 9:00 p. m. del 12-jun en Bogotá
+    expect(todayBogota()).toBe('2026-06-12')
+  })
+  it('cambia de día a las 05:00Z (medianoche Colombia)', () => {
+    setNow('2026-06-13T05:00:00.000Z')
+    expect(todayBogota()).toBe('2026-06-13')
   })
 })
