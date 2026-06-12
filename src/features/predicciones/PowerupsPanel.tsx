@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import { TrendUp, TrendDown } from '@phosphor-icons/react'
+import { TrendUp, TrendDown, Users } from '@phosphor-icons/react'
 import { usePowerups } from '../powerups/hooks'
 import { signed } from './format'
-import { PhaseSummary, PanelSkeleton } from './parts'
+import { PhaseSummary, PanelSkeleton, ConsensusLegend } from './parts'
 import type { PowerupTeam } from '../../types/api'
 
 export function PowerupsPanel({ locked }: { locked: boolean }) {
@@ -12,10 +12,13 @@ export function PowerupsPanel({ locked }: { locked: boolean }) {
   const pe = data?.pointsEarned ?? null
   const chosen = (data?.darkHorse ? 1 : 0) + (data?.disappointment ? 1 : 0)
   const value = locked && pe ? `${signed(pe.total)} pts` : `${chosen}/2 elegidos`
+  const hasConsensus =
+    data?.darkHorse?.stats?.chosenPct != null || data?.disappointment?.stats?.chosenPct != null
 
   return (
     <div className="space-y-3">
       <PhaseSummary label="Pálpitos" value={value} />
+      {hasConsensus && <ConsensusLegend kind="powerups" />}
       <PowerupCard
         kind="dark"
         label="La revelación"
@@ -60,7 +63,10 @@ function PowerupCard({
         <span className="block font-mono text-[10px] font-bold uppercase tracking-wide text-muted">{label}</span>
         <span className="block text-sm font-bold text-ink">{team?.name ?? '—'}</span>
         {team?.stats?.chosenPct != null && (
-          <span className="block text-xs text-ink-soft">{Math.round(team.stats.chosenPct)}% lo eligió igual</span>
+          <span className="flex items-center gap-1 text-xs text-ink-soft">
+            <Users size={12} weight="bold" />
+            {Math.round(team.stats.chosenPct)}%
+          </span>
         )}
         {rounds != null && <span className="block text-xs text-ink-soft">Avanzó {rounds} rondas</span>}
       </span>

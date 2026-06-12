@@ -1,5 +1,16 @@
+import { Users } from '@phosphor-icons/react'
 import { Flag } from '../../ui/Flag'
 import type { GroupRanking } from '../../types/api'
+
+export function ConsensusLegend({ kind }: { kind: 'groups' | 'powerups' }) {
+  const who = kind === 'groups' ? 'de la polla que coincidió contigo' : 'que eligió lo mismo que tú'
+  return (
+    <div className="flex items-start gap-1.5 rounded-lg bg-surface-2 px-2.5 py-2 text-[11px] text-muted">
+      <Users size={13} weight="bold" className="mt-px shrink-0" />
+      <span>% de jugadores {who} — mientras más alto, más popular tu elección.</span>
+    </div>
+  )
+}
 
 export function PhaseSummary({ label, value }: { label: string; value: string }) {
   return (
@@ -38,8 +49,9 @@ export function RankingRow({ r, index, showResult }: { r: GroupRanking; index: n
       <Flag code={r.code} flag={r.flag} className="size-4" />
       <span className="flex-1 text-sm font-medium text-ink">{r.name}</span>
       {r.consensusPct != null && (
-        <span className="font-mono text-[11px] text-muted">
-          {Math.round(r.consensusPct)}%{result ? '' : ' coincidió'}
+        <span className="flex items-center gap-1 font-mono text-[11px] text-muted">
+          <Users size={11} weight="bold" />
+          {Math.round(r.consensusPct)}%
         </span>
       )}
       {result === 'exact' && (

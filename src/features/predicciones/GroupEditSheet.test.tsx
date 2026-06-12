@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders, seedSession } from '../../test/utils'
+import { setNow } from '../../lib/clock'
 import { GroupEditSheet } from './GroupEditSheet'
 
 describe('GroupEditSheet', () => {
@@ -28,6 +29,14 @@ describe('GroupEditSheet', () => {
     expect(within(dialog).getAllByText('EXACTO')).toHaveLength(4)
     expect(within(dialog).getByText(/predicciones est[aá]n cerradas/i)).toBeInTheDocument()
     expect(within(dialog).queryByRole('button', { name: /guardar grupo/i })).not.toBeInTheDocument()
+  })
+
+  it('cerrado post-lock: muestra la leyenda del consenso', async () => {
+    setNow('2026-06-12T00:00:00.000Z')
+    seedSession('p-juan')
+    renderWithProviders(<GroupEditSheet groupId="g-A" locked onClose={() => {}} />)
+    const dialog = await screen.findByRole('dialog', { name: 'Grupo A' })
+    await within(dialog).findByText(/jugadores de la polla que coincidió contigo/i)
   })
 
   it('groupId null: no abre el sheet', () => {

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMyGroupPredictions } from '../groups/hooks'
 import { useMyTotals } from './hooks'
 import { signed } from './format'
-import { PhaseSummary, PanelSkeleton, RankingRow } from './parts'
+import { PhaseSummary, PanelSkeleton, RankingRow, ConsensusLegend } from './parts'
 import { GroupEditSheet } from './GroupEditSheet'
 import type { GroupPrediction } from '../../types/api'
 
@@ -14,10 +14,12 @@ export function GruposPanel({ locked }: { locked: boolean }) {
   const list = groups.data?.data ?? []
   const completed = groups.data?.completedGroups ?? 0
   const value = locked && totals.data ? `${signed(totals.data.breakdown.groups)} pts` : `${completed}/12 completos`
+  const hasConsensus = list.some((g) => g.rankings.some((r) => r.consensusPct != null))
 
   return (
     <div className="space-y-3">
       <PhaseSummary label="Grupos" value={value} />
+      {hasConsensus && <ConsensusLegend kind="groups" />}
       {list.map((g) => (
         <GroupRow key={g.groupId} g={g} locked={locked} onOpen={setOpenId} />
       ))}

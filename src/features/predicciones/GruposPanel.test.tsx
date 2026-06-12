@@ -2,11 +2,25 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders, seedSession } from '../../test/utils'
+import { setNow } from '../../lib/clock'
 import { GruposPanel } from './GruposPanel'
 
 describe('GruposPanel', () => {
   beforeEach(() => {
     seedSession('p-juan')
+  })
+
+  it('post-lock: muestra la leyenda del consenso una sola vez, arriba', async () => {
+    setNow('2026-06-12T00:00:00.000Z')
+    renderWithProviders(<GruposPanel locked />)
+    await screen.findByText('Grupo A')
+    expect(screen.getAllByText(/jugadores de la polla que coincidió contigo/i)).toHaveLength(1)
+  })
+
+  it('pre-lock: no muestra la leyenda (sin datos de consenso)', async () => {
+    renderWithProviders(<GruposPanel locked />)
+    await screen.findByText('Grupo A')
+    expect(screen.queryByText(/jugadores de la polla que coincidió contigo/i)).not.toBeInTheDocument()
   })
 
   it('locked: subtotal de puntos, 12 grupos en mi orden y marcas EXACTO', async () => {

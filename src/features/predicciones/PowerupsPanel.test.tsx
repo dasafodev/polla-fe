@@ -26,16 +26,18 @@ describe('PowerupsPanel', () => {
     expect(screen.queryByText('+15')).not.toBeInTheDocument()
   })
 
-  it('post-lock: muestra el % de consenso en ambos slots', async () => {
+  it('post-lock: muestra la leyenda y el % de consenso en ambos slots', async () => {
     setNow('2026-06-12T00:00:00.000Z')
     renderWithProviders(<PowerupsPanel locked />)
     await screen.findByText('Equipo A4')
-    expect(screen.getAllByText(/lo eligió igual/)).toHaveLength(2)
+    expect(screen.getByText(/jugadores que eligió lo mismo que tú/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/^\d+%$/)).toHaveLength(2)
   })
 
-  it('pre-lock: no muestra el % de consenso (dato null)', async () => {
+  it('pre-lock: no muestra leyenda ni % de consenso (dato null)', async () => {
     renderWithProviders(<PowerupsPanel locked />)
     await screen.findByText('Equipo A4')
-    expect(screen.queryByText(/lo eligió igual/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/jugadores que eligió lo mismo que tú/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^\d+%$/)).not.toBeInTheDocument()
   })
 })

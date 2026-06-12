@@ -5,7 +5,7 @@ import { isApiError } from '../../lib/errors'
 import { Sheet } from '../../ui/Sheet'
 import { Button } from '../../ui/Button'
 import { signed } from './format'
-import { RankingRow } from './parts'
+import { RankingRow, ConsensusLegend } from './parts'
 import type { Group, GroupPrediction } from '../../types/api'
 
 export function GroupEditSheet({
@@ -82,6 +82,7 @@ function GroupEditor({
 
 function ReadOnlyGroup({ prediction, name }: { prediction: GroupPrediction | undefined; name: string | undefined }) {
   if (!prediction) return <SheetLoading />
+  const hasConsensus = prediction.rankings.some((r) => r.consensusPct != null)
   return (
     <div className="px-2 pb-2">
       <div className="mb-2 flex items-center justify-between px-1">
@@ -92,6 +93,11 @@ function ReadOnlyGroup({ prediction, name }: { prediction: GroupPrediction | und
           </span>
         )}
       </div>
+      {hasConsensus && (
+        <div className="mb-2">
+          <ConsensusLegend kind="groups" />
+        </div>
+      )}
       {prediction.rankings.map((r, i) => (
         <RankingRow key={r.teamId} r={r} index={i} showResult />
       ))}

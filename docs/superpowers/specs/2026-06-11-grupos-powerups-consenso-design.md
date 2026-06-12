@@ -126,3 +126,26 @@ Cero cambios de backend. Solo dejar de descartar el campo:
 - `src/features/predicciones/PowerupsPanel.tsx` — línea en `PowerupCard`.
 - `src/mocks/handlers/groups.ts`, `src/mocks/handlers/powerups.ts` — datos de mock.
 - Tests asociados de `parts`/`PowerupsPanel`/adaptador (crear/extender).
+
+## Actualización 2026-06-11 — claridad
+
+Tras enviar v1, los usuarios no entendían el "{pct}% coincidió": creían que el `%`
+era la **probabilidad del equipo**, no el % de jugadores que predijo igual, y no
+sabían si alto/bajo era bueno o malo. Para no saturar cada fila, se resuelve con
+una **leyenda** (no con más texto por chip):
+
+- **Chip** (más compacto): pasa de "{pct}% coincidió" / "{pct}% lo eligió igual" a
+  un icono de personas (Phosphor `Users`) + el número → **"👥 {pct}%"**, igual en
+  grupos y powerups, con o sin resultado.
+- **Leyenda** (`ConsensusLegend` en `parts.tsx`), una sola vez por vista, **arriba**
+  (en grupos, antes de la lista — al final no se leería con 12 grupos):
+  - grupos: "% de jugadores de la polla que coincidió contigo — mientras más alto,
+    más popular tu elección."
+  - powerups: "% de jugadores que eligió lo mismo que tú — mientras más alto, más
+    popular tu elección."
+  - El icono 👥 del chip es la clave que la leyenda define (subsana "de qué es el %"
+    y "si alto es bueno").
+- **Gating**: la leyenda solo aparece si hay al menos un chip en la vista (post-lock).
+- **Ubicaciones de la leyenda**: `GruposPanel` (arriba de la lista), `ReadOnlyGroup`
+  del `GroupEditSheet` (arriba), `PowerupsPanel` (bajo "Pálpitos").
+- Sin cambios de backend ni de la plomería de datos de v1.
