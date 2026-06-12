@@ -11,10 +11,12 @@ export function Podium({
   entries,
   meId,
   onPick,
+  view,
 }: {
   entries: ScoreboardEntry[]
   meId: string | null
   onPick: (e: ScoreboardEntry) => void
+  view: 'provisional' | 'official'
 }) {
   const slots = [
     { e: entries[1], place: 2, h: 70 },
@@ -41,7 +43,7 @@ export function Podium({
             <span className="text-center font-display text-[13px] font-bold leading-tight text-white">
               {e.participant.name}
             </span>
-            <span className="font-mono text-xs font-bold text-violet-light">{e.total} pts</span>
+            <span className="font-mono text-xs font-bold text-violet-light">{view === 'provisional' ? e.total : 0} pts</span>
             {isMe && (
               <span className="rounded-full border border-violet-light px-2 py-0.5 font-display text-[10px] font-bold text-violet-light">
                 TÚ

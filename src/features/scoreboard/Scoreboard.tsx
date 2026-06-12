@@ -10,11 +10,20 @@ import { PlayerBreakdown } from './PlayerBreakdown'
 import { ScoreboardEmpty } from './states/ScoreboardEmpty'
 import { NAVY_BG } from './theme'
 
+export type PointsView = 'provisional' | 'official'
+
+// "Oficiales" se muestra en 0 a propósito: los puntos confirmados se otorgan al cerrar
+// cada grupo y por ahora ese dato no viaja desde el backend.
+function pointsFor(entry: ScoreboardEntry, view: PointsView): number {
+  return view === 'provisional' ? entry.total : 0
+}
+
 export function Scoreboard() {
   const q = useScoreboard()
   const { participant } = useAuth()
   const meId = participant?.id ?? null
   const [selected, setSelected] = useState<ScoreboardEntry | null>(null)
+  const [view, setView] = useState<PointsView>('provisional')
 
   if (q.isLoading) return <ScoreboardSkeleton />
   if (q.error) return <ScoreboardError onRetry={() => q.refetch()} />
@@ -37,8 +46,14 @@ export function Scoreboard() {
         {q.data && (
           <p className="font-mono text-[10.5px] tracking-wide text-violet-light">ACTUALIZADO {formatUpdated(q.data.updatedAt)}</p>
         )}
+        <PointsToggle view={view} onChange={setView} />
+        <p className="mt-2 text-[11px] leading-snug text-violet-light">
+          {view === 'provisional'
+            ? 'Puntos provisionales — se confirman al cerrar cada grupo.'
+            : 'Aún no hay puntos oficiales. Se asignan al cerrar cada grupo.'}
+        </p>
         <div className="mt-5">
-          <Podium entries={top3} meId={meId} onPick={setSelected} />
+          <Podium entries={top3} meId={meId} onPick={setSelected} view={view} />
         </div>
       </div>
 
@@ -48,14 +63,14 @@ export function Scoreboard() {
         )}
         <ul className="space-y-2">
           {rest.map((e) => (
-            <ScoreboardRow key={e.participant.id} entry={e} meId={meId} onPick={setSelected} />
+            <ScoreboardRow key={e.participant.id} entry={e} meId={meId} onPick={setSelected} view={view} />
           ))}
           {outsider && (
             <>
               <li aria-hidden="true" data-testid="rank-gap" className="flex justify-center py-0.5 text-muted">
                 <span className="font-mono text-lg leading-none tracking-[0.45em]">···</span>
               </li>
-              <ScoreboardRow key={outsider.participant.id} entry={outsider} meId={meId} onPick={setSelected} />
+              <ScoreboardRow key={outsider.participant.id} entry={outsider} meId={meId} onPick={setSelected} view={view} />
             </>
           )}
         </ul>
@@ -68,14 +83,43 @@ export function Scoreboard() {
   )
 }
 
+function PointsToggle({ view, onChange }: { view: PointsView; onChange: (v: PointsView) => void }) {
+  const opts: [PointsView, string][] = [
+    ['provisional', 'Provisionales'],
+    ['official', 'Oficiales'],
+  ]
+  return (
+    <div className="mt-3 inline-flex rounded-full bg-white/10 p-0.5" role="group" aria-label="Tipo de puntos">
+      {opts.map(([key, label]) => {
+        const active = view === key
+        return (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(key)}
+            className={`rounded-full px-3.5 py-1 font-display text-xs font-bold transition ${
+              active ? 'bg-white text-ink' : 'text-violet-light'
+            }`}
+          >
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 const ScoreboardRow = memo(function ScoreboardRow({
   entry,
   meId,
   onPick,
+  view,
 }: {
   entry: ScoreboardEntry
   meId: string | null
   onPick: (e: ScoreboardEntry) => void
+  view: PointsView
 }) {
   const isMe = entry.participant.id === meId
   return (
@@ -94,7 +138,7 @@ const ScoreboardRow = memo(function ScoreboardRow({
             TÚ
           </span>
         )}
-        <span className="font-mono text-sm font-bold text-ink">{entry.total} pts</span>
+        <span className="font-mono text-sm font-bold text-ink">{pointsFor(entry, view)} pts</span>
       </button>
     </li>
   )

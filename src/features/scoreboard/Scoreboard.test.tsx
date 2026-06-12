@@ -31,6 +31,20 @@ describe('Scoreboard', () => {
     expect(within(dialog).getByText('+15')).toBeInTheDocument() // caballo oscuro
     expect(within(dialog).getByText('-5')).toBeInTheDocument() // decepción
   })
+
+  it('el switch alterna entre provisionales (default) y oficiales en 0', async () => {
+    renderWithProviders(<Scoreboard />)
+    const juan = await screen.findByRole('button', { name: /Juan/i })
+    expect(within(juan).getByText(/584 pts/)).toBeInTheDocument()
+    expect(screen.getByText(/se confirman al cerrar cada grupo/i)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Oficiales' }))
+    const juanOfficial = screen.getByRole('button', { name: /Juan/i })
+    expect(within(juanOfficial).getByText(/^0 pts$/)).toBeInTheDocument()
+    expect(screen.getByText(/Aún no hay puntos oficiales/i)).toBeInTheDocument()
+    // No cae al estado vacío: la Tabla sigue visible.
+    expect(screen.getByRole('heading', { name: 'Tabla' })).toBeInTheDocument()
+  })
 })
 
 describe('Scoreboard — usuario fuera del top 10', () => {
