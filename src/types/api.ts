@@ -45,6 +45,16 @@ export interface SignupBody {
 export interface Team { id: string; name: string; code: string; isTop8: boolean; flag: string | null }
 export interface Group { id: string; label: string; name: string; teams: Team[] }
 
+// ── Partidos de fase de grupos (GET /groups/matches — informativo, no paga puntos) ──
+export interface GroupMatchTeam { id: string; name: string; code: string; flag: string | null }
+export interface GroupMatch {
+  id: string; matchNumber: number; groupId: string | null; groupLabel: string | null
+  scheduledAt: string; status: MatchStatus
+  homeTeam: GroupMatchTeam | null; awayTeam: GroupMatchTeam | null
+  homeTeamLabel: string | null; awayTeamLabel: string | null
+  scoreHome: number | null; scoreAway: number | null
+}
+
 // ── Grupos: predicciones ─────────────────────────────────────────────────────
 export interface GroupRanking { teamId: string; name: string; code: string; isTop8: boolean; flag: string | null; position: number; result: 'exact' | 'partial' | null; consensusPct: number | null }
 export interface GroupPointsEarned {

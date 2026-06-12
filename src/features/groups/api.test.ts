@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { adaptMyGroupPredictions, adaptFriendsGroups } from './api'
+import { adaptMyGroupPredictions, adaptFriendsGroups, adaptGroupMatch } from './api'
 
 // Forma cruda del backend real: predictedPosition (no position), sin pts_group_position_partial.
 // `flag` se conserva (puede ser null); `totalGroupPoints` se ignora.
@@ -69,5 +69,25 @@ describe('adaptFriendsGroups', () => {
     const out = adaptFriendsGroups({ available: false, availableAt: '2026-06-11T16:00:00.000Z' })
     expect(out.available).toBe(false)
     expect(out.availableAt).toBe('2026-06-11T16:00:00.000Z')
+  })
+})
+
+describe('adaptGroupMatch', () => {
+  const raw = {
+    id: 'gm-1', matchNumber: 1, groupId: 'g-A', groupLabel: 'A',
+    scheduledAt: '2026-06-12T16:00:00.000Z', status: 'LIVE',
+    homeTeam: { id: 'tA1', name: 'Equipo A1', code: 'A1', flag: null },
+    awayTeam: { id: 'tA2', name: 'Equipo A2', code: 'A2', flag: null },
+    homeTeamLabel: 'Equipo A1', awayTeamLabel: 'Equipo A2',
+    scoreHome: 1, scoreAway: 0,
+  }
+  it('baja el status del backend a minúsculas (LIVE → live)', () => {
+    expect(adaptGroupMatch(raw).status).toBe('live')
+  })
+  it('conserva marcador, grupo y equipos', () => {
+    const out = adaptGroupMatch(raw)
+    expect(out.scoreHome).toBe(1)
+    expect(out.groupLabel).toBe('A')
+    expect(out.homeTeam?.code).toBe('A1')
   })
 })

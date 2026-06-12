@@ -1,7 +1,8 @@
 import { request } from '../../lib/apiClient'
+import { statusToFrontend } from '../../lib/contract'
 import type {
   Group, MyGroupPredictions, SaveGroupPredictionsBody, ThirdsResponse, SaveThirdsBody, FriendsGroups,
-  GroupRanking, GroupPointsEarned, GroupPrediction, ParticipantPredictions,
+  GroupRanking, GroupPointsEarned, GroupPrediction, ParticipantPredictions, GroupMatch,
 } from '../../types/api'
 
 // ── Anti-corruption: el backend real usa `predictedPosition` (no `position`) y no envía
@@ -64,3 +65,15 @@ export const getThirds = () => request<ThirdsResponse>('GET', '/groups/thirds')
 export const saveThirds = (body: SaveThirdsBody) => request<{ ok: boolean; selectedCount: number }>('POST', '/groups/thirds', { body })
 export const getFriendsGroups = () =>
   request<RawFriendsGroups>('GET', '/groups/predictions/friends').then(adaptFriendsGroups)
+
+// El backend serializa status en MAYÚSCULAS (SCHEDULED|LIVE|FINISHED); adaptamos como en KO.
+type RawGroupMatch = Omit<GroupMatch, 'status'> & { status: string }
+
+export function adaptGroupMatch(m: RawGroupMatch): GroupMatch {
+  return { ...m, status: statusToFrontend(m.status) }
+}
+
+export const getGroupMatches = (filters: { date?: string; groupId?: string } = {}) =>
+  request<{ data: RawGroupMatch[] }>('GET', '/groups/matches', {
+    query: { date: filters.date, groupId: filters.groupId },
+  }).then((r) => r.data.map(adaptGroupMatch))
