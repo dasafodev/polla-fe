@@ -19,6 +19,14 @@ function pointsFor(entry: ScoreboardEntry, view: PointsView): number {
   return view === 'provisional' ? entry.total : 0
 }
 
+// El podio solo se muestra con un top 3 inequívoco: el BE comparte rank en empates (1,1,3…),
+// así que hay empate si los 3 primeros repiten rank o un 4º comparte el rank del 3º.
+function tieInTop(entries: ScoreboardEntry[]): boolean {
+  const top = entries.slice(0, 3)
+  if (new Set(top.map((e) => e.rank)).size !== top.length) return true
+  return entries.length > 3 && entries[3].rank === top[2]?.rank
+}
+
 export function Scoreboard() {
   const q = useScoreboard()
   const { participant } = useAuth()
@@ -37,8 +45,11 @@ export function Scoreboard() {
   const hasGap = data.length >= 2 && data[data.length - 1].rank > data[data.length - 2].rank + 1
   const outsider = hasGap ? data[data.length - 1] : null
   const ranked = hasGap ? data.slice(0, -1) : data
-  const top3 = ranked.slice(0, 3)
-  const rest = ranked.slice(3)
+  // Con empate en la punta no hay podio: la vista cae a lista plana (como "Todos en 0"),
+  // porque los pedestales 1-2-3 contradirían los ranks compartidos (1,1,3…) del backend.
+  const tied = tieInTop(ranked)
+  const top3 = tied ? [] : ranked.slice(0, 3)
+  const rest = tied ? ranked : ranked.slice(3)
 
   return (
     <div className="-mx-5 -mt-3">
@@ -53,14 +64,18 @@ export function Scoreboard() {
             ? 'Puntos provisionales — se confirman al cerrar cada grupo.'
             : 'Aún no hay puntos oficiales. Se asignan al cerrar cada grupo.'}
         </p>
-        <div className="mt-5">
-          <Podium entries={top3} meId={meId} onPick={setSelected} view={view} />
-        </div>
+        {!tied && (
+          <div className="mt-5">
+            <Podium entries={top3} meId={meId} onPick={setSelected} view={view} />
+          </div>
+        )}
       </div>
 
       <div className="-mt-4 rounded-t-[22px] bg-bg px-5 pt-5">
         {(rest.length > 0 || outsider) && (
-          <p className="mb-2 font-mono text-[10.5px] font-bold tracking-wide text-muted">DEMÁS JUGADORES</p>
+          <p className="mb-2 font-mono text-[10.5px] font-bold tracking-wide text-muted">
+            {tied ? 'EMPATE EN LA PUNTA' : 'DEMÁS JUGADORES'}
+          </p>
         )}
         <ul className="space-y-2">
           {rest.map((e) => (

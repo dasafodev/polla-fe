@@ -176,9 +176,14 @@ export function computeScoreboard(db: Db): ScoreboardEntry[] {
     .filter((p) => p.role !== 'admin')
     .map((p) => { const s = scoreParticipant(db, p.id, idx); return { id: p.id, name: p.name, total: s.total, koExact: s.koExact } })
   rows.sort((a, b) => (b.total - a.total) || (b.koExact - a.koExact) || a.id.localeCompare(b.id))
-  return rows.map((r, i) => ({
-    rank: i + 1, participant: { id: r.id, name: r.name }, total: r.total, prize: i < PRIZES.length ? PRIZES[i] : null,
-  }))
+  // Como el BE (scoreboard.service): empate pleno (total Y exactos KO) comparte rank;
+  // el siguiente rank salta a la posición real (1,1,3…).
+  let rank = 1
+  return rows.map((r, i) => {
+    const prev = rows[i - 1]
+    if (i > 0 && (prev.total !== r.total || prev.koExact !== r.koExact)) rank = i + 1
+    return { rank, participant: { id: r.id, name: r.name }, total: r.total, prize: i < PRIZES.length ? PRIZES[i] : null }
+  })
 }
 
 // El backend solo expone el top N; si el usuario de la sesión queda fuera, lo anexa al final

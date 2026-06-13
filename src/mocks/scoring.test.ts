@@ -28,6 +28,20 @@ describe('computeScoreboard', () => {
     const iMaria = sb.findIndex((e) => e.participant.id === 'p-maria')
     expect(iJuan).toBeLessThan(iMaria)
   })
+
+  it('empate pleno (pts Y exactos KO) → comparten rank y el siguiente salta, como el BE (1,1,3)', () => {
+    // María copia las predicciones KO de Juan → mismo total y mismos exactos
+    const deJuan = db.koPredictions.filter((p) => p.participantId === 'p-juan')
+    db.koPredictions = [
+      ...db.koPredictions.filter((p) => p.participantId !== 'p-maria'),
+      ...deJuan.map((p) => ({ ...p, participantId: 'p-maria' })),
+    ]
+    const sb = computeScoreboard(db)
+    expect(sb[0].rank).toBe(1)
+    expect(sb[1].rank).toBe(1)
+    expect(sb[2].rank).toBe(3)
+    expect(sb[3].rank).toBe(4)
+  })
 })
 
 describe('topScoreboard (top-N + usuario fuera del top)', () => {

@@ -33,6 +33,31 @@ describe('Scoreboard', () => {
     expect(within(dialog).getByText('-5')).toBeInTheDocument() // decepción
   })
 
+  it('empate en el top 3 → sin podio: lista plana completa con el rank real repetido', async () => {
+    // María copia las predicciones KO de Juan → empate pleno (mismo total y mismos exactos)
+    const deJuan = db.koPredictions.filter((p) => p.participantId === 'p-juan')
+    db.koPredictions = [
+      ...db.koPredictions.filter((p) => p.participantId !== 'p-maria'),
+      ...deJuan.map((p) => ({ ...p, participantId: 'p-maria' })),
+    ]
+    renderWithProviders(<Scoreboard />)
+    expect(await screen.findByText('EMPATE EN LA PUNTA')).toBeInTheDocument()
+    expect(screen.queryByText('DEMÁS JUGADORES')).not.toBeInTheDocument()
+    // los 4 jugadores como filas de lista (nadie en podio)
+    expect(screen.getAllByRole('listitem')).toHaveLength(4)
+    const juan = screen.getByRole('button', { name: /Juan/i })
+    const maria = screen.getByRole('button', { name: /María/i })
+    expect(within(juan).getByText('1')).toBeInTheDocument()
+    expect(within(maria).getByText('1')).toBeInTheDocument() // rank compartido
+  })
+
+  it('sin empate en el top 3, el podio sigue (caso seed: desempate por exactos KO)', async () => {
+    renderWithProviders(<Scoreboard />)
+    await screen.findByRole('button', { name: /Juan/i })
+    expect(screen.getByText('DEMÁS JUGADORES')).toBeInTheDocument()
+    expect(screen.queryByText('EMPATE EN LA PUNTA')).not.toBeInTheDocument()
+  })
+
   it('normaliza a Título los nombres que vienen en mayúsculas o minúsculas crudas', async () => {
     const maria = db.participants.find((p) => p.id === 'p-maria')!
     maria.name = 'MARÍA LÓPEZ'
