@@ -31,18 +31,17 @@ export function PanelSkeleton() {
   )
 }
 
-export function RankingRow({ r, index }: { r: GroupRanking; index: number }) {
+// Solo se resalta el acierto exacto (verde). El badge muestra los puntos que ese acierto suma
+// (+N) en vez de la palabra "EXACTO"; si aún no se conoce el valor, cae a un check.
+export function RankingRow({ r, index, exactPoints }: { r: GroupRanking; index: number; exactPoints?: number | null }) {
   const top = index < 2
-  const result = r.result
-  const tint = result === 'exact' ? 'bg-[#eaf6f0]' : result === 'partial' ? 'bg-[#fdf4e7]' : ''
-  const posClass =
-    result === 'exact'
-      ? 'bg-success text-white'
-      : result === 'partial'
-        ? 'bg-[#e8a33d] text-white'
-        : top
-          ? 'bg-tint text-violet-strong'
-          : 'bg-surface-2 text-ink-soft'
+  const isExact = r.result === 'exact'
+  const tint = isExact ? 'bg-[#eaf6f0]' : ''
+  const posClass = isExact
+    ? 'bg-success text-white'
+    : top
+      ? 'bg-tint text-violet-strong'
+      : 'bg-surface-2 text-ink-soft'
   return (
     <div className={`flex items-center gap-2.5 rounded-lg px-1.5 py-1.5 ${tint}`}>
       <span className={`grid size-5 place-items-center rounded-full font-mono text-[11px] font-bold ${posClass}`}>{r.position}</span>
@@ -54,11 +53,10 @@ export function RankingRow({ r, index }: { r: GroupRanking; index: number }) {
           {Math.round(r.consensusPct)}%
         </span>
       )}
-      {result === 'exact' && (
-        <span className="rounded-full bg-[#d8efe3] px-2 py-0.5 font-mono text-[10px] font-bold text-success">EXACTO</span>
-      )}
-      {result === 'partial' && (
-        <span className="rounded-full bg-[#f7e7cb] px-2 py-0.5 font-mono text-[10px] font-bold text-[#9a6a16]">PARCIAL</span>
+      {isExact && (
+        <span className="rounded-full bg-[#d8efe3] px-2 py-0.5 font-mono text-[10px] font-bold text-success">
+          {exactPoints != null ? `+${exactPoints}` : '✓'}
+        </span>
       )}
     </div>
   )

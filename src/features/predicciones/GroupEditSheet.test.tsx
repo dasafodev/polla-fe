@@ -13,20 +13,23 @@ describe('GroupEditSheet', () => {
 
     const dialog = await screen.findByRole('dialog', { name: 'Grupo A' })
     expect(within(dialog).getByText('Equipo A1')).toBeInTheDocument()
-    // editable: sin marcas de resultado ni nota de cierre
-    expect(within(dialog).queryByText('EXACTO')).not.toBeInTheDocument()
+    // editable: sin badges de puntos, sin tabla real ni nota de cierre
+    expect(within(dialog).queryByText('+5')).not.toBeInTheDocument()
+    expect(within(dialog).queryByText('Tabla real')).not.toBeInTheDocument()
 
     await userEvent.click(within(dialog).getByRole('button', { name: /guardar grupo/i }))
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
   })
 
-  it('cerrado: solo lectura con resultados y sin botón guardar', async () => {
+  it('cerrado: solo lectura con +puntos por acierto, tabla real y sin botón guardar', async () => {
     seedSession('p-juan')
     renderWithProviders(<GroupEditSheet groupId="g-A" locked onClose={() => {}} />)
 
     const dialog = await screen.findByRole('dialog', { name: 'Grupo A' })
     await within(dialog).findByText('Equipo A1')
-    expect(within(dialog).getAllByText('EXACTO')).toHaveLength(4)
+    expect(within(dialog).getAllByText('+5')).toHaveLength(4) // 4 aciertos, +5 c/u
+    expect(within(dialog).queryByText('EXACTO')).not.toBeInTheDocument()
+    expect(within(dialog).getByText('Tabla real')).toBeInTheDocument() // el detalle sí trae la tabla real
     expect(within(dialog).getByText(/predicciones est[aá]n cerradas/i)).toBeInTheDocument()
     expect(within(dialog).queryByRole('button', { name: /guardar grupo/i })).not.toBeInTheDocument()
   })

@@ -5,8 +5,8 @@ import { isApiError } from '../../lib/errors'
 import { Sheet } from '../../ui/Sheet'
 import { Button } from '../../ui/Button'
 import { signed } from './format'
-import { RankingRow, ConsensusLegend } from './parts'
-import { rankingsWithResult } from './groupResults'
+import { RankingRow, ConsensusLegend, GroupRealTable } from './parts'
+import { rankingsWithResult, exactPointValue, realTable } from './groupResults'
 import type { Group, GroupPrediction } from '../../types/api'
 
 export function GroupEditSheet({
@@ -85,6 +85,8 @@ function ReadOnlyGroup({ prediction, name, group }: { prediction: GroupPredictio
   if (!prediction) return <SheetLoading />
   const hasConsensus = prediction.rankings.some((r) => r.consensusPct != null)
   const rankings = rankingsWithResult(prediction.rankings, group)
+  const exactPoints = exactPointValue([{ rankings, pointsEarned: prediction.pointsEarned }])
+  const table = realTable(group)
   return (
     <div className="px-2 pb-2">
       <div className="mb-2 flex items-center justify-between px-1">
@@ -101,8 +103,9 @@ function ReadOnlyGroup({ prediction, name, group }: { prediction: GroupPredictio
         </div>
       )}
       {rankings.map((r, i) => (
-        <RankingRow key={r.teamId} r={r} index={i} />
+        <RankingRow key={r.teamId} r={r} index={i} exactPoints={exactPoints} />
       ))}
+      {table && <GroupRealTable rows={table} />}
       <p className="mt-3 text-center text-sm font-medium text-lock">
         Las predicciones están cerradas. Solo lectura.
       </p>

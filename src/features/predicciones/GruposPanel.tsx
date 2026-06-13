@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { useGroups, useMyGroupPredictions } from '../groups/hooks'
 import { useMyTotals } from './hooks'
 import { signed } from './format'
-import { PhaseSummary, PanelSkeleton, RankingRow, ConsensusLegend, GroupRealTable, type RealTableRow } from './parts'
+import { PhaseSummary, PanelSkeleton, RankingRow, ConsensusLegend } from './parts'
 import { GroupEditSheet } from './GroupEditSheet'
-import { rankingsWithResult } from './groupResults'
-import type { Group, GroupPrediction } from '../../types/api'
+import { rankingsWithResult, exactPointValue } from './groupResults'
+import type { GroupPrediction, GroupRanking } from '../../types/api'
 
 export function GruposPanel({ locked }: { locked: boolean }) {
   const groups = useMyGroupPredictions()
@@ -19,40 +19,25 @@ export function GruposPanel({ locked }: { locked: boolean }) {
   const hasConsensus = list.some((g) => g.rankings.some((r) => r.consensusPct != null))
   const catalogById = new Map((catalog.data?.data ?? []).map((g) => [g.id, g]))
 
+  // El acierto (EXACTO) y su valor en puntos se derivan de la tabla real; el backend no los envía.
+  const withResults = list.map((g) => ({ g, rankings: rankingsWithResult(g.rankings, catalogById.get(g.groupId)) }))
+  const exactPoints = exactPointValue(withResults.map(({ g, rankings }) => ({ rankings, pointsEarned: g.pointsEarned })))
+
   return (
     <div className="space-y-3">
       <PhaseSummary label="Grupos" value={value} />
       {hasConsensus && <ConsensusLegend kind="groups" />}
-      {list.map((g) => (
-        <GroupRow
-          key={g.groupId}
-          g={g}
-          locked={locked}
-          onOpen={setOpenId}
-          catalogGroup={catalogById.get(g.groupId)}
-        />
+      {withResults.map(({ g, rankings }) => (
+        <GroupRow key={g.groupId} g={g} rankings={rankings} exactPoints={exactPoints} locked={locked} onOpen={setOpenId} />
       ))}
       <GroupEditSheet groupId={openId} locked={locked} onClose={() => setOpenId(null)} />
     </div>
   )
 }
 
-// La tabla real sale del standing embebido en GET /groups (la actualiza el cron del BE cada 5 min).
-function realTableFor(group: Group | undefined): RealTableRow[] | null {
-  if (!group) return null
-  const rows = group.teams
-    .filter((t) => t.standing != null)
-    .map((t) => ({ code: t.code, flag: t.flag, standing: t.standing! }))
-    .sort((a, b) => (a.standing.realPosition ?? 99) - (b.standing.realPosition ?? 99))
-  return rows.length > 0 ? rows : null
-}
-
-function GroupRow({ g, locked, onOpen, catalogGroup }: {
-  g: GroupPrediction; locked: boolean; onOpen: (groupId: string) => void; catalogGroup: Group | undefined
+function GroupRow({ g, rankings, exactPoints, locked, onOpen }: {
+  g: GroupPrediction; rankings: GroupRanking[]; exactPoints: number | null; locked: boolean; onOpen: (groupId: string) => void
 }) {
-  const realTable = locked ? realTableFor(catalogGroup) : null
-  // El acierto por equipo (EXACTO/PARCIAL) se calcula desde la tabla real; el backend no lo envía.
-  const rankings = rankingsWithResult(g.rankings, catalogGroup)
   if (!g.groupComplete) {
     return (
       <button
@@ -82,9 +67,8 @@ function GroupRow({ g, locked, onOpen, catalogGroup }: {
         )}
       </div>
       {rankings.map((r, i) => (
-        <RankingRow key={r.teamId} r={r} index={i} />
+        <RankingRow key={r.teamId} r={r} index={i} exactPoints={exactPoints} />
       ))}
-      {realTable && <GroupRealTable rows={realTable} />}
     </button>
   )
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { rankingsWithResult, positionResult } from './groupResults'
+import { rankingsWithResult, positionResult, exactPointValue, realTable } from './groupResults'
 import type { Group, GroupRanking } from '../../types/api'
 
 const ranking = (teamId: string, position: number): GroupRanking => ({
@@ -33,5 +33,35 @@ describe('rankingsWithResult', () => {
   })
   it('grupo ausente → todo null', () => {
     expect(rankingsWithResult(rankings, undefined).every((r) => r.result === null)).toBe(true)
+  })
+})
+
+describe('exactPointValue', () => {
+  const pts = (exact: number) => ({ pts_group_position_exact: exact, pts_group_position_partial: 0, bonus_group_complete: 20, total: exact + 20 })
+  const withResult = (r: 'exact' | 'partial' | null): GroupRanking => ({ ...ranking('t', 1), result: r })
+
+  it('deriva el valor unitario de pts_group_position_exact / #exactos', () => {
+    // 3 exactos que sumaron 15 → 5 c/u
+    const groups = [{ rankings: [withResult('exact'), withResult('exact'), withResult('exact'), withResult('partial')], pointsEarned: pts(15) }]
+    expect(exactPointValue(groups)).toBe(5)
+  })
+  it('usa el primer grupo con puntos y exactos (ignora los que aún no suman)', () => {
+    const groups = [
+      { rankings: [withResult(null)], pointsEarned: null },
+      { rankings: [withResult('exact'), withResult('exact')], pointsEarned: pts(10) },
+    ]
+    expect(exactPointValue(groups)).toBe(5)
+  })
+  it('null cuando ningún grupo tiene puntos y exactos', () => {
+    expect(exactPointValue([{ rankings: [withResult(null)], pointsEarned: null }])).toBeNull()
+  })
+})
+
+describe('realTable', () => {
+  it('arma las filas ordenadas por posición real; null si no hay tabla', () => {
+    const group: Group = { id: 'g', label: 'A', name: 'Grupo A', teams: [team('A2', 2), team('A1', 1), team('A3', null)] }
+    const rows = realTable(group)!
+    expect(rows.map((r) => r.code)).toEqual(['A1', 'A2']) // A3 sin standing queda fuera, orden por realPosition
+    expect(realTable({ ...group, teams: group.teams.map((t) => ({ ...t, standing: null })) })).toBeNull()
   })
 })

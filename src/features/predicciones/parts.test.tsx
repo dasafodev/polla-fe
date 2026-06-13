@@ -25,15 +25,22 @@ describe('RankingRow · consenso', () => {
     expect(screen.queryByText(/\d+%/)).not.toBeInTheDocument()
   })
 
-  it('con resultado: el badge y el % conviven', () => {
-    renderWithProviders(<RankingRow r={baseR({ consensusPct: 78, result: 'exact' })} index={0} />)
-    expect(screen.getByText('EXACTO')).toBeInTheDocument()
+  it('exacto: muestra los puntos que suma (+N) en vez de "EXACTO" y convive con el %', () => {
+    renderWithProviders(<RankingRow r={baseR({ consensusPct: 78, result: 'exact' })} index={0} exactPoints={5} />)
+    expect(screen.getByText('+5')).toBeInTheDocument()
     expect(screen.getByText('78%')).toBeInTheDocument()
+    expect(screen.queryByText('EXACTO')).not.toBeInTheDocument()
   })
 
-  it('pinta el badge desde r.result sin gate de candado', () => {
-    renderWithProviders(<RankingRow r={baseR({ result: 'partial' })} index={0} />)
-    expect(screen.getByText('PARCIAL')).toBeInTheDocument()
+  it('exacto sin valor de puntos conocido: cae a un check', () => {
+    renderWithProviders(<RankingRow r={baseR({ result: 'exact' })} index={0} />)
+    expect(screen.getByText('✓')).toBeInTheDocument()
+  })
+
+  it('parcial ya no se resalta (sin badge ni puntos)', () => {
+    renderWithProviders(<RankingRow r={baseR({ result: 'partial' })} index={0} exactPoints={5} />)
+    expect(screen.queryByText('PARCIAL')).not.toBeInTheDocument()
+    expect(screen.queryByText('+5')).not.toBeInTheDocument()
   })
 })
 

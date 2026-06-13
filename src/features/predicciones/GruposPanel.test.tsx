@@ -23,22 +23,26 @@ describe('GruposPanel', () => {
     expect(screen.queryByText(/jugadores de la polla que coincidió contigo/i)).not.toBeInTheDocument()
   })
 
-  it('locked: subtotal de puntos, 12 grupos en mi orden y marcas EXACTO solo donde hay tabla real', async () => {
+  it('locked: subtotal de puntos, 12 grupos en mi orden y los aciertos muestran +puntos', async () => {
     renderWithProviders(<GruposPanel locked />)
     await screen.findByText('Grupo A')
     await screen.findByText('+480 pts') // subtotal (espera al breakdown)
     expect(screen.getAllByText(/^Grupo [A-L]$/)).toHaveLength(12)
     expect(screen.getByText('Equipo A1')).toBeInTheDocument()
-    // El acierto se calcula desde el standing de /groups: en el seed solo A y B jugaron → 8 exactos.
-    expect(await screen.findAllByText('EXACTO')).toHaveLength(8)
+    // El acierto sale del standing de /groups: en el seed solo A y B jugaron → 8 exactos, +5 c/u.
+    expect(await screen.findAllByText('+5')).toHaveLength(8)
+    expect(screen.queryByText('EXACTO')).not.toBeInTheDocument()
+    expect(screen.queryByText('PARCIAL')).not.toBeInTheDocument()
+    // La tabla real vive solo en el detalle, no en el tab.
+    expect(screen.queryByText('Tabla real')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Editar Grupo A' })).toBeInTheDocument()
   })
 
-  it('sin cierre: muestra avance y las marcas aparecen apenas hay resultado', async () => {
+  it('sin cierre: muestra avance y los aciertos aparecen apenas hay resultado', async () => {
     renderWithProviders(<GruposPanel locked={false} />)
     await screen.findByText('Grupo A')
     expect(screen.getByText('12/12 completos')).toBeInTheDocument()
-    expect(await screen.findAllByText('EXACTO')).toHaveLength(8) // marcas desde la tabla real, sin gate de candado
+    expect(await screen.findAllByText('+5')).toHaveLength(8) // marcas desde la tabla real, sin gate de candado
   })
 
   it('grupo sin ordenar muestra estado vacío', async () => {
