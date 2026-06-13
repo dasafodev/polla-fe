@@ -23,13 +23,14 @@ describe('GruposPanel', () => {
     expect(screen.queryByText(/jugadores de la polla que coincidió contigo/i)).not.toBeInTheDocument()
   })
 
-  it('locked: subtotal de puntos, 12 grupos en mi orden y marcas EXACTO', async () => {
+  it('locked: subtotal de puntos, 12 grupos en mi orden y marcas EXACTO solo donde hay tabla real', async () => {
     renderWithProviders(<GruposPanel locked />)
     await screen.findByText('Grupo A')
     await screen.findByText('+480 pts') // subtotal (espera al breakdown)
     expect(screen.getAllByText(/^Grupo [A-L]$/)).toHaveLength(12)
     expect(screen.getByText('Equipo A1')).toBeInTheDocument()
-    expect(screen.getAllByText('EXACTO')).toHaveLength(48) // 12 grupos × 4
+    // El acierto se calcula desde el standing de /groups: en el seed solo A y B jugaron → 8 exactos.
+    expect(await screen.findAllByText('EXACTO')).toHaveLength(8)
     expect(screen.getByRole('button', { name: 'Editar Grupo A' })).toBeInTheDocument()
   })
 
@@ -37,7 +38,7 @@ describe('GruposPanel', () => {
     renderWithProviders(<GruposPanel locked={false} />)
     await screen.findByText('Grupo A')
     expect(screen.getByText('12/12 completos')).toBeInTheDocument()
-    expect(screen.getAllByText('EXACTO')).toHaveLength(48) // las marcas ya no dependen del candado
+    expect(await screen.findAllByText('EXACTO')).toHaveLength(8) // marcas desde la tabla real, sin gate de candado
   })
 
   it('grupo sin ordenar muestra estado vacío', async () => {

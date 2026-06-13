@@ -4,6 +4,7 @@ import { useMyTotals } from './hooks'
 import { signed } from './format'
 import { PhaseSummary, PanelSkeleton, RankingRow, ConsensusLegend, GroupRealTable, type RealTableRow } from './parts'
 import { GroupEditSheet } from './GroupEditSheet'
+import { rankingsWithResult } from './groupResults'
 import type { Group, GroupPrediction } from '../../types/api'
 
 export function GruposPanel({ locked }: { locked: boolean }) {
@@ -28,7 +29,7 @@ export function GruposPanel({ locked }: { locked: boolean }) {
           g={g}
           locked={locked}
           onOpen={setOpenId}
-          realTable={locked ? realTableFor(catalogById.get(g.groupId)) : null}
+          catalogGroup={catalogById.get(g.groupId)}
         />
       ))}
       <GroupEditSheet groupId={openId} locked={locked} onClose={() => setOpenId(null)} />
@@ -46,9 +47,12 @@ function realTableFor(group: Group | undefined): RealTableRow[] | null {
   return rows.length > 0 ? rows : null
 }
 
-function GroupRow({ g, locked, onOpen, realTable }: {
-  g: GroupPrediction; locked: boolean; onOpen: (groupId: string) => void; realTable: RealTableRow[] | null
+function GroupRow({ g, locked, onOpen, catalogGroup }: {
+  g: GroupPrediction; locked: boolean; onOpen: (groupId: string) => void; catalogGroup: Group | undefined
 }) {
+  const realTable = locked ? realTableFor(catalogGroup) : null
+  // El acierto por equipo (EXACTO/PARCIAL) se calcula desde la tabla real; el backend no lo envía.
+  const rankings = rankingsWithResult(g.rankings, catalogGroup)
   if (!g.groupComplete) {
     return (
       <button
@@ -77,7 +81,7 @@ function GroupRow({ g, locked, onOpen, realTable }: {
           </span>
         )}
       </div>
-      {g.rankings.map((r, i) => (
+      {rankings.map((r, i) => (
         <RankingRow key={r.teamId} r={r} index={i} />
       ))}
       {realTable && <GroupRealTable rows={realTable} />}

@@ -6,6 +6,7 @@ import { Sheet } from '../../ui/Sheet'
 import { Button } from '../../ui/Button'
 import { signed } from './format'
 import { RankingRow, ConsensusLegend } from './parts'
+import { rankingsWithResult } from './groupResults'
 import type { Group, GroupPrediction } from '../../types/api'
 
 export function GroupEditSheet({
@@ -27,7 +28,7 @@ export function GroupEditSheet({
   return (
     <Sheet open={!!groupId} onClose={onClose} ariaLabel={name}>
       {!groupId ? null : locked ? (
-        <ReadOnlyGroup prediction={prediction} name={name} />
+        <ReadOnlyGroup prediction={prediction} name={name} group={group} />
       ) : group ? (
         <GroupEditor key={group.id} group={group} prediction={prediction} onSaved={onClose} />
       ) : (
@@ -80,9 +81,10 @@ function GroupEditor({
   )
 }
 
-function ReadOnlyGroup({ prediction, name }: { prediction: GroupPrediction | undefined; name: string | undefined }) {
+function ReadOnlyGroup({ prediction, name, group }: { prediction: GroupPrediction | undefined; name: string | undefined; group: Group | undefined }) {
   if (!prediction) return <SheetLoading />
   const hasConsensus = prediction.rankings.some((r) => r.consensusPct != null)
+  const rankings = rankingsWithResult(prediction.rankings, group)
   return (
     <div className="px-2 pb-2">
       <div className="mb-2 flex items-center justify-between px-1">
@@ -98,7 +100,7 @@ function ReadOnlyGroup({ prediction, name }: { prediction: GroupPrediction | und
           <ConsensusLegend kind="groups" />
         </div>
       )}
-      {prediction.rankings.map((r, i) => (
+      {rankings.map((r, i) => (
         <RankingRow key={r.teamId} r={r} index={i} />
       ))}
       <p className="mt-3 text-center text-sm font-medium text-lock">

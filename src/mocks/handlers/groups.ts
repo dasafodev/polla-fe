@@ -66,17 +66,12 @@ function validateRankings(group: DbGroup, rankings: { teamId: string; position: 
   }
   return positions.size === 4 && teamIds.size === 4
 }
-function serializeRankings(pred?: DbGroupPrediction, official?: string[]) {
+// Espeja el contrato real: el backend NO envía el acierto por ranking, solo predictedPosition y
+// positionStats. El EXACTO/PARCIAL lo calcula la FE cruzando con el standing de GET /groups.
+function serializeRankings(pred?: DbGroupPrediction) {
   return (pred?.rankings ?? []).slice().sort((a, b) => a.position - b.position).map((r) => {
     const t = teamById(r.teamId)!
-    const result: 'exact' | 'partial' | null = !official
-      ? null
-      : official.indexOf(t.id) === r.position - 1
-        ? 'exact'
-        : official.includes(t.id)
-          ? 'partial'
-          : null
-    return { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag, position: r.position, result, positionStats: consensusStat(t.id, r.position) }
+    return { teamId: t.id, name: t.name, code: t.code, isTop8: t.isTop8, flag: t.flag, position: r.position, positionStats: consensusStat(t.id, r.position) }
   })
 }
 
@@ -166,7 +161,7 @@ export const groupsHandlers = [
       const pred = predOf(pid, g.id), complete = isComplete(pred)
       return {
         groupId: g.id, label: g.label, name: g.name, groupComplete: complete,
-        rankings: serializeRankings(pred, db.officialGroupStandings?.[g.id]), pointsEarned: complete ? groupPointsFor(db, pid, g.id) : null,
+        rankings: serializeRankings(pred), pointsEarned: complete ? groupPointsFor(db, pid, g.id) : null,
       }
     })
     return HttpResponse.json({ data, completedGroups: data.filter((d) => d.groupComplete).length }, { status: 200 })
