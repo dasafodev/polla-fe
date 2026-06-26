@@ -1502,11 +1502,31 @@ paths:
       summary: Tabla de posiciones completa
       operationId: getScoreboard
       description: >
-        Retorna todos los participantes ordenados por puntaje total descendente.
+        Retorna los participantes ordenados por puntaje descendente.
         El puntaje se calcula on-demand al momento del request, usando el caché
         del cron de 1AM si está disponible.
         prize se incluye para rank 1, 2 y 3. Null para el resto.
         Criterio de desempate: mayor cantidad de marcadores exactos acertados en KO.
+      parameters:
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [total, real, simulated]
+            default: total
+          description: >
+            Criterio de orden. total = real + simulado (default);
+            real = solo puntos confirmados; simulated = solo la proyección provisional.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "10"
+          description: >
+            Entero positivo (top N, con el viewer anexado si queda fuera) o "all"
+            para la tabla completa (todos los participantes).
       responses:
         '200':
           description: Tabla de posiciones
@@ -2068,7 +2088,7 @@ components:
 
     ScoreboardEntry:
       type: object
-      required: [rank, participant, total, prize]
+      required: [rank, participant, total, realTotal, simulatedTotal, prize]
       properties:
         rank:
           type: integer
@@ -2081,7 +2101,13 @@ components:
             name: { type: string }
         total:
           type: integer
-          description: "Puntaje total acumulado"
+          description: "Puntaje total acumulado = realTotal + simulatedTotal"
+        realTotal:
+          type: integer
+          description: "Puntos confirmados/persistidos (al cerrar grupos y partidos)."
+        simulatedTotal:
+          type: integer
+          description: "Proyección provisional aún no confirmada."
         prize:
           type: [integer, 'null']
           description: "Premio en COP. 700000 para rank 1, 250000 para rank 2, 50000 para rank 3. Null para rank 4 en adelante."

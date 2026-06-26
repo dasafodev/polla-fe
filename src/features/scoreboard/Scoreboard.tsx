@@ -9,15 +9,8 @@ import { Sheet } from '../../ui/Sheet'
 import { Podium } from './Podium'
 import { PlayerBreakdown } from './PlayerBreakdown'
 import { ScoreboardEmpty } from './states/ScoreboardEmpty'
+import { pointsFor, type PointsView } from './points'
 import { NAVY_BG } from './theme'
-
-export type PointsView = 'provisional' | 'official'
-
-// "Oficiales" se muestra en 0 a propósito: los puntos confirmados se otorgan al cerrar
-// cada grupo y por ahora ese dato no viaja desde el backend.
-function pointsFor(entry: ScoreboardEntry, view: PointsView): number {
-  return view === 'provisional' ? entry.total : 0
-}
 
 // El podio solo se muestra con un top 3 inequívoco: el BE comparte rank en empates (1,1,3…),
 // así que hay empate si los 3 primeros repiten rank o un 4º comparte el rank del 3º.
@@ -41,15 +34,11 @@ export function Scoreboard() {
   const allZero = data.every((e) => e.total === 0)
   if (data.length === 0 || allZero) return <ScoreboardEmpty entries={data} meId={meId} />
 
-  // El backend solo trae el top; si quedo fuera me anexa al final con mi rank real (hueco de posiciones).
-  const hasGap = data.length >= 2 && data[data.length - 1].rank > data[data.length - 2].rank + 1
-  const outsider = hasGap ? data[data.length - 1] : null
-  const ranked = hasGap ? data.slice(0, -1) : data
   // Con empate en la punta no hay podio: la vista cae a lista plana (como "Todos en 0"),
   // porque los pedestales 1-2-3 contradirían los ranks compartidos (1,1,3…) del backend.
-  const tied = tieInTop(ranked)
-  const top3 = tied ? [] : ranked.slice(0, 3)
-  const rest = tied ? ranked : ranked.slice(3)
+  const tied = tieInTop(data)
+  const top3 = tied ? [] : data.slice(0, 3)
+  const rest = tied ? data : data.slice(3)
 
   return (
     <div className="-mx-5 -mt-3">
@@ -62,7 +51,7 @@ export function Scoreboard() {
         <p className="mt-2 text-[11px] leading-snug text-violet-light">
           {view === 'provisional'
             ? 'Puntos provisionales — se confirman al cerrar cada grupo.'
-            : 'Aún no hay puntos oficiales. Se asignan al cerrar cada grupo.'}
+            : 'Puntos oficiales — solo lo confirmado al cerrar cada grupo o partido.'}
         </p>
         {!tied && (
           <div className="mt-5">
@@ -72,7 +61,7 @@ export function Scoreboard() {
       </div>
 
       <div className="-mt-4 rounded-t-[22px] bg-bg px-5 pt-5">
-        {(rest.length > 0 || outsider) && (
+        {rest.length > 0 && (
           <p className="mb-2 font-mono text-[10.5px] font-bold tracking-wide text-muted">
             {tied ? 'EMPATE EN LA PUNTA' : 'DEMÁS JUGADORES'}
           </p>
@@ -81,14 +70,6 @@ export function Scoreboard() {
           {rest.map((e) => (
             <ScoreboardRow key={e.participant.id} entry={e} meId={meId} onPick={setSelected} view={view} />
           ))}
-          {outsider && (
-            <>
-              <li aria-hidden="true" data-testid="rank-gap" className="flex justify-center py-0.5 text-muted">
-                <span className="font-mono text-lg leading-none tracking-[0.45em]">···</span>
-              </li>
-              <ScoreboardRow key={outsider.participant.id} entry={outsider} meId={meId} onPick={setSelected} view={view} />
-            </>
-          )}
         </ul>
       </div>
 

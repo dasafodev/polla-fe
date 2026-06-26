@@ -1,73 +1,51 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Card } from '../../../ui/Card'
 import { Flag } from '../../../ui/Flag'
 import { fadeUp } from '../../../ui/motion'
 import { useGroupMatches } from '../../groups/hooks'
-import { deriveMatchCards } from '../matchCards'
+import { useAllKoPredictions } from '../../predicciones/hooks'
+import { deriveDayMatches, type MatchDisplay } from '../dayMatches'
 import { formatKickoffBogota } from '../format'
-import type { GroupMatch, KoMatch } from '../../../types/api'
-import type { MatchStatus } from '../../../types/enums'
+import { now, todayBogota } from '../../../lib/clock'
 
-interface MatchDisplay {
-  label: string
-  scheduledAt: string
-  status: MatchStatus
-  home: { code: string; flag: string | null } | null
-  away: { code: string; flag: string | null } | null
-  homeLabel: string | null
-  awayLabel: string | null
-  scoreHome: number | null
-  scoreAway: number | null
-}
+// Todos los partidos del día (grupos + eliminatorias). Si hoy no hay, cae al próximo programado.
+export function MatchCards() {
+  const groupMatches = useGroupMatches({}, { pollMs: 60_000 })
+  const ko = useAllKoPredictions()
+  const koMatches = useMemo(() => ko.rounds.flatMap((r) => r.matches), [ko.rounds])
+  const { matches, mode } = deriveDayMatches({
+    groupMatches: groupMatches.data ?? [],
+    koMatches,
+    today: todayBogota(),
+    now: now(),
+  })
 
-const fromGroup = (m: GroupMatch): MatchDisplay => ({
-  label: m.groupLabel ? `Grupo ${m.groupLabel}` : 'Fase de grupos',
-  scheduledAt: m.scheduledAt, status: m.status,
-  home: m.homeTeam, away: m.awayTeam,
-  homeLabel: m.homeTeamLabel, awayLabel: m.awayTeamLabel,
-  scoreHome: m.scoreHome, scoreAway: m.scoreAway,
-})
-
-const fromKo = (m: KoMatch): MatchDisplay => ({
-  label: 'Eliminatorias',
-  scheduledAt: m.scheduledAt, status: m.status,
-  home: m.homeTeam, away: m.awayTeam,
-  homeLabel: m.homeTeamLabel, awayLabel: m.awayTeamLabel,
-  scoreHome: m.result?.scoreHome ?? null, scoreAway: m.result?.scoreAway ?? null,
-})
-
-// Dos cards individuales: el partido en curso/siguiente y el inmediatamente anterior.
-// La fase de grupos manda; sin partidos de grupos por jugar, cae al próximo KO.
-export function MatchCards({ koNext }: { koNext: KoMatch | null }) {
-  const matches = useGroupMatches({}, { pollMs: 60_000 })
-  const { current, previous } = deriveMatchCards(matches.data ?? [])
-  const next = current ? fromGroup(current) : koNext ? fromKo(koNext) : null
-  const prev = previous ? fromGroup(previous) : null
-  if (!next && !prev) return null
+  if (matches.length === 0) return null
 
   return (
     <>
-      {next && (
-        <motion.div variants={fadeUp}>
-          <MatchCard kicker={next.status === 'live' ? 'En juego ahora' : 'Siguiente partido'} m={next} />
+      <motion.div variants={fadeUp}>
+        <p className="font-mono text-[10px] font-bold uppercase tracking-wide text-muted">
+          {mode === 'today' ? 'Partidos de hoy' : 'Próximo partido'}
+        </p>
+      </motion.div>
+      {matches.map((m) => (
+        <motion.div key={m.id} variants={fadeUp}>
+          <MatchCard m={m} />
         </motion.div>
-      )}
-      {prev && (
-        <motion.div variants={fadeUp}>
-          <MatchCard kicker="Último partido" m={prev} />
-        </motion.div>
-      )}
+      ))}
     </>
   )
 }
 
-function MatchCard({ kicker, m }: { kicker: string; m: MatchDisplay }) {
+function MatchCard({ m }: { m: MatchDisplay }) {
   const live = m.status === 'live'
   const hasScore = m.scoreHome != null && m.scoreAway != null
   return (
     <Card className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <p className={`font-mono text-[10px] font-bold uppercase tracking-wide ${live ? 'text-danger' : 'text-muted'}`}>{kicker}</p>
+        <p className={`font-mono text-[10px] font-bold uppercase tracking-wide ${live ? 'text-danger' : 'text-muted'}`}>{m.kicker}</p>
         <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-muted">{m.label}</span>
       </div>
       <div className="flex items-center justify-between gap-3">

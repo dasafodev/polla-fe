@@ -129,7 +129,9 @@ export interface FriendKoPrediction {
 export interface FriendsKo { available: boolean; matchId: string; availableAt: string | null; data: FriendKoPrediction[] | null }
 
 // ── Scoreboard / breakdown ────────────────────────────────────────────────────
-export interface ScoreboardEntry { rank: number; participant: { id: string; name: string }; total: number; prize: number | null }
+// total = realTotal + simulatedTotal. realTotal = puntos confirmados/persistidos por el backend
+// (al cerrar grupos/partidos); simulatedTotal = proyección provisional. El backend siempre los envía.
+export interface ScoreboardEntry { rank: number; participant: { id: string; name: string }; total: number; realTotal?: number; simulatedTotal?: number; prize: number | null }
 export interface Scoreboard { updatedAt: string; data: ScoreboardEntry[] }
 export interface ScoreBreakdownDetail { groups: number; thirds: number; ko: number; darkHorse: number; disappointment: number }
 export interface ScoreBreakdown {

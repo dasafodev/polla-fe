@@ -21,7 +21,7 @@ export function LiveHome() {
           <PositionCard info={live.position} />
         </motion.div>
       )}
-      <MatchCards koNext={live.nextMatch} />
+      <MatchCards />
     </motion.div>
   )
 }

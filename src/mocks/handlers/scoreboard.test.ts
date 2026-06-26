@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { makeFakeIdToken } from '../jwt'
+import { db } from '../db'
 
 const URL = (p: string) => `http://localhost/api${p}`
 const get = (p: string) => fetch(URL(p), { credentials: 'include' })
@@ -19,6 +20,19 @@ describe('GET /scoreboard', () => {
     expect(iJuan).toBeLessThan(iMaria)
     expect(body.data[0].rank).toBe(1)
     expect(body.data[0].prize).toBe(700000)
+  })
+
+  it('por defecto trae el top 10; con limit=all trae a TODOS los jugadores', async () => {
+    for (let i = 1; i <= 8; i++) {
+      db.participants.push({
+        id: `p-extra${i}`, googleSub: `sub-extra${i}`, name: `Extra ${i}`,
+        email: `extra${i}@gmail.com`, phone: null, role: 'participant',
+      })
+    }
+    const def = await (await get('/scoreboard')).json()
+    expect(def.data).toHaveLength(10)
+    const all = await (await get('/scoreboard?limit=all')).json()
+    expect(all.data).toHaveLength(12) // 4 del seed + 8 extra, sin admin
   })
 })
 

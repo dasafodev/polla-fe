@@ -33,8 +33,7 @@ function round(slug: KoMatchesResponse['round']['slug'], name: string, order: nu
   return { round: { slug, name, order }, matches }
 }
 
-const NOW = Date.parse('2026-06-20T00:00:00Z')
-const base = { myId: 'me', scoreboard: [] as ScoreboardEntry[], rounds: [] as KoMatchesResponse[], now: NOW, loading: false }
+const base = { myId: 'me', scoreboard: [] as ScoreboardEntry[], rounds: [] as KoMatchesResponse[], loading: false }
 
 describe('deriveLiveHome · posición', () => {
   it('calcula gap al líder y gap al podio cuando estoy fuera del podio', () => {
@@ -93,43 +92,5 @@ describe('deriveLiveHome · KO pendientes', () => {
       ]),
     ]
     expect(deriveLiveHome({ ...base, rounds }).pendingKo).toBe(null)
-  })
-})
-
-describe('deriveLiveHome · próximo partido', () => {
-  it('los partidos en vivo van primero', () => {
-    const rounds = [
-      round('r32', 'Dieciseisavos', 1, [
-        match({ id: 'soon', scheduledAt: '2026-06-28T12:00:00Z' }),
-        match({ id: 'live', status: 'live', scheduledAt: '2026-06-28T16:00:00Z' }),
-      ]),
-    ]
-    expect(deriveLiveHome({ ...base, rounds }).nextMatch?.id).toBe('live')
-  })
-
-  it('sin en vivo, toma el de hora más cercana; excluye finalizados y TBD', () => {
-    const rounds = [
-      round('r32', 'Dieciseisavos', 1, [
-        match({ id: 'late', scheduledAt: '2026-06-29T16:00:00Z' }),
-        match({ id: 'early', scheduledAt: '2026-06-28T16:00:00Z' }),
-        match({ id: 'done', status: 'finished', scheduledAt: '2026-06-27T16:00:00Z' }),
-      ]),
-    ]
-    expect(deriveLiveHome({ ...base, rounds }).nextMatch?.id).toBe('early')
-  })
-
-  it('excluye partidos programados cuya hora ya pasó (stale)', () => {
-    const rounds = [
-      round('r32', 'Dieciseisavos', 1, [
-        match({ id: 'past', scheduledAt: '2026-06-05T16:00:00Z' }),
-        match({ id: 'future', scheduledAt: '2026-06-28T16:00:00Z' }),
-      ]),
-    ]
-    expect(deriveLiveHome({ ...base, rounds }).nextMatch?.id).toBe('future')
-  })
-
-  it('sin candidatos → null', () => {
-    const rounds = [round('r32', 'Dieciseisavos', 1, [match({ status: 'finished' })])]
-    expect(deriveLiveHome({ ...base, rounds }).nextMatch).toBe(null)
   })
 })

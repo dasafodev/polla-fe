@@ -3,6 +3,7 @@ import type { ScoreboardEntry } from '../../types/api'
 import { Avatar } from '../../ui/Avatar'
 import { displayName } from '../../lib/names'
 import { formatCOP } from './format'
+import { pointsFor, type PointsView } from './points'
 
 const FIRST_BG = 'linear-gradient(180deg, #7d54e6, #5a28bf)'
 const SIDE_BG = 'linear-gradient(180deg, #4b3a82, #2f2563)'
@@ -17,7 +18,7 @@ export function Podium({
   entries: ScoreboardEntry[]
   meId: string | null
   onPick: (e: ScoreboardEntry) => void
-  view: 'provisional' | 'official'
+  view: PointsView
 }) {
   const slots = [
     { e: entries[1], place: 2, h: 70 },
@@ -44,7 +45,7 @@ export function Podium({
             <span className="text-center font-display text-[13px] font-bold leading-tight text-white">
               {displayName(e.participant.name)}
             </span>
-            <span className="font-mono text-xs font-bold text-violet-light">{view === 'provisional' ? e.total : 0} pts</span>
+            <span className="font-mono text-xs font-bold text-violet-light">{pointsFor(e, view)} pts</span>
             {isMe && (
               <span className="rounded-full border border-violet-light px-2 py-0.5 font-display text-[10px] font-bold text-violet-light">
                 TÚ

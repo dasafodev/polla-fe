@@ -182,7 +182,9 @@ export function computeScoreboard(db: Db): ScoreboardEntry[] {
   return rows.map((r, i) => {
     const prev = rows[i - 1]
     if (i > 0 && (prev.total !== r.total || prev.koExact !== r.koExact)) rank = i + 1
-    return { rank, participant: { id: r.id, name: r.name }, total: r.total, prize: i < PRIZES.length ? PRIZES[i] : null }
+    // El mock solo puntúa resultados ya oficiales (no proyecta predicciones abiertas), así que todo
+    // lo computado es "confirmado": realTotal = total y simulatedTotal = 0.
+    return { rank, participant: { id: r.id, name: r.name }, total: r.total, realTotal: r.total, simulatedTotal: 0, prize: i < PRIZES.length ? PRIZES[i] : null }
   })
 }
 

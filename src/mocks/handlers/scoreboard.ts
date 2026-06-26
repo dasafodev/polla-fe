@@ -5,9 +5,12 @@ import { err, requireSession } from './_shared'
 import { computeScoreboard, computeBreakdown, prizeForParticipant, topScoreboard } from '../scoring'
 
 export const scoreboardHandlers = [
-  http.get('/api/scoreboard', () => {
+  http.get('/api/scoreboard', ({ request }) => {
     const s = requireSession(); if (s.response) return s.response
-    const data = topScoreboard(computeScoreboard(db), s.participant.id)
+    const all = computeScoreboard(db)
+    const limit = new URL(request.url).searchParams.get('limit')
+    // limit=all → tabla completa; numérico/ausente → top N (default 10) con el viewer anexado si quedó fuera.
+    const data = limit === 'all' ? all : topScoreboard(all, s.participant.id, limit ? Number(limit) : 10)
     return HttpResponse.json({ updatedAt: new Date(now()).toISOString(), data }, { status: 200 })
   }),
 

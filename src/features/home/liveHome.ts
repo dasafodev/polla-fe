@@ -28,14 +28,12 @@ export interface LiveHomeState {
   loading: boolean
   position: PositionInfo | null
   pendingKo: PendingKoInfo | null
-  nextMatch: KoMatch | null
 }
 
 interface DeriveInput {
   myId: string
   scoreboard: ScoreboardEntry[]
   rounds: KoMatchesResponse[]
-  now: number
   loading: boolean
 }
 
@@ -74,27 +72,11 @@ function derivePendingKo(rounds: KoMatchesResponse[]): PendingKoInfo | null {
   return { count: open.pending.length, roundName: open.round.name, deadline }
 }
 
-function deriveNextMatch(rounds: KoMatchesResponse[], now: number): KoMatch | null {
-  // Próximo = en vivo, o programado con hora de inicio aún en el futuro (no partidos pasados/stale).
-  const candidates = rounds
-    .flatMap((r) => r.matches)
-    .filter((m) => predecible(m) && (m.status === 'live' || (m.status === 'scheduled' && Date.parse(m.scheduledAt) > now)))
-  if (candidates.length === 0) return null
-  return candidates.sort((a, b) => {
-    // Los partidos en vivo van primero; luego, por hora de inicio ascendente.
-    const liveA = a.status === 'live' ? 0 : 1
-    const liveB = b.status === 'live' ? 0 : 1
-    if (liveA !== liveB) return liveA - liveB
-    return Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt)
-  })[0]
-}
-
 export function deriveLiveHome(i: DeriveInput): LiveHomeState {
   return {
     loading: i.loading,
     position: derivePosition(i.myId, i.scoreboard),
     pendingKo: derivePendingKo(i.rounds),
-    nextMatch: deriveNextMatch(i.rounds, i.now),
   }
 }
 
@@ -108,10 +90,8 @@ export function useLiveHome(): LiveHomeState {
   const rounds = ko.rounds
   const loading = scoreboard.isLoading || ko.isLoading
 
-  // `now` se captura solo cuando cambian los datos (no en cada render): así los sorts/derivaciones
-  // no se recalculan en cada refetch de cualquier query del Dashboard.
   return useMemo(
-    () => deriveLiveHome({ myId, scoreboard: boardData ?? [], rounds, now: Date.now(), loading }),
+    () => deriveLiveHome({ myId, scoreboard: boardData ?? [], rounds, loading }),
     [myId, boardData, rounds, loading],
   )
 }

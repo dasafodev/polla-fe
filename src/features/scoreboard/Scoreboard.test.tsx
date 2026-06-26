@@ -70,48 +70,62 @@ describe('Scoreboard', () => {
     expect(screen.queryByText('MARÍA LÓPEZ')).not.toBeInTheDocument()
   })
 
-  it('el switch alterna entre provisionales (default) y oficiales en 0', async () => {
+  it('el switch alterna entre provisionales (total) y oficiales (realTotal del backend)', async () => {
+    // total ≠ realTotal para distinguir las dos vistas; pedro (#4, fuera del podio) queda en la lista.
+    server.use(
+      http.get('/api/scoreboard', () =>
+        HttpResponse.json({
+          updatedAt: '2026-06-06T12:00:00.000Z',
+          data: [
+            { rank: 1, participant: { id: 'p-juan', name: 'Juan' }, total: 145, realTotal: 40, simulatedTotal: 105, prize: 700000 },
+            { rank: 2, participant: { id: 'p-maria', name: 'María' }, total: 132, realTotal: 30, simulatedTotal: 102, prize: 250000 },
+            { rank: 3, participant: { id: 'p-luis', name: 'Luis' }, total: 118, realTotal: 20, simulatedTotal: 98, prize: 50000 },
+            { rank: 4, participant: { id: 'p-pedro', name: 'Pedro' }, total: 98, realTotal: 10, simulatedTotal: 88, prize: null },
+          ],
+        }),
+      ),
+    )
     renderWithProviders(<Scoreboard />)
-    const juan = await screen.findByRole('button', { name: /Juan/i })
-    expect(within(juan).getByText(/584 pts/)).toBeInTheDocument()
-    expect(screen.getByText(/se confirman al cerrar cada grupo/i)).toBeInTheDocument()
+    const pedro = await screen.findByRole('button', { name: /Pedro/i })
+    expect(within(pedro).getByText(/^98 pts$/)).toBeInTheDocument() // provisional = total
 
     await userEvent.click(screen.getByRole('button', { name: 'Oficiales' }))
-    const juanOfficial = screen.getByRole('button', { name: /Juan/i })
-    expect(within(juanOfficial).getByText(/^0 pts$/)).toBeInTheDocument()
-    expect(screen.getByText(/Aún no hay puntos oficiales/i)).toBeInTheDocument()
+    const pedroOfficial = screen.getByRole('button', { name: /Pedro/i })
+    expect(within(pedroOfficial).getByText(/^10 pts$/)).toBeInTheDocument() // oficial = realTotal, no 0
+    expect(screen.queryByText(/^0 pts$/)).not.toBeInTheDocument()
     // No cae al estado vacío: la Tabla sigue visible.
     expect(screen.getByRole('heading', { name: 'Tabla' })).toBeInTheDocument()
   })
 })
 
-describe('Scoreboard — usuario fuera del top 10', () => {
-  const top10 = Array.from({ length: 10 }, (_, i) => ({
-    rank: i + 1, participant: { id: `p-top${i + 1}`, name: `Top ${i + 1}` }, total: 200 - i, prize: null,
+describe('Scoreboard — lista completa', () => {
+  const NAMES = ['Ana', 'Beto', 'Caro', 'Dani', 'Eva', 'Fito', 'Gabi', 'Hugo', 'Iva', 'Jose', 'Kena', 'Lalo']
+  // ranks con empate al final (…,10,10,12): antes esto disparaba un separador "···" falso.
+  const RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12]
+  const entries = NAMES.map((name, i) => ({
+    rank: RANKS[i], participant: { id: `p${i + 1}`, name }, total: 200 - i * 5, prize: null,
   }))
-  const mockScoreboard = (...rest: typeof top10) =>
+
+  let capturedUrl = ''
+  beforeEach(() => {
+    seedSession('p-pedro')
+    capturedUrl = ''
     server.use(
-      http.get('/api/scoreboard', () =>
-        HttpResponse.json({ updatedAt: '2026-06-06T12:00:00.000Z', data: [...top10, ...rest] }),
-      ),
+      http.get('/api/scoreboard', ({ request }) => {
+        capturedUrl = request.url
+        return HttpResponse.json({ updatedAt: '2026-06-06T12:00:00.000Z', data: entries })
+      }),
     )
-
-  beforeEach(() => seedSession('p-pedro'))
-
-  it('me muestra al final con mi posición real tras un separador cuando hay hueco', async () => {
-    mockScoreboard({ rank: 27, participant: { id: 'p-pedro', name: 'Pedro' }, total: 12, prize: null })
-    renderWithProviders(<Scoreboard />)
-    const pedro = await screen.findByRole('button', { name: /Pedro/i })
-    expect(within(pedro).getByText('TÚ')).toBeInTheDocument()
-    expect(within(pedro).getByText('27')).toBeInTheDocument() // posición real, no "11"
-    expect(screen.getByTestId('rank-gap')).toBeInTheDocument()
   })
 
-  it('cuando soy exactamente #11 (ranks contiguos) me muestra sin separador', async () => {
-    mockScoreboard({ rank: 11, participant: { id: 'p-pedro', name: 'Pedro' }, total: 12, prize: null })
+  it('pide limit=all y muestra a TODOS los jugadores sin separador, aunque haya empate al final', async () => {
     renderWithProviders(<Scoreboard />)
-    const pedro = await screen.findByRole('button', { name: /Pedro/i })
-    expect(within(pedro).getByText('TÚ')).toBeInTheDocument()
+    await screen.findByRole('button', { name: /Ana/i })
+
+    expect(new URL(capturedUrl).searchParams.get('limit')).toBe('all')
+    for (const name of NAMES) {
+      expect(screen.getByRole('button', { name: new RegExp(name, 'i') })).toBeInTheDocument()
+    }
     expect(screen.queryByTestId('rank-gap')).not.toBeInTheDocument()
   })
 })
