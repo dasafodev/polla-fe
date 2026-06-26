@@ -35,7 +35,7 @@ export const keys = {
     friends: (id: string) => ['ko', 'friends', id] as const,
   },
   scoreboard: {
-    all: () => ['scoreboard'] as const,
+    all: (sortBy: string = 'total') => ['scoreboard', sortBy] as const,
     breakdown: (pid: string) => ['scoreboard', 'breakdown', pid] as const,
   },
   admin: {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { renderWithProviders, seedSession } from '../../test/utils'
@@ -95,6 +95,43 @@ describe('Scoreboard', () => {
     expect(screen.queryByText(/^0 pts$/)).not.toBeInTheDocument()
     // No cae al estado vacío: la Tabla sigue visible.
     expect(screen.getByRole('heading', { name: 'Tabla' })).toBeInTheDocument()
+  })
+
+  it('en "Oficiales" pide al backend sortBy=real y reordena la tabla por puntos oficiales', async () => {
+    // total y realTotal van en orden inverso → cada vista tiene un orden distinto.
+    // El orden lo decide el backend según sortBy (el desempate por exactos KO solo lo conoce el BE).
+    const provisional = [
+      { rank: 1, participant: { id: 'p-juan', name: 'Juan' }, total: 145, realTotal: 10, simulatedTotal: 135, prize: 700000 },
+      { rank: 2, participant: { id: 'p-maria', name: 'María' }, total: 132, realTotal: 20, simulatedTotal: 112, prize: 250000 },
+      { rank: 3, participant: { id: 'p-luis', name: 'Luis' }, total: 118, realTotal: 30, simulatedTotal: 88, prize: 50000 },
+      { rank: 4, participant: { id: 'p-pedro', name: 'Pedro' }, total: 98, realTotal: 40, simulatedTotal: 58, prize: null },
+    ]
+    const oficial = [
+      { rank: 1, participant: { id: 'p-pedro', name: 'Pedro' }, total: 98, realTotal: 40, simulatedTotal: 58, prize: 700000 },
+      { rank: 2, participant: { id: 'p-luis', name: 'Luis' }, total: 118, realTotal: 30, simulatedTotal: 88, prize: 250000 },
+      { rank: 3, participant: { id: 'p-maria', name: 'María' }, total: 132, realTotal: 20, simulatedTotal: 112, prize: 50000 },
+      { rank: 4, participant: { id: 'p-juan', name: 'Juan' }, total: 145, realTotal: 10, simulatedTotal: 135, prize: null },
+    ]
+    const urls: string[] = []
+    server.use(
+      http.get('/api/scoreboard', ({ request }) => {
+        urls.push(request.url)
+        const sortBy = new URL(request.url).searchParams.get('sortBy')
+        return HttpResponse.json({ updatedAt: '2026-06-06T12:00:00.000Z', data: sortBy === 'real' ? oficial : provisional })
+      }),
+    )
+    renderWithProviders(<Scoreboard />)
+    // Provisional (orden por total): Pedro (#4) es el único bajo el podio.
+    await screen.findByRole('button', { name: /Juan/i })
+    expect(within(screen.getByRole('list')).getByRole('button', { name: /Pedro/i })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Oficiales' }))
+
+    // El backend reordena: la vista oficial debe pedir sortBy=real…
+    await waitFor(() => expect(urls.some((u) => new URL(u).searchParams.get('sortBy') === 'real')).toBe(true))
+    // …y la tabla queda reordenada por puntos oficiales: ahora Juan (#4 por real) es el de la lista, no Pedro.
+    await waitFor(() => expect(within(screen.getByRole('list')).getByRole('button', { name: /Juan/i })).toBeInTheDocument())
+    expect(within(screen.getByRole('list')).queryByRole('button', { name: /Pedro/i })).not.toBeInTheDocument()
   })
 })
 

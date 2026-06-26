@@ -21,11 +21,12 @@ function tieInTop(entries: ScoreboardEntry[]): boolean {
 }
 
 export function Scoreboard() {
-  const q = useScoreboard()
+  const [view, setView] = useState<PointsView>('provisional')
+  // El orden y el rank los decide el backend: la vista oficial pide sortBy=real.
+  const q = useScoreboard(view === 'official' ? 'real' : 'total')
   const { participant } = useAuth()
   const meId = participant?.id ?? null
   const [selected, setSelected] = useState<ScoreboardEntry | null>(null)
-  const [view, setView] = useState<PointsView>('provisional')
 
   if (q.isLoading) return <ScoreboardSkeleton />
   if (q.error) return <ScoreboardError onRetry={() => q.refetch()} />
