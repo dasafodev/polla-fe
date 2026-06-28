@@ -6,6 +6,7 @@ import { useMemo } from 'react'
 import { useAuth } from '../../auth/useAuth'
 import { useScoreboard } from '../scoreboard/hooks'
 import { useAllKoPredictions } from '../predicciones/hooks'
+import { ROUND_LONG } from '../ko/koView'
 import type { KoMatch, KoMatchesResponse, ScoreboardEntry } from '../../types/api'
 
 export interface PositionInfo {
@@ -69,7 +70,9 @@ function derivePendingKo(rounds: KoMatchesResponse[]): PendingKoInfo | null {
     .find((r) => r.pending.length > 0)
   if (!open) return null
   const deadline = open.pending.reduce((min, m) => (m.lockedAt < min ? m.lockedAt : min), open.pending[0].lockedAt)
-  return { count: open.pending.length, roundName: open.round.name, deadline }
+  // El backend serializa el nombre de la ronda en inglés ("Round of 32"); mostramos el rótulo en
+  // español por slug, igual que el panel de Eliminatorias.
+  return { count: open.pending.length, roundName: ROUND_LONG[open.round.slug], deadline }
 }
 
 export function deriveLiveHome(i: DeriveInput): LiveHomeState {

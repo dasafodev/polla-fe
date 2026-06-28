@@ -72,12 +72,14 @@ describe('deriveLiveHome · posición', () => {
 
 describe('deriveLiveHome · KO pendientes', () => {
   it('elige la ronda de menor order con pendientes, cuenta y toma el cierre más próximo', () => {
+    // El backend manda el nombre de la ronda en inglés ("Round of 16"); el Inicio debe mostrar el
+    // rótulo en español ("Octavos"), no el crudo del backend.
     const rounds = [
-      round('r16', 'Octavos', 2, [
+      round('r16', 'Round of 16', 2, [
         match({ id: 'a', lockedAt: '2026-07-01T10:00:00Z' }),
         match({ id: 'b', lockedAt: '2026-07-01T08:00:00Z' }),
       ]),
-      round('r32', 'Dieciseisavos', 1, [match({ id: 'c', myPrediction: { scoreHome: 1, scoreAway: 0, teamAdvancesId: 'col', tripleActive: false, lockedIn: false, pointsEarned: null } })]),
+      round('r32', 'Round of 32', 1, [match({ id: 'c', myPrediction: { scoreHome: 1, scoreAway: 0, teamAdvancesId: 'col', tripleActive: false, lockedIn: false, pointsEarned: null } })]),
     ]
     // r32 ya está pronosticado → la ronda abierta es r16
     const s = deriveLiveHome({ ...base, rounds })
