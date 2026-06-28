@@ -18,7 +18,7 @@ export function MisPronosticos() {
   const state = useOnboardingState()
   const totals = useMyTotals()
   const [params, setParams] = useSearchParams()
-  const tab = (TABS.find((t) => t.key === params.get('tab'))?.key ?? 'grupos') as TabKey
+  const tab = (TABS.find((t) => t.key === params.get('tab'))?.key ?? 'eliminatorias') as TabKey
 
   if (state.loading) return <ScreenSkeleton />
 

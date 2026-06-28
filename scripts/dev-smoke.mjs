@@ -21,12 +21,10 @@ try {
   await page.getByRole('heading', { name: /Hola, Juan/i }).waitFor({ timeout: 8000 })
   check(true, 'dev login-as Juan → Dashboard "Hola, Juan"')
 
-  // 2) Predicciones → resumen tabbed por fase (tab Grupos por defecto). Cambiar de tab y
+  // 2) Predicciones → resumen tabbed por fase (tab Eliminatorias por defecto). Cambiar de tab y
   //    entrar al editor de un grupo desde el resumen (consume /groups + /groups/predictions/me).
   await page.getByRole('link', { name: 'Predicciones' }).click()
   await page.getByRole('heading', { name: /^Predicciones$/ }).waitFor({ timeout: 8000 })
-  await page.getByText('Grupo A').first().waitFor({ timeout: 8000 })
-  await page.getByRole('button', { name: 'Eliminatorias' }).click()
   await page.getByText(/Dieciseisavos|Octavos/).first().waitFor({ timeout: 8000 })
   await page.getByRole('button', { name: 'Grupos' }).click()
   await page.getByRole('link', { name: /Grupo A/ }).first().click()

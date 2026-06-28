@@ -11,21 +11,20 @@ describe('MisPronosticos', () => {
     seedSession('p-juan')
   })
 
-  it('torneo no iniciado: header con % de avance y tab Grupos por defecto', async () => {
+  it('torneo no iniciado: header con % de avance y tab Eliminatorias por defecto', async () => {
     renderWithProviders(<MisPronosticos />, { route: '/predicciones' })
-    await screen.findByText('Grupo A')
+    await screen.findByText('Dieciseisavos') // el panel de Eliminatorias abre por defecto
     expect(screen.getByText('100%')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Terceros' })).toBeInTheDocument()
   })
 
   it('cambia a la tab Terceros al tocarla', async () => {
     renderWithProviders(<MisPronosticos />, { route: '/predicciones' })
-    await screen.findByText('Grupo A')
+    await screen.findByText('Dieciseisavos') // espera a que el panel por defecto (Eliminatorias) cargue
     await userEvent.click(screen.getByRole('button', { name: 'Terceros' }))
     await screen.findByText('Equipo A3')
-    // El panel de Grupos se desmontó: su link "Editar Grupo A" ya no existe.
-    // (No uso el texto "Grupo A" porque Terceros también lo muestra como grupo de origen.)
-    expect(screen.queryByRole('link', { name: 'Editar Grupo A' })).not.toBeInTheDocument()
+    // El panel de Eliminatorias se desmontó: su ronda "Dieciseisavos" ya no existe.
+    expect(screen.queryByText('Dieciseisavos')).not.toBeInTheDocument()
   })
 
   it('torneo iniciado: header muestra el total de puntos', async () => {

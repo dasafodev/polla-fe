@@ -15,7 +15,7 @@ export function PendingKoAlert({ info }: { info: PendingKoInfo }) {
       </p>
       <h2 className="mt-1.5 font-display text-xl font-black">{info.roundName}</h2>
       <p className="mt-0.5 text-sm text-white/80">El primero cierra el {formatDeadline(info.deadline)}</p>
-      <Button variant="light" fullWidth className="mt-4" onClick={() => nav('/eliminatorias')}>
+      <Button variant="light" fullWidth className="mt-4" onClick={() => nav('/predicciones?tab=eliminatorias')}>
         Pronosticar ahora →
       </Button>
     </div>
