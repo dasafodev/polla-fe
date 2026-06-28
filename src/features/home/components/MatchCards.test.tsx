@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { renderWithProviders, seedSession } from '../../../test/utils'
 import { db } from '../../../mocks/db'
 import { setNow } from '../../../lib/clock'
@@ -31,6 +32,29 @@ describe('MatchCards', () => {
 
     expect(await screen.findByText('Partidos de hoy')).toBeInTheDocument()
     expect(screen.getByText('Eliminatorias')).toBeInTheDocument()
+  })
+
+  it('tocar un partido KO abre el mismo sheet de pronóstico que Predicciones', async () => {
+    seedSession('p-juan')
+    setNow('2026-06-29T14:00:00.000Z') // 29-jun antes del cierre (15:30Z): ko-r32-open-1 G1 vs H1, abierto
+    renderWithProviders(<MatchCards />)
+
+    await screen.findByText('Eliminatorias')
+    await userEvent.click(screen.getByRole('button', { name: 'G1 vs H1' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+    expect(within(dialog).getByText('¿Quién avanza?')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Guardar pronóstico' })).toBeInTheDocument()
+  })
+
+  it('los partidos de grupos no abren el sheet (no son interactivos)', async () => {
+    seedSession('p-juan')
+    setNow('2026-06-12T18:00:00.000Z') // 12-jun: solo partidos de grupos
+    renderWithProviders(<MatchCards />)
+
+    await screen.findByText('Partidos de hoy')
+    // Las cards de grupos no son botones → no hay rol button entre los partidos del día.
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
   it('sin partidos hoy → muestra el próximo partido programado', async () => {

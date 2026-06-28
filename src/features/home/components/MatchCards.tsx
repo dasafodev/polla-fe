@@ -1,13 +1,16 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Card } from '../../../ui/Card'
 import { Flag } from '../../../ui/Flag'
 import { fadeUp } from '../../../ui/motion'
 import { useGroupMatches } from '../../groups/hooks'
 import { useAllKoPredictions } from '../../predicciones/hooks'
+import { KoPredictionSheet } from '../../ko/KoPredictionSheet'
+import { ROUND_LONG, tripleUsesRemaining } from '../../ko/koView'
 import { deriveDayMatches, type MatchDisplay } from '../dayMatches'
 import { formatKickoffBogota } from '../format'
 import { now, todayBogota } from '../../../lib/clock'
+import type { KoMatch } from '../../../types/api'
 
 // Todos los partidos del día (grupos + eliminatorias). Si hoy no hay, cae al próximo programado.
 export function MatchCards() {
@@ -21,6 +24,23 @@ export function MatchCards() {
     now: now(),
   })
 
+  // Pronóstico KO desde el Inicio: tocar un partido de eliminatorias abre el mismo sheet del panel
+  // de Predicciones. El partido y su ronda se derivan de las rondas frescas (datos al día para el form).
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  let selectedMatch: KoMatch | null = null
+  let selectedRound: string | undefined
+  if (selectedId) {
+    for (const r of ko.rounds) {
+      const found = r.matches.find((mm) => mm.id === selectedId)
+      if (found) {
+        selectedMatch = found
+        selectedRound = ROUND_LONG[r.round.slug]
+        break
+      }
+    }
+  }
+  const tripleRemaining = tripleUsesRemaining(ko.rounds)
+
   if (matches.length === 0) return null
 
   return (
@@ -32,18 +52,25 @@ export function MatchCards() {
       </motion.div>
       {matches.map((m) => (
         <motion.div key={m.id} variants={fadeUp}>
-          <MatchCard m={m} />
+          <MatchCard m={m} onPick={m.kind === 'ko' ? () => setSelectedId(m.id) : undefined} />
         </motion.div>
       ))}
+
+      <KoPredictionSheet
+        match={selectedMatch}
+        roundName={selectedRound}
+        tripleRemaining={tripleRemaining}
+        onClose={() => setSelectedId(null)}
+      />
     </>
   )
 }
 
-function MatchCard({ m }: { m: MatchDisplay }) {
+function MatchCard({ m, onPick }: { m: MatchDisplay; onPick?: () => void }) {
   const live = m.status === 'live'
   const hasScore = m.scoreHome != null && m.scoreAway != null
-  return (
-    <Card className="p-4">
+  const body = (
+    <>
       <div className="mb-3 flex items-center justify-between">
         <p className={`font-mono text-[10px] font-bold uppercase tracking-wide ${live ? 'text-danger' : 'text-muted'}`}>{m.kicker}</p>
         <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-muted">{m.label}</span>
@@ -64,8 +91,22 @@ function MatchCard({ m }: { m: MatchDisplay }) {
         </div>
         <TeamSide team={m.away} fallback={m.awayLabel} />
       </div>
-    </Card>
+    </>
   )
+
+  if (onPick) {
+    return (
+      <button
+        type="button"
+        onClick={onPick}
+        aria-label={`${m.home?.code ?? m.homeLabel ?? '?'} vs ${m.away?.code ?? m.awayLabel ?? '?'}`}
+        className="block w-full text-left active:scale-[0.99]"
+      >
+        <Card className="p-4">{body}</Card>
+      </button>
+    )
+  }
+  return <Card className="p-4">{body}</Card>
 }
 
 function TeamSide({ team, fallback }: { team: { code: string; flag: string | null } | null; fallback: string | null }) {

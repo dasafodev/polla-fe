@@ -4,6 +4,7 @@ import { bogotaDateOf } from '../../lib/clock'
 
 export interface MatchDisplay {
   id: string
+  kind: 'group' | 'ko'
   kicker: string
   label: string
   scheduledAt: string
@@ -29,6 +30,7 @@ function kickerForStatus(status: MatchStatus): string {
 
 const fromGroup = (m: GroupMatch): MatchDisplay => ({
   id: m.id,
+  kind: 'group',
   kicker: kickerForStatus(m.status),
   label: m.groupLabel ? `Grupo ${m.groupLabel}` : 'Fase de grupos',
   scheduledAt: m.scheduledAt, status: m.status,
@@ -39,6 +41,7 @@ const fromGroup = (m: GroupMatch): MatchDisplay => ({
 
 const fromKo = (m: KoMatch): MatchDisplay => ({
   id: m.id,
+  kind: 'ko',
   kicker: kickerForStatus(m.status),
   label: 'Eliminatorias',
   scheduledAt: m.scheduledAt, status: m.status,
