@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { ListBullets, TreeStructure } from '@phosphor-icons/react'
 import { useAllKoPredictions, useMyTotals } from './hooks'
 import { signed } from './format'
-import { PhaseSummary, PanelSkeleton } from './parts'
+import { PhaseSummary, PanelSkeleton, PanelError } from './parts'
 import { buildColumns, tripleUsesRemaining, predictionProgress } from '../ko/koView'
 import { KoListView } from '../ko/KoListView'
 import { KoBracketView } from '../ko/KoBracketView'
@@ -16,7 +16,7 @@ const VIEWS: { key: ViewMode; label: string; Icon: typeof ListBullets }[] = [
 ]
 
 export function EliminatoriasPanel({ locked }: { locked: boolean }) {
-  const { isLoading, rounds } = useAllKoPredictions()
+  const { isLoading, isError, rounds, refetch } = useAllKoPredictions()
   const totals = useMyTotals()
   const [view, setView] = useState<ViewMode>('lista')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -40,6 +40,9 @@ export function EliminatoriasPanel({ locked }: { locked: boolean }) {
   }
 
   if (isLoading) return <PanelSkeleton />
+  // Si ninguna ronda cargó, mostramos error + reintento en vez del cuadro de placeholders "Por
+  // definir" (que se confundiría con cruces aún sin clasificados).
+  if (isError && rounds.length === 0) return <PanelError message="No pudimos cargar las eliminatorias." onRetry={refetch} />
 
   const value = locked && totals.data ? `${signed(totals.data.breakdown.ko)} pts` : `${progress.done}/${progress.total} pronósticos`
   const onPick = (m: KoMatch) => setSelectedId(m.id)
@@ -47,6 +50,16 @@ export function EliminatoriasPanel({ locked }: { locked: boolean }) {
   return (
     <div className="space-y-4">
       <PhaseSummary label="Eliminatorias" value={value} />
+
+      {/* Fallo parcial: algunas rondas sí cargaron. Avisamos sin ocultar lo que sí se pudo mostrar. */}
+      {isError && rounds.length > 0 && (
+        <div className="flex items-center justify-between gap-2 rounded-card border border-border bg-surface-2 px-3 py-2 text-[13px] text-ink-soft">
+          <span>Algunas rondas no cargaron.</span>
+          <button type="button" onClick={refetch} className="font-bold text-violet">
+            Reintentar
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-2">
         <span className="rounded-full bg-[#f6eed9] px-3 py-1 text-[13px] font-medium text-gold">

@@ -1,5 +1,6 @@
 import { Users } from '@phosphor-icons/react'
 import { Flag } from '../../ui/Flag'
+import { Button } from '../../ui/Button'
 import type { GroupRanking, TeamStanding } from '../../types/api'
 
 export function ConsensusLegend({ kind }: { kind: 'groups' | 'powerups' }) {
@@ -27,6 +28,19 @@ export function PanelSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="h-24 animate-pulse rounded-card bg-surface-2" aria-busy />
       ))}
+    </div>
+  )
+}
+
+// Estado de error de un panel cuando no se pudo cargar nada (mismo patrón que DeckError en grupos):
+// evita caer al cuadro de placeholders "Por definir", que se confundiría con cruces sin definir.
+export function PanelError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="rounded-card border border-border bg-surface p-8 text-center">
+      <p className="text-ink-soft">{message}</p>
+      <Button className="mt-4" onClick={onRetry}>
+        Reintentar
+      </Button>
     </div>
   )
 }

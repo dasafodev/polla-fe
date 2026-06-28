@@ -4,7 +4,7 @@ import { Sheet } from '../../ui/Sheet'
 import { Button } from '../../ui/Button'
 import { Flag } from '../../ui/Flag'
 import { useKoMatch, useSaveKoPrediction, useFriendsKo } from './hooks'
-import { isApiError } from '../../lib/errors'
+import { koSaveErrorText } from './koErrors'
 import { displayName } from '../../lib/names'
 import { signed } from '../predicciones/format'
 import type { KoMatch, KoTeam } from '../../types/api'
@@ -108,7 +108,7 @@ function EditForm({
       { scoreHome, scoreAway, teamAdvancesId: advances, tripleActive: triple },
       {
         onSuccess: () => setMessage({ ok: true, text: mp ? 'Pronóstico actualizado' : 'Pronóstico guardado' }),
-        onError: (e) => setMessage({ ok: false, text: isApiError(e) ? e.message : 'No se pudo guardar' }),
+        onError: (e) => setMessage({ ok: false, text: koSaveErrorText(e) }),
       },
     )
   }

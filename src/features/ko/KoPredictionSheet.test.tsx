@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { http, HttpResponse } from 'msw'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders, seedSession } from '../../test/utils'
+import { server } from '../../mocks/server'
 import { db } from '../../mocks/db'
 import { EliminatoriasPanel } from '../predicciones/EliminatoriasPanel'
 
@@ -45,5 +47,23 @@ describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
     expect(within(dialog).getByText('Tu pronóstico')).toBeInTheDocument()
     expect(within(dialog).getByText('Resultado real')).toBeInTheDocument()
     expect(within(dialog).queryByRole('button', { name: 'Guardar pronóstico' })).not.toBeInTheDocument()
+  })
+
+  it('error de guardado: muestra copy en español por código, no el mensaje crudo en inglés del backend', async () => {
+    // El backend real responde { code, message } con message en INGLÉS; el FE debe traducir por code.
+    server.use(
+      http.post('/api/ko/matches/:matchId/predictions', () =>
+        HttpResponse.json({ code: 'PREDICTION_ALREADY_EXISTS', message: 'A prediction already exists for this match' }, { status: 409 }),
+      ),
+    )
+    renderWithProviders(<EliminatoriasPanel locked={false} />)
+    await screen.findByText('Dieciseisavos')
+    await userEvent.click(screen.getByRole('button', { name: 'Equipo G1 vs Equipo H1' })) // ko-r32-open-1
+    const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Equipo G1' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar pronóstico' }))
+
+    expect(await within(dialog).findByText('Ya tienes un pronóstico para este partido.')).toBeInTheDocument()
+    expect(within(dialog).queryByText(/already exists/i)).not.toBeInTheDocument()
   })
 })

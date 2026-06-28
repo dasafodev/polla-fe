@@ -12,7 +12,12 @@ export function useMyTotals() {
   return useBreakdown(participant?.id ?? '')
 }
 
-export function useAllKoPredictions(): { isLoading: boolean; rounds: KoMatchesResponse[] } {
+export function useAllKoPredictions(): {
+  isLoading: boolean
+  isError: boolean
+  rounds: KoMatchesResponse[]
+  refetch: () => void
+} {
   const results = useQueries({
     queries: ROUND_SLUGS.map((slug) => ({ queryKey: keys.ko.round(slug), queryFn: () => getKoMatches(slug) })),
   })
@@ -24,5 +29,10 @@ export function useAllKoPredictions(): { isLoading: boolean; rounds: KoMatchesRe
     // eslint-disable-next-line react-hooks/exhaustive-deps
     data,
   )
-  return { isLoading: results.some((r) => r.isLoading), rounds }
+  return {
+    isLoading: results.some((r) => r.isLoading),
+    isError: results.some((r) => r.isError),
+    rounds,
+    refetch: () => results.forEach((r) => void r.refetch()),
+  }
 }

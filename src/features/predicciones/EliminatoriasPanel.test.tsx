@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { http, HttpResponse } from 'msw'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders, seedSession } from '../../test/utils'
+import { server } from '../../mocks/server'
 import { EliminatoriasPanel } from './EliminatoriasPanel'
 
 describe('EliminatoriasPanel', () => {
@@ -45,5 +47,21 @@ describe('EliminatoriasPanel', () => {
     renderWithProviders(<EliminatoriasPanel locked />)
     await screen.findByText('Dieciseisavos')
     expect(await screen.findByText('+14 pts')).toBeInTheDocument() // breakdown.ko de juan (sin cambios)
+  })
+
+  it('si fallan las rondas KO, muestra un error con reintento (no un cuadro vacío "Por definir")', async () => {
+    server.use(
+      http.get('/api/ko/matches', () => HttpResponse.json({ code: 'VALIDATION_ERROR', message: 'boom' }, { status: 400 })),
+    )
+    renderWithProviders(<EliminatoriasPanel locked={false} />)
+
+    // No cae silenciosamente al cuadro de placeholders: muestra error + reintento.
+    expect(await screen.findByText('No pudimos cargar las eliminatorias.')).toBeInTheDocument()
+    expect(screen.queryByText('Dieciseisavos')).not.toBeInTheDocument()
+
+    // Restaurar el backend y reintentar recupera el cuadro.
+    server.resetHandlers()
+    await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+    expect(await screen.findByText('Dieciseisavos')).toBeInTheDocument()
   })
 })
