@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { setNow } from '../../lib/clock'
 import { db } from '../db'
 import { makeFakeIdToken } from '../jwt'
+import { adaptKoMatch } from '../../features/ko/api'
 
 const URL = (p: string) => `http://localhost/api${p}`
 const get = (p: string) => fetch(URL(p), { credentials: 'include' })
@@ -144,13 +145,19 @@ describe('validación de marcador', () => {
   })
 })
 
-describe('match.locked (candado a nivel de partido)', () => {
-  it('un partido bloqueado por tiempo expone locked:true aunque no haya predicción', async () => {
+describe('match.locked (el mock no lo envía; el adaptador lo deriva de lockedAt, como el backend)', () => {
+  it('el mock no incluye `locked` crudo y sí expone lockedAt (espeja al backend)', async () => {
     const body = await (await get('/ko/matches?roundSlug=r32')).json()
     const locked = body.matches.find((x: { id: string }) => x.id === 'ko-r32-locked')
-    expect(locked.locked).toBe(true)
+    expect(locked).not.toHaveProperty('locked')
+    expect(typeof locked.lockedAt).toBe('string')
     expect(locked.myPrediction).toBeNull()
+  })
+  it('adaptKoMatch deriva locked:true para el cerrado por tiempo (sin predicción) y false para el abierto', async () => {
+    const body = await (await get('/ko/matches?roundSlug=r32')).json()
+    const locked = body.matches.find((x: { id: string }) => x.id === 'ko-r32-locked')
     const open = body.matches.find((x: { id: string }) => x.id === 'ko-r32-open-1')
-    expect(open.locked).toBe(false)
+    expect(adaptKoMatch(locked).locked).toBe(true)
+    expect(adaptKoMatch(open).locked).toBe(false)
   })
 })

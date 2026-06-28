@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { renderWithProviders, seedSession } from '../../test/utils'
 import { EliminatoriasPanel } from './EliminatoriasPanel'
 
@@ -8,24 +9,41 @@ describe('EliminatoriasPanel', () => {
     seedSession('p-juan')
   })
 
-  it('locked: secciones por ronda, puntos por partido y partidos sin pronóstico', async () => {
-    renderWithProviders(<EliminatoriasPanel locked />)
+  it('muestra todas las rondas hasta la final y marca los cruces por definir', async () => {
+    renderWithProviders(<EliminatoriasPanel locked={false} />)
     await screen.findByText('Dieciseisavos') // r32 (espera a las queries KO)
-    await screen.findByText('+14 pts') // subtotal de fase (espera al breakdown)
-    expect(screen.getByText('Octavos')).toBeInTheDocument() // r16
-    expect(screen.getAllByText('+5')).toHaveLength(2) // r32-1 y r32-2 (exactos: 2 avanza + 3 exacto)
-    expect(screen.getAllByText('Sin pronóstico')).toHaveLength(6) // 8 r32 − 2 pronosticados
-    expect(screen.getByRole('link', { name: 'Equipo A1 vs Equipo B1' })).toHaveAttribute(
-      'href',
-      '/eliminatorias/partido/ko-r32-1',
-    )
+    for (const r of ['Octavos', 'Cuartos', 'Semifinal', 'Tercer puesto', 'Final']) {
+      expect(screen.getByText(r)).toBeInTheDocument()
+    }
+    // cuartos/semis/final aún sin clasificados → marcados como "Por definir"
+    expect(screen.getAllByText('Por definir').length).toBeGreaterThan(0)
   })
 
-  it('sin cierre: conteo de pronósticos y sin puntos/resultados', async () => {
+  it('alterna entre vista Lista y Llaves', async () => {
     renderWithProviders(<EliminatoriasPanel locked={false} />)
     await screen.findByText('Dieciseisavos')
-    expect(screen.getByText('3 pronósticos')).toBeInTheDocument()
-    expect(screen.queryByText('+14 pts')).not.toBeInTheDocument()
-    expect(screen.queryByText('+5')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Desliza para ver todas las rondas/)).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Llaves' }))
+    expect(screen.getByText(/Desliza para ver todas las rondas/)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Lista' }))
+    expect(screen.queryByText(/Desliza para ver todas las rondas/)).not.toBeInTheDocument()
+  })
+
+  it('tocar un partido definido abre el sheet de pronóstico', async () => {
+    renderWithProviders(<EliminatoriasPanel locked={false} />)
+    await screen.findByText('Dieciseisavos')
+    await userEvent.click(screen.getByRole('button', { name: 'Equipo G1 vs Equipo H1' })) // ko-r32-open-1 (abierto)
+
+    const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+    expect(within(dialog).getByText('¿Quién avanza?')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Guardar pronóstico' })).toBeInTheDocument()
+  })
+
+  it('locked: muestra el subtotal de puntos KO de la fase', async () => {
+    renderWithProviders(<EliminatoriasPanel locked />)
+    await screen.findByText('Dieciseisavos')
+    expect(await screen.findByText('+14 pts')).toBeInTheDocument() // breakdown.ko de juan (sin cambios)
   })
 })

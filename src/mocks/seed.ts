@@ -52,6 +52,16 @@ function buildKoMatches(): DbKoMatch[] {
     id, roundSlug, externalMatchId: n, matchNumber: n, scheduledAt, lockedAt: lock(scheduledAt),
     status, homeTeamId, awayTeamId, homeTeamLabel: homeTeamId ? null : `Pos ${n}`, awayTeamLabel: awayTeamId ? null : `Pos ${n}b`, result,
   })
+  // Cruce aún sin definir: sin equipos, con rótulo descriptivo. El mock SÍ expone estos labels
+  // (el backend real los descarta y manda null → el FE cae a "Por definir"). Sirve para demostrar
+  // el marcado de partidos cuyos clasificados todavía no se conocen.
+  const u = (
+    id: string, roundSlug: DbKoMatch['roundSlug'], n: number, scheduledAt: string,
+    homeTeamLabel: string, awayTeamLabel: string,
+  ): DbKoMatch => ({
+    id, roundSlug, externalMatchId: 1000 + n, matchNumber: n, scheduledAt, lockedAt: lock(scheduledAt),
+    status: 'scheduled', homeTeamId: null, awayTeamId: null, homeTeamLabel, awayTeamLabel, result: null,
+  })
   return [
     // finished (desempate): r32-1, r32-2 y r16-1. scheduledAt en el pasado respecto al reloj de
     // test (6-jun) → lockedIn true (un partido terminado está cerrado). Datos ilustrativos (§13 riesgo 7).
@@ -65,8 +75,36 @@ function buildKoMatches(): DbKoMatch[] {
     m('ko-r32-open-3', 'r32', 6, '2026-07-01T16:00:00.000Z', 'scheduled', 'tC2', 'tD2', null),
     m('ko-r32-open-4', 'r32', 7, '2026-07-02T16:00:00.000Z', 'scheduled', 'tE2', 'tF2', null),
     m('ko-r32-open-5', 'r32', 8, '2026-07-03T16:00:00.000Z', 'scheduled', 'tG2', 'tH2', null),
-    // placeholder sin cruce definido (homeTeam null)
+    // R32 restantes (9–16): cruces definidos abiertos que completan la primera columna del cuadro
+    m('ko-r32-9', 'r32', 9, '2026-07-01T18:00:00.000Z', 'scheduled', 'tI1', 'tJ1', null),
+    m('ko-r32-10', 'r32', 10, '2026-07-01T22:00:00.000Z', 'scheduled', 'tK1', 'tL1', null),
+    m('ko-r32-11', 'r32', 11, '2026-07-02T18:00:00.000Z', 'scheduled', 'tI2', 'tJ2', null),
+    m('ko-r32-12', 'r32', 12, '2026-07-02T22:00:00.000Z', 'scheduled', 'tK2', 'tL2', null),
+    m('ko-r32-13', 'r32', 13, '2026-07-03T18:00:00.000Z', 'scheduled', 'tA3', 'tB3', null),
+    m('ko-r32-14', 'r32', 14, '2026-07-03T22:00:00.000Z', 'scheduled', 'tC3', 'tD3', null),
+    m('ko-r32-15', 'r32', 15, '2026-07-04T18:00:00.000Z', 'scheduled', 'tE3', 'tF3', null),
+    m('ko-r32-16', 'r32', 16, '2026-07-04T22:00:00.000Z', 'scheduled', 'tG3', 'tH3', null),
+    // R16 (octavos): r16-1 finished (desempate) + 2 definidos abiertos + 5 por definir
     m('ko-r16-1', 'r16', 1, '2026-06-03T16:00:00.000Z', 'finished', 'tA1', 'tC1', { scoreHome: 0, scoreAway: 0, winnerTeamId: 'tA1' }),
+    m('ko-r16-2', 'r16', 2, '2026-07-05T18:00:00.000Z', 'scheduled', 'tE1', 'tG1', null),
+    m('ko-r16-3', 'r16', 3, '2026-07-05T22:00:00.000Z', 'scheduled', 'tB2', 'tD2', null),
+    u('ko-r16-4', 'r16', 4, '2026-07-06T18:00:00.000Z', 'Ganador 16avos 7', 'Ganador 16avos 8'),
+    u('ko-r16-5', 'r16', 5, '2026-07-06T22:00:00.000Z', 'Ganador 16avos 9', 'Ganador 16avos 10'),
+    u('ko-r16-6', 'r16', 6, '2026-07-07T18:00:00.000Z', 'Ganador 16avos 11', 'Ganador 16avos 12'),
+    u('ko-r16-7', 'r16', 7, '2026-07-07T22:00:00.000Z', 'Ganador 16avos 13', 'Ganador 16avos 14'),
+    u('ko-r16-8', 'r16', 8, '2026-07-08T18:00:00.000Z', 'Ganador 16avos 15', 'Ganador 16avos 16'),
+    // Cuartos de final (todos por definir)
+    u('ko-qf-1', 'qf', 1, '2026-07-10T18:00:00.000Z', 'Ganador 8vos 1', 'Ganador 8vos 2'),
+    u('ko-qf-2', 'qf', 2, '2026-07-10T22:00:00.000Z', 'Ganador 8vos 3', 'Ganador 8vos 4'),
+    u('ko-qf-3', 'qf', 3, '2026-07-11T18:00:00.000Z', 'Ganador 8vos 5', 'Ganador 8vos 6'),
+    u('ko-qf-4', 'qf', 4, '2026-07-11T22:00:00.000Z', 'Ganador 8vos 7', 'Ganador 8vos 8'),
+    // Semifinales
+    u('ko-sf-1', 'sf', 1, '2026-07-14T18:00:00.000Z', 'Ganador 4tos 1', 'Ganador 4tos 2'),
+    u('ko-sf-2', 'sf', 2, '2026-07-15T18:00:00.000Z', 'Ganador 4tos 3', 'Ganador 4tos 4'),
+    // Tercer puesto
+    u('ko-3rd-1', '3rd', 1, '2026-07-18T18:00:00.000Z', 'Perdedor Semifinal 1', 'Perdedor Semifinal 2'),
+    // Final
+    u('ko-final-1', 'final', 1, '2026-07-19T18:00:00.000Z', 'Ganador Semifinal 1', 'Ganador Semifinal 2'),
   ]
 }
 

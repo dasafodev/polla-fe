@@ -17,9 +17,10 @@ function koTeam(id: string | null) {
 }
 function serializeMatch(m: DbKoMatch, pid: string) {
   const mp = predOf(pid, m.id)
+  // El backend NO serializa `locked` a nivel de partido (solo lockedAt); el FE lo deriva en adaptKoMatch.
   return {
     id: m.id, externalMatchId: m.externalMatchId, matchNumber: m.matchNumber, scheduledAt: m.scheduledAt, lockedAt: m.lockedAt,
-    status: m.status, locked: matchLocked(m), homeTeam: koTeam(m.homeTeamId), awayTeam: koTeam(m.awayTeamId),
+    status: m.status, homeTeam: koTeam(m.homeTeamId), awayTeam: koTeam(m.awayTeamId),
     homeTeamLabel: m.homeTeamLabel, awayTeamLabel: m.awayTeamLabel, result: m.result,
     myPrediction: mp ? {
       scoreHome: mp.scoreHome, scoreAway: mp.scoreAway, teamAdvancesId: mp.teamAdvancesId, tripleActive: mp.tripleActive,

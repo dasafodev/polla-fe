@@ -1,91 +1,82 @@
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { ListBullets, TreeStructure } from '@phosphor-icons/react'
 import { useAllKoPredictions, useMyTotals } from './hooks'
 import { signed } from './format'
 import { PhaseSummary, PanelSkeleton } from './parts'
-import type { KoMatch, KoMatchesResponse } from '../../types/api'
+import { buildColumns, tripleUsesRemaining, predictionProgress } from '../ko/koView'
+import { KoListView } from '../ko/KoListView'
+import { KoBracketView } from '../ko/KoBracketView'
+import { KoPredictionSheet } from '../ko/KoPredictionSheet'
+import type { KoMatch } from '../../types/api'
+
+type ViewMode = 'lista' | 'llaves'
+const VIEWS: { key: ViewMode; label: string; Icon: typeof ListBullets }[] = [
+  { key: 'lista', label: 'Lista', Icon: ListBullets },
+  { key: 'llaves', label: 'Llaves', Icon: TreeStructure },
+]
 
 export function EliminatoriasPanel({ locked }: { locked: boolean }) {
   const { isLoading, rounds } = useAllKoPredictions()
   const totals = useMyTotals()
+  const [view, setView] = useState<ViewMode>('lista')
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  const columns = useMemo(() => buildColumns(rounds), [rounds])
+  const triple = tripleUsesRemaining(rounds)
+  const progress = predictionProgress(rounds)
+
+  // El partido seleccionado se deriva de las columnas en cada render (datos frescos para el sheet).
+  let selectedMatch: KoMatch | null = null
+  let selectedRound: string | undefined
+  if (selectedId) {
+    for (const col of columns) {
+      const slot = col.slots.find((s) => s.match?.id === selectedId)
+      if (slot?.match) {
+        selectedMatch = slot.match
+        selectedRound = col.name
+        break
+      }
+    }
+  }
+
   if (isLoading) return <PanelSkeleton />
-  const withMatches = rounds.filter((r) => r.matches.length > 0)
-  const predictedCount = withMatches.reduce((n, r) => n + r.matches.filter((m) => m.myPrediction).length, 0)
-  const value = locked && totals.data ? `${signed(totals.data.breakdown.ko)} pts` : `${predictedCount} pronósticos`
+
+  const value = locked && totals.data ? `${signed(totals.data.breakdown.ko)} pts` : `${progress.done}/${progress.total} pronósticos`
+  const onPick = (m: KoMatch) => setSelectedId(m.id)
 
   return (
     <div className="space-y-4">
       <PhaseSummary label="Eliminatorias" value={value} />
-      {withMatches.map((r) => (
-        <RoundSection key={r.round.slug} r={r} locked={locked} />
-      ))}
-    </div>
-  )
-}
 
-function RoundSection({ r, locked }: { r: KoMatchesResponse; locked: boolean }) {
-  const roundPts = r.matches.reduce((n, m) => n + (m.myPrediction?.pointsEarned?.total ?? 0), 0)
-  return (
-    <div>
-      <div className="flex items-center justify-between px-1 pb-1.5">
-        <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-muted">{r.round.name}</span>
-        {locked && <span className="font-mono text-xs font-bold text-violet">{signed(roundPts)}</span>}
-      </div>
-      <div className="space-y-2">
-        {r.matches.map((m) => (
-          <MatchRow key={m.id} m={m} locked={locked} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function teamName(m: KoMatch, side: 'home' | 'away'): string {
-  if (side === 'home') return m.homeTeam?.name ?? m.homeTeamLabel ?? '—'
-  return m.awayTeam?.name ?? m.awayTeamLabel ?? '—'
-}
-
-function advancesName(m: KoMatch): string {
-  const id = m.myPrediction?.teamAdvancesId
-  if (!id) return ''
-  if (m.homeTeam?.id === id) return m.homeTeam.name
-  if (m.awayTeam?.id === id) return m.awayTeam.name
-  return ''
-}
-
-function MatchRow({ m, locked }: { m: KoMatch; locked: boolean }) {
-  const home = teamName(m, 'home')
-  const away = teamName(m, 'away')
-  const pred = m.myPrediction
-  const pe = pred?.pointsEarned
-  const scored = locked && m.result != null && pe != null
-  const advancesHit = scored && pe!.pts_ko_advances > 0
-  const exactHit = scored && pe!.pts_ko_exact_score > 0
-  return (
-    <Link
-      to={`/eliminatorias/partido/${m.id}`}
-      aria-label={`${home} vs ${away}`}
-      className="flex items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 shadow-card active:scale-[0.99]"
-    >
-      <span className="flex-1">
-        <span className="block text-sm font-bold text-ink">
-          {home} {pred ? `${pred.scoreHome} – ${pred.scoreAway}` : ''} {away}
+      <div className="flex items-center justify-between gap-2">
+        <span className="rounded-full bg-[#f6eed9] px-3 py-1 text-[13px] font-medium text-gold">
+          Triple o nada · {3 - triple}/3
         </span>
-        <span className="block text-xs text-ink-soft">
-          {pred ? (
-            <>
-              Avanza {advancesName(m)}
-              {advancesHit ? ' ✓' : ''}
-              {scored && m.result ? ` · real ${m.result.scoreHome}–${m.result.scoreAway}${exactHit ? ' ✓' : ''}` : ''}
-            </>
-          ) : (
-            'Sin pronóstico'
-          )}
-        </span>
-      </span>
-      {pred?.tripleActive && (
-        <span className="rounded bg-tint px-1.5 py-0.5 font-mono text-[10px] font-bold text-violet">Triple</span>
+        <div className="inline-flex rounded-full border border-border bg-surface p-0.5">
+          {VIEWS.map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setView(key)}
+              aria-pressed={view === key}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold transition ${
+                view === key ? 'bg-violet text-white' : 'text-muted'
+              }`}
+            >
+              <Icon size={16} weight="bold" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {view === 'lista' ? (
+        <KoListView columns={columns} locked={locked} onPick={onPick} />
+      ) : (
+        <KoBracketView columns={columns} locked={locked} onPick={onPick} />
       )}
-      {scored && <span className={`font-mono text-sm font-bold ${pe!.total > 0 ? 'text-success' : 'text-muted'}`}>{signed(pe!.total)}</span>}
-    </Link>
+
+      <KoPredictionSheet match={selectedMatch} roundName={selectedRound} tripleRemaining={triple} onClose={() => setSelectedId(null)} />
+    </div>
   )
 }
