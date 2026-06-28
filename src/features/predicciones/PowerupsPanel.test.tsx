@@ -9,10 +9,11 @@ describe('PowerupsPanel', () => {
     seedSession('p-juan')
   })
 
-  it('locked: subtotal y puntos de caballo y decepción', async () => {
+  it('locked: puntos por pálpito de caballo y decepción (sin subtotal de fase)', async () => {
     renderWithProviders(<PowerupsPanel locked />)
     await screen.findByText('Equipo A4') // caballo oscuro
-    expect(screen.getByText('+10 pts')).toBeInTheDocument()
+    expect(screen.getByText('2/2 elegidos')).toBeInTheDocument() // progreso, no subtotal de puntos
+    expect(screen.queryByText('+10 pts')).not.toBeInTheDocument()
     expect(screen.getByText('+15')).toBeInTheDocument()
     expect(screen.getByText('Equipo A1')).toBeInTheDocument() // decepción
     expect(screen.getByText('-5')).toBeInTheDocument()

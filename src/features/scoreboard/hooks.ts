@@ -3,7 +3,7 @@ import { keys } from '../../lib/queryClient'
 import { getScoreboard, getBreakdown, type ScoreboardSort } from './api'
 
 export function useScoreboard(sortBy: ScoreboardSort = 'total') {
-  // keepPreviousData: al alternar provisional/oficial no parpadea al skeleton mientras reordena el backend.
+  // keepPreviousData: evita parpadear al skeleton en refetches mientras el backend reordena.
   return useQuery({
     queryKey: keys.scoreboard.all(sortBy),
     queryFn: () => getScoreboard(sortBy),

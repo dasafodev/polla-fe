@@ -9,7 +9,7 @@ import { Sheet } from '../../ui/Sheet'
 import { Podium } from './Podium'
 import { PlayerBreakdown } from './PlayerBreakdown'
 import { ScoreboardEmpty } from './states/ScoreboardEmpty'
-import { pointsFor, type PointsView } from './points'
+import { officialPoints } from './points'
 import { NAVY_BG } from './theme'
 
 // El podio solo se muestra con un top 3 inequívoco: el BE comparte rank en empates (1,1,3…),
@@ -21,9 +21,8 @@ function tieInTop(entries: ScoreboardEntry[]): boolean {
 }
 
 export function Scoreboard() {
-  const [view, setView] = useState<PointsView>('provisional')
-  // El orden y el rank los decide el backend: la vista oficial pide sortBy=real.
-  const q = useScoreboard(view === 'official' ? 'real' : 'total')
+  // El orden y el rank los decide el backend: la tabla pide siempre sortBy=real (puntos oficiales).
+  const q = useScoreboard('real')
   const { participant } = useAuth()
   const meId = participant?.id ?? null
   const [selected, setSelected] = useState<ScoreboardEntry | null>(null)
@@ -48,15 +47,12 @@ export function Scoreboard() {
         {q.data && (
           <p className="font-mono text-[10.5px] tracking-wide text-violet-light">ACTUALIZADO {formatUpdated(q.data.updatedAt)}</p>
         )}
-        <PointsToggle view={view} onChange={setView} />
         <p className="mt-2 text-[11px] leading-snug text-violet-light">
-          {view === 'provisional'
-            ? 'Puntos provisionales — se confirman al cerrar cada grupo.'
-            : 'Puntos oficiales — solo lo confirmado al cerrar cada grupo o partido.'}
+          Puntos oficiales — solo lo confirmado al cerrar cada grupo o partido.
         </p>
         {!tied && (
           <div className="mt-5">
-            <Podium entries={top3} meId={meId} onPick={setSelected} view={view} />
+            <Podium entries={top3} meId={meId} onPick={setSelected} />
           </div>
         )}
       </div>
@@ -69,7 +65,7 @@ export function Scoreboard() {
         )}
         <ul className="space-y-2">
           {rest.map((e) => (
-            <ScoreboardRow key={e.participant.id} entry={e} meId={meId} onPick={setSelected} view={view} />
+            <ScoreboardRow key={e.participant.id} entry={e} meId={meId} onPick={setSelected} />
           ))}
         </ul>
       </div>
@@ -81,43 +77,14 @@ export function Scoreboard() {
   )
 }
 
-function PointsToggle({ view, onChange }: { view: PointsView; onChange: (v: PointsView) => void }) {
-  const opts: [PointsView, string][] = [
-    ['provisional', 'Provisionales'],
-    ['official', 'Oficiales'],
-  ]
-  return (
-    <div className="mt-3 inline-flex rounded-full bg-white/10 p-0.5" role="group" aria-label="Tipo de puntos">
-      {opts.map(([key, label]) => {
-        const active = view === key
-        return (
-          <button
-            key={key}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onChange(key)}
-            className={`rounded-full px-3.5 py-1 font-display text-xs font-bold transition ${
-              active ? 'bg-white text-ink' : 'text-violet-light'
-            }`}
-          >
-            {label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 const ScoreboardRow = memo(function ScoreboardRow({
   entry,
   meId,
   onPick,
-  view,
 }: {
   entry: ScoreboardEntry
   meId: string | null
   onPick: (e: ScoreboardEntry) => void
-  view: PointsView
 }) {
   const isMe = entry.participant.id === meId
   return (
@@ -136,7 +103,7 @@ const ScoreboardRow = memo(function ScoreboardRow({
             TÚ
           </span>
         )}
-        <span className="font-mono text-sm font-bold text-ink">{pointsFor(entry, view)} pts</span>
+        <span className="font-mono text-sm font-bold text-ink">{officialPoints(entry)} pts</span>
       </button>
     </li>
   )

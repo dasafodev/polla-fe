@@ -25,9 +25,8 @@ export function KoBracketView({
         <div className="flex gap-3">
           {columns.map((col) => (
             <section key={col.slug} className="w-[156px] shrink-0">
-              <div className="mb-2 flex items-baseline justify-between">
+              <div className="mb-2">
                 <h3 className="font-mono text-[11px] font-bold uppercase tracking-wide text-violet-strong">{col.short}</h3>
-                {locked && col.points > 0 && <span className="font-mono text-[10px] font-bold text-violet">{signed(col.points)}</span>}
               </div>
               <div className="space-y-2">
                 {col.slots.map((slot) =>

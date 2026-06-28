@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pointsFor } from './points'
+import { officialPoints } from './points'
 import type { ScoreboardEntry } from '../../types/api'
 
 const entry: ScoreboardEntry = {
@@ -7,16 +7,12 @@ const entry: ScoreboardEntry = {
   total: 145, realTotal: 40, simulatedTotal: 105, prize: null,
 }
 
-describe('pointsFor', () => {
-  it('provisionales = total (proyección completa)', () => {
-    expect(pointsFor(entry, 'provisional')).toBe(145)
+describe('officialPoints', () => {
+  it('usa realTotal del backend (lo confirmado), nunca la proyección provisional', () => {
+    expect(officialPoints(entry)).toBe(40)
   })
 
-  it('oficiales = realTotal del backend (lo confirmado), no 0', () => {
-    expect(pointsFor(entry, 'official')).toBe(40)
-  })
-
-  it('oficiales cae a 0 si el backend no envía realTotal', () => {
-    expect(pointsFor({ ...entry, realTotal: undefined }, 'official')).toBe(0)
+  it('cae a 0 si el backend no envía realTotal', () => {
+    expect(officialPoints({ ...entry, realTotal: undefined })).toBe(0)
   })
 })

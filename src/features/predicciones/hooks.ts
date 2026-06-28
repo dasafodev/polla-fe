@@ -1,16 +1,9 @@
 import { useMemo } from 'react'
 import { useQueries } from '@tanstack/react-query'
-import { useAuth } from '../../auth/useAuth'
-import { useBreakdown } from '../scoreboard/hooks'
 import { keys } from '../../lib/queryClient'
 import { getKoMatches } from '../ko/api'
 import { ROUND_SLUGS } from '../../types/enums'
 import type { KoMatchesResponse } from '../../types/api'
-
-export function useMyTotals() {
-  const { participant } = useAuth()
-  return useBreakdown(participant?.id ?? '')
-}
 
 export function useAllKoPredictions(): {
   isLoading: boolean

@@ -1,8 +1,7 @@
 import type { ScoreboardEntry } from '../../types/api'
 
-export type PointsView = 'provisional' | 'official'
-
-// Provisionales = proyección total (real + simulado). Oficiales = solo lo confirmado por el backend.
-export function pointsFor(entry: ScoreboardEntry, view: PointsView): number {
-  return view === 'official' ? (entry.realTotal ?? 0) : entry.total
+// La tabla muestra solo puntos oficiales: lo confirmado por el backend (realTotal).
+// La proyección provisional (real + simulado) ya no se muestra.
+export function officialPoints(entry: ScoreboardEntry): number {
+  return entry.realTotal ?? 0
 }

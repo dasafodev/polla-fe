@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ListBullets, TreeStructure } from '@phosphor-icons/react'
-import { useAllKoPredictions, useMyTotals } from './hooks'
-import { signed } from './format'
+import { useAllKoPredictions } from './hooks'
 import { PhaseSummary, PanelSkeleton, PanelError } from './parts'
 import { buildColumns, tripleUsesRemaining, predictionProgress } from '../ko/koView'
 import { KoListView } from '../ko/KoListView'
@@ -17,7 +16,6 @@ const VIEWS: { key: ViewMode; label: string; Icon: typeof ListBullets }[] = [
 
 export function EliminatoriasPanel({ locked }: { locked: boolean }) {
   const { isLoading, isError, rounds, refetch } = useAllKoPredictions()
-  const totals = useMyTotals()
   const [view, setView] = useState<ViewMode>('lista')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -44,7 +42,7 @@ export function EliminatoriasPanel({ locked }: { locked: boolean }) {
   // definir" (que se confundiría con cruces aún sin clasificados).
   if (isError && rounds.length === 0) return <PanelError message="No pudimos cargar las eliminatorias." onRetry={refetch} />
 
-  const value = locked && totals.data ? `${signed(totals.data.breakdown.ko)} pts` : `${progress.done}/${progress.total} pronósticos`
+  const value = `${progress.done}/${progress.total} pronósticos`
   const onPick = (m: KoMatch) => setSelectedId(m.id)
 
   return (

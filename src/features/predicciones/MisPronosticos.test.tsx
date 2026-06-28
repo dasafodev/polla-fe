@@ -27,9 +27,11 @@ describe('MisPronosticos', () => {
     expect(screen.queryByText('Dieciseisavos')).not.toBeInTheDocument()
   })
 
-  it('torneo iniciado: header muestra el total de puntos', async () => {
+  it('torneo iniciado: el header ya no muestra el total general de puntos', async () => {
     setNow(db.tournamentStartAt)
     renderWithProviders(<MisPronosticos />, { route: '/predicciones' })
-    await screen.findByText('584 pts')
+    await screen.findByText('Dieciseisavos') // el panel por defecto (Eliminatorias) cargó
+    expect(screen.queryByText('584 pts')).not.toBeInTheDocument()
+    expect(screen.queryByText(/\d+ pts$/)).not.toBeInTheDocument() // sin contabilización general
   })
 })

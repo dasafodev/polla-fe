@@ -43,10 +43,11 @@ describe('EliminatoriasPanel', () => {
     expect(within(dialog).getByRole('button', { name: 'Guardar pronóstico' })).toBeInTheDocument()
   })
 
-  it('locked: muestra el subtotal de puntos KO de la fase', async () => {
+  it('locked: muestra el progreso de la fase, no el subtotal de puntos KO', async () => {
     renderWithProviders(<EliminatoriasPanel locked />)
     await screen.findByText('Dieciseisavos')
-    expect(await screen.findByText('+14 pts')).toBeInTheDocument() // breakdown.ko de juan (sin cambios)
+    expect(screen.getByText(/\d+\/\d+ pronósticos/)).toBeInTheDocument() // progreso, no subtotal de fase
+    expect(screen.queryByText('+14 pts')).not.toBeInTheDocument()
   })
 
   it('si fallan las rondas KO, muestra un error con reintento (no un cuadro vacío "Por definir")', async () => {

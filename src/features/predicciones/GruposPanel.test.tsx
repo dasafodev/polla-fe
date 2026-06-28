@@ -23,10 +23,11 @@ describe('GruposPanel', () => {
     expect(screen.queryByText(/jugadores de la polla que coincidió contigo/i)).not.toBeInTheDocument()
   })
 
-  it('locked: subtotal de puntos, 12 grupos en mi orden y los aciertos muestran +puntos', async () => {
+  it('locked: 12 grupos en mi orden y los aciertos muestran +puntos (sin subtotal de fase)', async () => {
     renderWithProviders(<GruposPanel locked />)
     await screen.findByText('Grupo A')
-    await screen.findByText('+480 pts') // subtotal (espera al breakdown)
+    expect(screen.getByText('12/12 completos')).toBeInTheDocument() // progreso, no subtotal de puntos
+    expect(screen.queryByText('+480 pts')).not.toBeInTheDocument()
     expect(screen.getAllByText(/^Grupo [A-L]$/)).toHaveLength(12)
     expect(screen.getByText('Equipo A1')).toBeInTheDocument()
     // El acierto sale del standing de /groups: en el seed solo A y B jugaron → 8 exactos, +5 c/u.

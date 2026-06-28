@@ -1,18 +1,15 @@
 import { Link } from 'react-router-dom'
 import { useThirds } from '../groups/hooks'
-import { useMyTotals } from './hooks'
-import { signed } from './format'
 import { PhaseSummary, PanelSkeleton } from './parts'
 import { Flag } from '../../ui/Flag'
 import type { ThirdCandidate } from '../../types/api'
 
 export function TercerosPanel({ locked }: { locked: boolean }) {
   const thirds = useThirds()
-  const totals = useMyTotals()
   if (thirds.isLoading) return <PanelSkeleton />
   const selected = (thirds.data?.data ?? []).filter((c) => c.selected)
   const count = thirds.data?.selectedCount ?? 0
-  const value = locked && totals.data ? `${signed(totals.data.breakdown.thirds)} pts` : `${count}/8 elegidos`
+  const value = `${count}/8 elegidos`
 
   return (
     <div className="space-y-3">

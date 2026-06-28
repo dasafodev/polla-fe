@@ -9,10 +9,11 @@ describe('TercerosPanel', () => {
     seedSession('p-juan')
   })
 
-  it('locked: subtotal, 8 elegidos y marca Clasificó', async () => {
+  it('locked: 8 elegidos y marca Clasificó (sin subtotal de fase)', async () => {
     renderWithProviders(<TercerosPanel locked />)
     await screen.findByText('Equipo A3')
-    await screen.findByText('+80 pts') // subtotal (espera al breakdown)
+    expect(screen.getByText('8/8 elegidos')).toBeInTheDocument() // progreso, no subtotal de puntos
+    expect(screen.queryByText('+80 pts')).not.toBeInTheDocument()
     expect(screen.getAllByText('Clasificó')).toHaveLength(8)
     expect(screen.getAllByRole('link')[0]).toHaveAttribute('href', '/predicciones/terceros')
   })

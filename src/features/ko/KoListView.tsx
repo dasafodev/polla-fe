@@ -19,9 +19,8 @@ export function KoListView({
     <div className="space-y-5">
       {columns.map((col) => (
         <section key={col.slug}>
-          <div className="mb-1.5 flex items-center justify-between px-1">
+          <div className="mb-1.5 px-1">
             <h3 className="font-mono text-[11px] font-bold uppercase tracking-wide text-muted">{col.name}</h3>
-            {locked && col.points > 0 && <span className="font-mono text-xs font-bold text-violet">{signed(col.points)}</span>}
           </div>
           <div className="space-y-2">
             {col.slots.map((slot) =>

@@ -11,7 +11,7 @@ export function PowerupsPanel({ locked }: { locked: boolean }) {
   const data = pw.data
   const pe = data?.pointsEarned ?? null
   const chosen = (data?.darkHorse ? 1 : 0) + (data?.disappointment ? 1 : 0)
-  const value = locked && pe ? `${signed(pe.total)} pts` : `${chosen}/2 elegidos`
+  const value = `${chosen}/2 elegidos`
   const hasConsensus =
     data?.darkHorse?.stats?.chosenPct != null || data?.disappointment?.stats?.chosenPct != null
 
