@@ -67,3 +67,44 @@ describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
     expect(within(dialog).queryByText(/already exists/i)).not.toBeInTheDocument()
   })
 })
+
+describe('KoPredictionSheet — pronósticos de la polla', () => {
+  beforeEach(() => {
+    seedSession('p-juan')
+  })
+
+  it('partido ya arrancado: revela el marcador de los demás y marca "sin pronóstico" a quien no jugó', async () => {
+    renderWithProviders(<EliminatoriasPanel locked />)
+    await screen.findByText('Dieciseisavos')
+    await userEvent.click(screen.getByRole('button', { name: 'Equipo A1 vs Equipo B1' })) // ko-r32-1 (arrancado)
+    const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+
+    expect(await within(dialog).findByText('Pronósticos de la polla')).toBeInTheDocument()
+    // María pronosticó 3–0 este cruce; el resto de participantes no lo jugaron.
+    expect(within(dialog).getByText('María')).toBeInTheDocument()
+    expect(within(dialog).getByText(/3–0/)).toBeInTheDocument()
+    expect(within(dialog).getAllByText('sin pronóstico').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('si falla la carga en un partido ya arrancado: muestra error + reintento, no el copy de "aún no disponible"', async () => {
+    server.use(
+      http.get('/api/ko/matches/:matchId/predictions/friends', () =>
+        HttpResponse.json({ code: 'VALIDATION_ERROR', message: 'boom' }, { status: 400 }),
+      ),
+    )
+    renderWithProviders(<EliminatoriasPanel locked />)
+    await screen.findByText('Dieciseisavos')
+    await userEvent.click(screen.getByRole('button', { name: 'Equipo A1 vs Equipo B1' })) // ko-r32-1 (arrancado)
+    const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+
+    // El partido YA arrancó: un fallo de carga NO debe disfrazarse de "todavía no se revelan".
+    expect(await within(dialog).findByText('No se pudieron cargar los pronósticos.')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
+    expect(within(dialog).queryByText('Se revelan cuando arranca el partido.')).not.toBeInTheDocument()
+
+    // Restaurar el backend y reintentar recupera la lista.
+    server.resetHandlers()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Reintentar' }))
+    expect(await within(dialog).findByText('María')).toBeInTheDocument()
+  })
+})

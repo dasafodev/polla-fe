@@ -46,7 +46,14 @@ function SheetBody({ initial, tripleRemaining }: { initial: KoMatch; tripleRemai
       ) : (
         <ReadOnly match={m} home={home} away={away} />
       )}
-      <FriendsBlock data={friends.data} isLoading={friends.isLoading} home={home} away={away} />
+      <FriendsBlock
+        data={friends.data}
+        isLoading={friends.isLoading}
+        isError={friends.isError}
+        onRetry={() => friends.refetch()}
+        home={home}
+        away={away}
+      />
     </div>
   )
 }
@@ -239,11 +246,15 @@ function ReadOnly({ match, home, away }: { match: KoMatch; home: KoTeam; away: K
 function FriendsBlock({
   data,
   isLoading,
+  isError,
+  onRetry,
   home,
   away,
 }: {
   data: ReturnType<typeof useFriendsKo>['data']
   isLoading: boolean
+  isError: boolean
+  onRetry: () => void
   home: KoTeam
   away: KoTeam
 }) {
@@ -254,6 +265,15 @@ function FriendsBlock({
       </p>
       {isLoading ? (
         <p className="mt-2 text-sm text-muted">Cargando…</p>
+      ) : isError ? (
+        // Un fallo de carga NO debe degradarse al copy de "aún no disponible": confundiría un error de
+        // red con un partido que todavía no arranca. Mostramos el error real con reintento.
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p className="text-sm text-ink-soft">No se pudieron cargar los pronósticos.</p>
+          <button type="button" onClick={onRetry} className="shrink-0 text-sm font-bold text-violet active:scale-95">
+            Reintentar
+          </button>
+        </div>
       ) : !data?.available ? (
         <p className="mt-2 text-sm text-ink-soft">Se revelan cuando arranca el partido.</p>
       ) : data.data && data.data.length > 0 ? (
