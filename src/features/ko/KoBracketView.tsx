@@ -1,6 +1,6 @@
-import { ArrowRight } from '@phosphor-icons/react'
+import { ArrowRight, Clock } from '@phosphor-icons/react'
 import { Flag } from '../../ui/Flag'
-import { signed } from '../predicciones/format'
+import { signed, formatKoKickoffShort } from '../predicciones/format'
 import { isDetermined, sideLabel, type KoColumn, type KoSlot } from './koView'
 import type { KoMatch, KoTeam } from '../../types/api'
 
@@ -69,6 +69,10 @@ function BracketCard({ m, locked, onPick }: { m: KoMatch; locked: boolean; onPic
       aria-label={`${home.name} vs ${away.name}`}
       className="block w-full overflow-hidden rounded-xl border border-border bg-surface text-left shadow-card active:scale-[0.98]"
     >
+      <div className="flex items-center gap-1 border-b border-border bg-surface-2 px-2 py-1">
+        <Clock size={9} weight="bold" className="shrink-0 text-muted" />
+        <span className="truncate font-mono text-[9px] font-medium text-ink-soft">{formatKoKickoffShort(m.scheduledAt)}</span>
+      </div>
       <Side team={home} score={mp?.scoreHome ?? null} win={advId === home.id} />
       <div className="h-px bg-border" />
       <Side team={away} score={mp?.scoreAway ?? null} win={advId === away.id} />

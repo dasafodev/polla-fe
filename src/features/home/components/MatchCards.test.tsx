@@ -44,7 +44,7 @@ describe('MatchCards', () => {
 
     const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
     expect(within(dialog).getByText('¿Quién avanza?')).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Guardar pronóstico' })).toBeInTheDocument()
+    expect(within(dialog).getByText('Tu marcador')).toBeInTheDocument() // form de ingreso KO (autoguarda, sin botón)
   })
 
   it('los partidos de grupos no abren el sheet (no son interactivos)', async () => {

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Minus, Plus, Check, X, LockSimple, Trophy, Users } from '@phosphor-icons/react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Minus, Plus, Check, X, LockSimple, Trophy, Users, Clock } from '@phosphor-icons/react'
 import { Sheet } from '../../ui/Sheet'
-import { Button } from '../../ui/Button'
 import { Flag } from '../../ui/Flag'
 import { useKoMatch, useSaveKoPrediction, useFriendsKo } from './hooks'
 import { koSaveErrorText } from './koErrors'
 import { displayName } from '../../lib/names'
+import { keys } from '../../lib/queryClient'
+import { formatKoKickoff } from '../predicciones/format'
 import type { KoMatch, KoTeam, KoResult, SaveKoPredictionBody } from '../../types/api'
 
 export function KoPredictionSheet({
@@ -22,12 +24,12 @@ export function KoPredictionSheet({
   return (
     <Sheet open={!!match} onClose={onClose} title={roundName ?? 'Eliminatoria'} ariaLabel="Pronóstico de eliminatoria">
       {/* key por id: remonta el form (y reinicia el estado desde myPrediction) al cambiar de partido. */}
-      {match && <SheetBody key={match.id} initial={match} tripleRemaining={tripleRemaining} onClose={onClose} />}
+      {match && <SheetBody key={match.id} initial={match} tripleRemaining={tripleRemaining} />}
     </Sheet>
   )
 }
 
-function SheetBody({ initial, tripleRemaining, onClose }: { initial: KoMatch; tripleRemaining: number; onClose: () => void }) {
+function SheetBody({ initial, tripleRemaining }: { initial: KoMatch; tripleRemaining: number }) {
   // useKoMatch da la copia fresca (con su propio isFetching): tras un POST, invalidar ko refetchea y
   // el gating evita el 409 del segundo guardado antes de que el modo pase a 'update'.
   const q = useKoMatch(initial.id)
@@ -40,8 +42,12 @@ function SheetBody({ initial, tripleRemaining, onClose }: { initial: KoMatch; tr
   const editable = !m.locked && m.status !== 'finished'
   return (
     <div className="space-y-4 px-2 pt-1">
+      <p className="flex items-center gap-1.5 font-mono text-[12px] font-medium text-ink-soft">
+        <Clock size={13} weight="bold" className="shrink-0 text-muted" />
+        {formatKoKickoff(m.scheduledAt)}
+      </p>
       {editable ? (
-        <EditForm match={m} home={home} away={away} tripleRemaining={tripleRemaining} isFetching={q.isFetching} onClose={onClose} />
+        <EditForm match={m} home={home} away={away} tripleRemaining={tripleRemaining} isFetching={q.isFetching} />
       ) : (
         <ReadOnly match={m} home={home} away={away} />
       )}
@@ -95,14 +101,12 @@ function EditForm({
   away,
   tripleRemaining,
   isFetching,
-  onClose,
 }: {
   match: KoMatch
   home: KoTeam
   away: KoTeam
   tripleRemaining: number
   isFetching: boolean
-  onClose: () => void
 }) {
   const mp = match.myPrediction
   const [scoreHome, setScoreHome] = useState(mp?.scoreHome ?? 0)
@@ -120,25 +124,23 @@ function EditForm({
 
   // createdRef evita un segundo 'create' (→ 409) si un autoguardado dispara antes de que el refetch
   // post-create repueble myPrediction: una vez creado el cruce, todo guardado siguiente es 'update'.
+  const qc = useQueryClient()
   const createdRef = useRef(!!mp)
   const save = useSaveKoPrediction(match.id, mp || createdRef.current ? 'update' : 'create')
   const initialSnap = mp ? snapshot({ scoreHome: mp.scoreHome, scoreAway: mp.scoreAway, teamAdvancesId: mp.teamAdvancesId, tripleActive: mp.tripleActive }) : null
-  const lastSaved = useRef<string | null>(initialSnap) // último payload PERSISTIDO (para "no hay nada nuevo, solo cierra")
   const lastAttempt = useRef<string | null>(initialSnap) // último payload INTENTADO: corta el reintento en bucle de un guardado que falla
 
   // No puede activar un nuevo triple si ya no le quedan usos (sí puede desactivar el que ya tenía).
   const canTriple = triple || tripleRemaining > 0 || !!mp?.tripleActive
 
-  function persist(onDone?: () => void) {
+  function persist() {
     const snap = snapshot(body)
     lastAttempt.current = snap // marca el intento ANTES de mutar: si falla, el autoguardado no lo repite
     setMessage(null)
     save.mutate(body, {
       onSuccess: () => {
         createdRef.current = true
-        lastSaved.current = snap
         setMessage({ ok: true, text: mp ? 'Pronóstico actualizado' : 'Pronóstico guardado' })
-        onDone?.()
       },
       onError: (e) => setMessage({ ok: false, text: koSaveErrorText(e) }),
     })
@@ -156,11 +158,16 @@ function EditForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snap, advances, isFetching, save.isPending])
 
-  function onSaveAndClose() {
-    // Tras el autoguardado normalmente ya está todo persistido: si no hay nada nuevo, solo cierra.
-    if (snapshot(body) === lastSaved.current && !save.isPending) return onClose()
-    persist(onClose)
+  // Ya no hay botón de guardar: si cierran el sheet justo tras un cambio (antes de que dispare el
+  // debounce), lo persistimos al desmontar. mutateAsync corre aunque el componente ya no exista; luego
+  // invalidamos para refrescar el listado. flushRef se reasigna en cada render para tener el body fresco.
+  const flushRef = useRef(() => {})
+  flushRef.current = () => {
+    if (!advances || snapshot(body) === lastAttempt.current || save.isPending || isFetching) return
+    lastAttempt.current = snapshot(body)
+    save.mutateAsync(body).then(() => qc.invalidateQueries({ queryKey: keys.ko.all() })).catch(() => {})
   }
+  useEffect(() => () => flushRef.current(), [])
 
   return (
     <>
@@ -222,14 +229,22 @@ function EditForm({
         <span className={`size-5 shrink-0 rounded-full border-2 ${triple ? 'border-gold bg-gold' : 'border-border'}`} aria-hidden />
       </button>
 
-      <Button fullWidth onClick={onSaveAndClose} loading={save.isPending} disabled={isFetching || !advances}>
-        {mp ? 'Actualizar pronóstico' : 'Guardar pronóstico'}
-      </Button>
-      {message && (
-        <p role="alert" className={`text-center text-sm font-medium ${message.ok ? 'text-success' : 'text-danger'}`}>
-          {message.text}
-        </p>
-      )}
+      {/* Sin botón: el marcador se guarda solo. Esta línea da el feedback que antes daba el botón. */}
+      <div className="flex min-h-[22px] items-center justify-center gap-1.5 text-center text-sm font-medium" role="status" aria-live="polite">
+        {save.isPending ? (
+          <span className="text-muted">Guardando…</span>
+        ) : message && !message.ok ? (
+          <span className="text-danger">{message.text}</span>
+        ) : !advances ? (
+          <span className="text-muted">Elige quién avanza para guardar</span>
+        ) : message?.ok ? (
+          <span className="flex items-center gap-1 text-success">
+            <Check size={15} weight="bold" /> {message.text}
+          </span>
+        ) : (
+          <span className="text-muted">Se guarda automáticamente</span>
+        )}
+      </div>
     </>
   )
 }

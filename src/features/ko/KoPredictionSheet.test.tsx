@@ -13,7 +13,7 @@ describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
     seedSession('p-juan')
   })
 
-  it('marcador con ganador: oculta "¿Quién avanza?" (avanza el del marcador) y el botón guarda + cierra', async () => {
+  it('marcador con ganador: oculta "¿Quién avanza?", autoguarda (sin botón) y la X cierra el sheet', async () => {
     renderWithProviders(<EliminatoriasPanel locked={false} />)
     await screen.findByText('Dieciseisavos')
     await userEvent.click(screen.getByRole('button', { name: 'Equipo G1 vs Equipo H1' })) // ko-r32-open-1
@@ -26,12 +26,19 @@ describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Sumar gol a Equipo G1' }))
     expect(within(dialog).queryByText('¿Quién avanza?')).not.toBeInTheDocument()
 
-    // el botón guarda y cierra el sheet
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar pronóstico' }))
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Pronóstico de eliminatoria' })).not.toBeInTheDocument())
+    // ya no hay botón de guardar: se persiste solo
+    expect(within(dialog).queryByRole('button', { name: /Guardar pronóstico|Actualizar pronóstico/ })).not.toBeInTheDocument()
+    await waitFor(
+      () => {
+        const pred = db.koPredictions.find((p) => p.participantId === 'p-juan' && p.matchId === 'ko-r32-open-1')
+        expect(pred).toMatchObject({ scoreHome: 1, scoreAway: 0, teamAdvancesId: 'tG1', tripleActive: false })
+      },
+      { timeout: 2000 },
+    )
 
-    const pred = db.koPredictions.find((p) => p.participantId === 'p-juan' && p.matchId === 'ko-r32-open-1')
-    expect(pred).toMatchObject({ scoreHome: 1, scoreAway: 0, teamAdvancesId: 'tG1', tripleActive: false })
+    // la X cierra el sheet
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cerrar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Pronóstico de eliminatoria' })).not.toBeInTheDocument())
   })
 
   it('autoguarda al cambiar el marcador, sin tocar el botón (debounce coalesce los taps)', async () => {
@@ -55,14 +62,49 @@ describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
     expect(screen.getByRole('dialog', { name: 'Pronóstico de eliminatoria' })).toBeInTheDocument()
   })
 
-  it('empate: muestra "¿Quién avanza?" y no permite guardar hasta elegir', async () => {
+  it('cerrar justo tras un cambio (antes del debounce) persiste el pendiente al desmontar', async () => {
     renderWithProviders(<EliminatoriasPanel locked={false} />)
     await screen.findByText('Dieciseisavos')
     await userEvent.click(screen.getByRole('button', { name: 'Equipo G1 vs Equipo H1' }))
     const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
-    // 0-0 es empate: el selector aparece y el botón está deshabilitado sin elegir quién avanza
+
+    // cambia el marcador y cierra de inmediato (sin esperar el debounce)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Sumar gol a Equipo G1' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cerrar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Pronóstico de eliminatoria' })).not.toBeInTheDocument())
+
+    // el flush al desmontar persistió el 1-0 (no se perdió)
+    await waitFor(
+      () =>
+        expect(db.koPredictions.find((p) => p.participantId === 'p-juan' && p.matchId === 'ko-r32-open-1')).toMatchObject({
+          scoreHome: 1,
+          scoreAway: 0,
+          teamAdvancesId: 'tG1',
+        }),
+      { timeout: 2000 },
+    )
+  })
+
+  it('empate: muestra "¿Quién avanza?" y no autoguarda hasta elegir', async () => {
+    renderWithProviders(<EliminatoriasPanel locked={false} />)
+    await screen.findByText('Dieciseisavos')
+    await userEvent.click(screen.getByRole('button', { name: 'Equipo G1 vs Equipo H1' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+    // 0-0 es empate: el selector aparece y el indicador pide elegir quién avanza (no autoguarda)
     expect(within(dialog).getByText('¿Quién avanza?')).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Guardar pronóstico' })).toBeDisabled()
+    expect(within(dialog).getByText('Elige quién avanza para guardar')).toBeInTheDocument()
+
+    // al elegir, completa el pronóstico y se autoguarda
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Equipo G1' }))
+    await waitFor(
+      () =>
+        expect(db.koPredictions.find((p) => p.participantId === 'p-juan' && p.matchId === 'ko-r32-open-1')).toMatchObject({
+          scoreHome: 0,
+          scoreAway: 0,
+          teamAdvancesId: 'tG1',
+        }),
+      { timeout: 2000 },
+    )
   })
 
   it('partido finalizado: solo lectura con resultado real, sin botón de guardar', async () => {
@@ -90,10 +132,10 @@ describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
     await screen.findByText('Dieciseisavos')
     await userEvent.click(screen.getByRole('button', { name: 'Equipo G1 vs Equipo H1' })) // ko-r32-open-1
     const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+    // elegir quién avanza completa el pronóstico → el autoguardado dispara el POST (→ 409 mockeado)
     await userEvent.click(within(dialog).getByRole('button', { name: 'Equipo G1' }))
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar pronóstico' }))
 
-    expect(await within(dialog).findByText('Ya tienes un pronóstico para este partido.')).toBeInTheDocument()
+    expect(await within(dialog).findByText('Ya tienes un pronóstico para este partido.', undefined, { timeout: 2000 })).toBeInTheDocument()
     expect(within(dialog).queryByText(/already exists/i)).not.toBeInTheDocument()
   })
 })

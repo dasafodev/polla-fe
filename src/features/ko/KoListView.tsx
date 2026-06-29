@@ -1,6 +1,6 @@
-import { CaretRight, Check, LockSimple } from '@phosphor-icons/react'
+import { CaretRight, Check, LockSimple, Clock } from '@phosphor-icons/react'
 import { Flag } from '../../ui/Flag'
-import { signed } from '../predicciones/format'
+import { signed, formatKoKickoff } from '../predicciones/format'
 import { isDetermined, sideLabel, type KoColumn, type KoSlot } from './koView'
 import type { KoMatch, KoTeam } from '../../types/api'
 
@@ -92,9 +92,13 @@ function MatchCard({ m, locked, onPick }: { m: KoMatch; locked: boolean; onPick:
       aria-label={`${home.name} vs ${away.name}`}
       className="block w-full overflow-hidden rounded-card border border-border bg-surface text-left shadow-card active:scale-[0.98]"
     >
-      {/* ── Zona 1: tu pronóstico ── */}
+      {/* ── Zona 1: fecha/hora + tu pronóstico ── */}
       <div className="flex items-stretch gap-3 px-3 pb-2 pt-2.5">
         <div className="min-w-0 flex-1">
+          <p className="mb-1.5 flex items-center gap-1 font-mono text-[10px] font-medium text-ink-soft">
+            <Clock size={11} weight="bold" className="shrink-0 text-muted" />
+            {formatKoKickoff(m.scheduledAt)}
+          </p>
           {mp && (
             <div className="mb-1.5 flex items-center justify-between gap-2">
               <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-ink-soft">Tu pronóstico</span>

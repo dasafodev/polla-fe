@@ -40,7 +40,7 @@ describe('EliminatoriasPanel', () => {
 
     const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
     expect(within(dialog).getByText('¿Quién avanza?')).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Guardar pronóstico' })).toBeInTheDocument()
+    expect(within(dialog).getByText('Tu marcador')).toBeInTheDocument() // form de ingreso (autoguarda, sin botón)
   })
 
   it('tocar el tag Triple o nada abre la explicación con la mecánica y el tope de 3 usos', async () => {
