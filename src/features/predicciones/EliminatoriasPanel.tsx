@@ -21,7 +21,9 @@ export function EliminatoriasPanel({ locked }: { locked: boolean }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showTripleInfo, setShowTripleInfo] = useState(false)
 
-  const columns = useMemo(() => buildColumns(rounds), [rounds])
+  // Lista: orden por prioridad (próximos primero, jugados al final). Llaves: orden estructural fijo
+  // por matchNumber que NO se reordena al jugarse los partidos.
+  const columns = useMemo(() => buildColumns(rounds, view === 'llaves' ? 'bracket' : 'priority'), [rounds, view])
   const triple = tripleUsesRemaining(rounds)
   const progress = predictionProgress(rounds)
 
