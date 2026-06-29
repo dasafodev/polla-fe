@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { http, HttpResponse } from 'msw'
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders, seedSession } from '../../test/utils'
 import { server } from '../../mocks/server'
@@ -13,28 +13,55 @@ describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
     seedSession('p-juan')
   })
 
-  it('crea un pronóstico: marcador + quién avanza, y persiste', async () => {
+  it('marcador con ganador: oculta "¿Quién avanza?" (avanza el del marcador) y el botón guarda + cierra', async () => {
     renderWithProviders(<EliminatoriasPanel locked={false} />)
     await screen.findByText('Dieciseisavos')
     await userEvent.click(screen.getByRole('button', { name: 'Equipo G1 vs Equipo H1' })) // ko-r32-open-1
     const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
 
-    // marcador 1-0: sube un gol al local
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Sumar gol a Equipo G1' }))
-    // quién avanza (requerido): el botón con nombre exacto del equipo, no los del stepper
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Equipo G1' }))
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar pronóstico' }))
+    // 0-0 inicial (empate): el selector de quién avanza SÍ se muestra
+    expect(within(dialog).getByText('¿Quién avanza?')).toBeInTheDocument()
 
-    await within(dialog).findByText('Pronóstico guardado')
+    // marcador 1-0: hay ganador → el selector desaparece (es obvio que avanza quien tiene el marcador)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Sumar gol a Equipo G1' }))
+    expect(within(dialog).queryByText('¿Quién avanza?')).not.toBeInTheDocument()
+
+    // el botón guarda y cierra el sheet
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar pronóstico' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Pronóstico de eliminatoria' })).not.toBeInTheDocument())
+
     const pred = db.koPredictions.find((p) => p.participantId === 'p-juan' && p.matchId === 'ko-r32-open-1')
     expect(pred).toMatchObject({ scoreHome: 1, scoreAway: 0, teamAdvancesId: 'tG1', tripleActive: false })
   })
 
-  it('no permite guardar sin elegir quién avanza', async () => {
+  it('autoguarda al cambiar el marcador, sin tocar el botón (debounce coalesce los taps)', async () => {
+    renderWithProviders(<EliminatoriasPanel locked={false} />)
+    await screen.findByText('Dieciseisavos')
+    await userEvent.click(screen.getByRole('button', { name: 'Equipo G1 vs Equipo H1' })) // ko-r32-open-1
+    const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+
+    // dos taps rápidos → 2-0; el debounce los junta en UN solo guardado
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Sumar gol a Equipo G1' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Sumar gol a Equipo G1' }))
+
+    // persiste solo, sin pulsar "Guardar pronóstico", y el sheet sigue abierto
+    await waitFor(
+      () => {
+        const pred = db.koPredictions.find((p) => p.participantId === 'p-juan' && p.matchId === 'ko-r32-open-1')
+        expect(pred).toMatchObject({ scoreHome: 2, scoreAway: 0, teamAdvancesId: 'tG1' })
+      },
+      { timeout: 2000 },
+    )
+    expect(screen.getByRole('dialog', { name: 'Pronóstico de eliminatoria' })).toBeInTheDocument()
+  })
+
+  it('empate: muestra "¿Quién avanza?" y no permite guardar hasta elegir', async () => {
     renderWithProviders(<EliminatoriasPanel locked={false} />)
     await screen.findByText('Dieciseisavos')
     await userEvent.click(screen.getByRole('button', { name: 'Equipo G1 vs Equipo H1' }))
     const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+    // 0-0 es empate: el selector aparece y el botón está deshabilitado sin elegir quién avanza
+    expect(within(dialog).getByText('¿Quién avanza?')).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Guardar pronóstico' })).toBeDisabled()
   })
 
@@ -44,8 +71,11 @@ describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Equipo A1 vs Equipo B1' })) // ko-r32-1 (finished)
     const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
 
-    expect(within(dialog).getByText('Tu pronóstico')).toBeInTheDocument()
-    expect(within(dialog).getByText('Resultado real')).toBeInTheDocument()
+    // Comparación TÚ | REAL: Juan pronosticó 2–1 (avanza A1) y el real fue 2–1 (gana A1) → acertó.
+    expect(within(dialog).getByText('Real')).toBeInTheDocument() // encabezado de columna del resultado real
+    expect(within(dialog).getAllByText(/Avanza/).length).toBeGreaterThan(0) // veredicto de avance
+    expect(within(dialog).getByText(/Acertaste/)).toBeInTheDocument() // único del ReadOnly
+    expect(within(dialog).getByText('puntos')).toBeInTheDocument() // banda de puntaje
     expect(within(dialog).queryByRole('button', { name: 'Guardar pronóstico' })).not.toBeInTheDocument()
   })
 
@@ -83,7 +113,7 @@ describe('KoPredictionSheet — pronósticos de la polla', () => {
     // María pronosticó 3–0 este cruce; el resto de participantes no lo jugaron.
     expect(within(dialog).getByText('María')).toBeInTheDocument()
     expect(within(dialog).getByText(/3–0/)).toBeInTheDocument()
-    expect(within(dialog).getAllByText('sin pronóstico').length).toBeGreaterThanOrEqual(1)
+    expect(within(dialog).getAllByText('Sin pronóstico').length).toBeGreaterThanOrEqual(1)
   })
 
   it('si falla la carga en un partido ya arrancado: muestra error + reintento, no el copy de "aún no disponible"', async () => {

@@ -90,7 +90,7 @@ describe('buildColumns', () => {
     expect(cols.map((c) => c.slug)).toEqual(['r32', 'r16', 'qf', 'sf', '3rd', 'final'])
     const r32 = cols[0]
     expect(r32.slots).toHaveLength(KO_MATCH_COUNTS.r32) // 16
-    // ordena por matchNumber asc: b (1) antes que a (2)
+    // misma fecha → desempata por matchNumber asc: b (1) antes que a (2)
     expect(r32.slots[0].match?.id).toBe('b')
     expect(r32.slots[1].match?.id).toBe('a')
     expect(r32.slots[2].match).toBeNull() // resto rellenado con cupos vacíos
@@ -99,6 +99,24 @@ describe('buildColumns', () => {
     expect(cols[5].slots).toHaveLength(1) // final
     expect(cols[1].slots).toHaveLength(KO_MATCH_COUNTS.r16) // 8
     expect(cols[2].slots.every((s) => s.match === null)).toBe(true) // rondas sin datos: todo placeholder
+  })
+
+  it('ordena cada ronda: por jugar (más pronto→más lejano) primero, los ya pasados al final', () => {
+    const soon = match({ id: 'soon', matchNumber: 9, scheduledAt: '2026-06-29T16:00:00.000Z' })
+    const later = match({ id: 'later', matchNumber: 3, scheduledAt: '2026-07-02T16:00:00.000Z' })
+    const finished = match({ id: 'fin', matchNumber: 1, scheduledAt: '2026-06-20T16:00:00.000Z', status: 'finished' })
+    const live = match({ id: 'live', matchNumber: 2, scheduledAt: '2026-06-25T16:00:00.000Z', status: 'live' })
+    const lockedUp = match({ id: 'lck', matchNumber: 5, scheduledAt: '2026-06-26T16:00:00.000Z', locked: true })
+    // Orden de entrada arbitrario; se reordena por estado y fecha.
+    const cols = buildColumns([round('r32', [finished, later, lockedUp, soon, live])])
+    const slotIds = cols[0].slots.map((s) => s.match?.id ?? '·')
+    // por jugar primero (soon 6/29 antes que later 7/2)
+    expect(slotIds.slice(0, 2)).toEqual(['soon', 'later'])
+    // luego cupos "Por definir" (·), y los ya pasados al final en orden cronológico (fin 6/20, live 6/25, lck 6/26)
+    expect(slotIds[2]).toBe('·')
+    expect(slotIds.slice(-3)).toEqual(['fin', 'live', 'lck'])
+    // solo los pronosticados/jugables ocupan slot; el orden de IDs ocupados es estable
+    expect(slotIds.filter((id) => id !== '·')).toEqual(['soon', 'later', 'fin', 'live', 'lck'])
   })
 
   it('acumula puntos KO de la ronda', () => {

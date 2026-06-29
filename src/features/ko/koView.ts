@@ -97,19 +97,39 @@ export interface KoColumn {
   points: number
 }
 
+// Un partido "ya pasó" cuando ya no se puede llenar: arrancó (live), terminó (finished) o se cerró
+// el candado de pronóstico (locked). Esos van al final para priorizar los que faltan por llenar.
+function hasStarted(m: KoMatch): boolean {
+  return m.status === 'live' || m.status === 'finished' || m.locked
+}
+
+// Orden cronológico: del más pronto al más lejano (scheduledAt es ISO → ordena como string);
+// empate por matchNumber para un orden estable.
+function byKickoff(a: KoMatch, b: KoMatch): number {
+  const t = a.scheduledAt.localeCompare(b.scheduledAt)
+  return t !== 0 ? t : a.matchNumber - b.matchNumber
+}
+
 // Arma las columnas del cuadro en orden de ronda (R32→Final, con 3er puesto antes de la final),
 // rellenando cada ronda con cupos vacíos hasta su conteo fijo para que SIEMPRE se vea el camino
 // completo hasta la final, incluso si el backend todavía no cargó esa ronda.
+// Dentro de cada ronda: primero los que faltan por jugar (del más pronto al más lejano), luego los
+// cupos "Por definir", y al final los que ya pasaron (también en orden cronológico). Así arriba
+// quedan siempre los cruces que el usuario todavía puede llenar.
 export function buildColumns(rounds: KoMatchesResponse[]): KoColumn[] {
   const bySlug = new Map(rounds.map((r) => [r.round.slug, r]))
   return ROUND_SLUGS.map((slug) => {
-    const r = bySlug.get(slug)
-    const matches = r ? [...r.matches].sort((a, b) => a.matchNumber - b.matchNumber) : []
+    const matches = bySlug.get(slug)?.matches ?? []
+    const upcoming = matches.filter((m) => !hasStarted(m)).sort(byKickoff)
+    const played = matches.filter(hasStarted).sort(byKickoff)
     const count = Math.max(KO_MATCH_COUNTS[slug], matches.length)
-    const slots: KoSlot[] = []
-    for (let i = 0; i < count; i++) {
-      slots.push({ match: matches[i] ?? null, round: slug, index: i })
-    }
+    const emptyCount = Math.max(0, count - upcoming.length - played.length)
+    const ordered: (KoMatch | null)[] = [
+      ...upcoming,
+      ...Array.from({ length: emptyCount }, () => null),
+      ...played,
+    ]
+    const slots: KoSlot[] = ordered.map((match, index) => ({ match, round: slug, index }))
     const points = matches.reduce((n, m) => n + (m.myPrediction?.pointsEarned?.total ?? 0), 0)
     return { slug, name: ROUND_LONG[slug], short: ROUND_SHORT[slug], slots, points }
   })

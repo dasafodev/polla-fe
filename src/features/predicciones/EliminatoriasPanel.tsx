@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react'
-import { ListBullets, TreeStructure } from '@phosphor-icons/react'
+import { useMemo, useState, type ReactNode } from 'react'
+import { ListBullets, TreeStructure, Trophy, Info, Check, X } from '@phosphor-icons/react'
 import { useAllKoPredictions } from './hooks'
 import { PhaseSummary, PanelSkeleton, PanelError } from './parts'
 import { buildColumns, tripleUsesRemaining, predictionProgress } from '../ko/koView'
 import { KoListView } from '../ko/KoListView'
 import { KoBracketView } from '../ko/KoBracketView'
 import { KoPredictionSheet } from '../ko/KoPredictionSheet'
+import { Sheet } from '../../ui/Sheet'
 import type { KoMatch } from '../../types/api'
 
 type ViewMode = 'lista' | 'llaves'
@@ -18,6 +19,7 @@ export function EliminatoriasPanel({ locked }: { locked: boolean }) {
   const { isLoading, isError, rounds, refetch } = useAllKoPredictions()
   const [view, setView] = useState<ViewMode>('lista')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [showTripleInfo, setShowTripleInfo] = useState(false)
 
   const columns = useMemo(() => buildColumns(rounds), [rounds])
   const triple = tripleUsesRemaining(rounds)
@@ -60,9 +62,6 @@ export function EliminatoriasPanel({ locked }: { locked: boolean }) {
       )}
 
       <div className="flex items-center justify-between gap-2">
-        <span className="rounded-full bg-[#f6eed9] px-3 py-1 text-[13px] font-medium text-gold">
-          Triple o nada · {3 - triple}/3
-        </span>
         <div className="inline-flex rounded-full border border-border bg-surface p-0.5">
           {VIEWS.map(({ key, label, Icon }) => (
             <button
@@ -79,6 +78,20 @@ export function EliminatoriasPanel({ locked }: { locked: boolean }) {
             </button>
           ))}
         </div>
+        {/* Tap → explica la mecánica y el tope de 3 usos por torneo. */}
+        <button
+          type="button"
+          onClick={() => setShowTripleInfo(true)}
+          aria-label="Cómo funciona Triple o nada"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#f6eed9] py-1.5 pl-2.5 pr-2 text-[13px] font-bold text-gold active:scale-[0.97]"
+        >
+          <Trophy size={14} weight="fill" />
+          <span>Triple o nada</span>
+          <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-gold px-1 font-mono text-[10px] font-bold tabular-nums text-navy">
+            {triple}
+          </span>
+          <Info size={13} weight="bold" className="opacity-60" />
+        </button>
       </div>
 
       {view === 'lista' ? (
@@ -88,6 +101,59 @@ export function EliminatoriasPanel({ locked }: { locked: boolean }) {
       )}
 
       <KoPredictionSheet match={selectedMatch} roundName={selectedRound} tripleRemaining={triple} onClose={() => setSelectedId(null)} />
+
+      <TripleInfoSheet open={showTripleInfo} onClose={() => setShowTripleInfo(false)} remaining={triple} />
     </div>
+  )
+}
+
+function InfoRow({ icon, tone, children }: { icon: ReactNode; tone: 'success' | 'danger' | 'gold'; children: ReactNode }) {
+  const chip =
+    tone === 'success'
+      ? 'bg-[#e6f4ee] text-success'
+      : tone === 'danger'
+        ? 'bg-[#fbe9e7] text-danger'
+        : 'bg-[#f6eed9] text-gold'
+  return (
+    <li className="flex items-start gap-3">
+      <span className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-full ${chip}`}>{icon}</span>
+      <p className="text-sm leading-snug text-ink-soft">{children}</p>
+    </li>
+  )
+}
+
+// Explica la mecánica de "Triple o nada" y el tope de 3 usos por torneo (se abre al tocar el tag).
+function TripleInfoSheet({ open, onClose, remaining }: { open: boolean; onClose: () => void; remaining: number }) {
+  return (
+    <Sheet open={open} onClose={onClose} title="Triple o nada" ariaLabel="Cómo funciona Triple o nada">
+      <div className="space-y-4 px-2 pb-2 pt-1">
+        <div className="flex items-center gap-3 rounded-card bg-[#f6eed9] p-4">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gold text-white">
+            <Trophy size={22} weight="fill" />
+          </span>
+          <p className="text-sm font-medium text-ink">
+            Una apuesta arriesgada para los partidos en los que confías plenamente en tu marcador.
+          </p>
+        </div>
+
+        <ul className="space-y-3">
+          <InfoRow tone="success" icon={<Check size={15} weight="bold" />}>
+            Si clavas el <span className="font-bold text-ink">marcador exacto</span>, ese partido vale el{' '}
+            <span className="font-bold text-ink">triple</span> de puntos.
+          </InfoRow>
+          <InfoRow tone="danger" icon={<X size={15} weight="bold" />}>
+            Si no aciertas el marcador exacto, el partido <span className="font-bold text-ink">suma 0</span> — aunque hayas
+            acertado quién avanza.
+          </InfoRow>
+          <InfoRow tone="gold" icon={<Trophy size={14} weight="fill" />}>
+            Solo puedes activarlo <span className="font-bold text-ink">3 veces</span> en todo el torneo.
+          </InfoRow>
+        </ul>
+
+        <p className="rounded-control bg-surface-2 px-3 py-2.5 text-center text-sm text-ink-soft">
+          Te quedan <span className="font-bold text-ink">{remaining} de 3</span> activaciones.
+        </p>
+      </div>
+    </Sheet>
   )
 }

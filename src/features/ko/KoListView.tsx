@@ -1,4 +1,4 @@
-import { CaretRight } from '@phosphor-icons/react'
+import { CaretRight, Check, LockSimple } from '@phosphor-icons/react'
 import { Flag } from '../../ui/Flag'
 import { signed } from '../predicciones/format'
 import { isDetermined, sideLabel, type KoColumn, type KoSlot } from './koView'
@@ -37,59 +37,125 @@ export function KoListView({
   )
 }
 
-function TeamSide({ team, score, win }: { team: KoTeam; score: number | null; win: boolean }) {
+function TeamSide({ team, score, winner, dim }: { team: KoTeam; score: number | null; winner: boolean; dim?: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
       <Flag code={team.code} flag={team.flag} className="size-6" />
-      <span className={`flex-1 truncate text-sm ${win ? 'font-extrabold text-ink' : 'font-medium text-ink-soft'}`}>{team.name}</span>
-      <span className="w-5 text-center font-mono text-base font-bold tabular-nums text-ink">{score ?? '–'}</span>
+      <span
+        className={`min-w-0 flex-1 truncate text-sm ${
+          dim ? 'font-medium text-muted' : winner ? 'font-extrabold text-ink' : 'font-medium text-ink-soft'
+        }`}
+      >
+        {team.name}
+      </span>
+      <span className={`w-5 shrink-0 text-center font-mono text-base font-bold tabular-nums ${dim ? 'text-muted' : 'text-ink'}`}>
+        {score ?? '–'}
+      </span>
     </div>
   )
 }
 
+// Chip de acierto: verde, icono + texto (nunca color solo). Solo aparece si ese componente sumó.
+function HitChip({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#e6f4ee] px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-success">
+      <Check size={11} weight="bold" />
+      {label}
+    </span>
+  )
+}
+
+// Dos zonas: arriba "Tu pronóstico" (tu marcador), y solo en estado resuelto una franja inferior con
+// el "Resultado real" + aciertos + puntos anclados. Así el real no se confunde con el pronóstico.
 function MatchCard({ m, locked, onPick }: { m: KoMatch; locked: boolean; onPick: (m: KoMatch) => void }) {
   const home = m.homeTeam!
   const away = m.awayTeam!
   const mp = m.myPrediction
   const pe = mp?.pointsEarned
   const scored = locked && m.result != null && pe != null
+  // Editable según el candado del propio partido (igual que el sheet), no el lock global del panel.
+  const editable = !m.locked && m.status !== 'finished'
   const advId = mp?.teamAdvancesId
+
+  const total = pe?.total ?? 0
+  // Aciertos derivados del pronóstico vs resultado (igual que el detalle), NO de los puntos: con
+  // "Triple o nada" busteado el total queda en 0 aunque el avance fuera correcto. Así card y detalle
+  // no se contradicen ("Avanza" acá vs "Acertaste" allá).
+  const gotAdvance = scored && mp!.teamAdvancesId === m.result!.winnerTeamId
+  const gotExact = scored && mp!.scoreHome === m.result!.scoreHome && mp!.scoreAway === m.result!.scoreAway
+  const pointsClass = total > 0 ? 'bg-[#e6f4ee] text-success' : 'bg-surface-2 text-ink-soft'
+
   return (
     <button
       type="button"
       onClick={() => onPick(m)}
       aria-label={`${home.name} vs ${away.name}`}
-      className="flex w-full items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 text-left shadow-card active:scale-[0.99]"
+      className="block w-full overflow-hidden rounded-card border border-border bg-surface text-left shadow-card active:scale-[0.98]"
     >
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <TeamSide team={home} score={mp?.scoreHome ?? null} win={advId === home.id} />
-        <TeamSide team={away} score={mp?.scoreAway ?? null} win={advId === away.id} />
-        <p className="truncate text-[11px] text-muted">
-          {mp ? (
-            scored && m.result ? (
-              <>
-                Real {m.result.scoreHome}–{m.result.scoreAway}
-                {pe!.pts_ko_advances > 0 ? ' · acertó quién avanza' : ''}
-                {pe!.pts_ko_exact_score > 0 ? ' · exacto' : ''}
-              </>
-            ) : (
-              <>Tu pronóstico{mp.tripleActive ? ' · triple o nada' : ''}</>
-            )
-          ) : m.status === 'finished' || m.locked ? (
-            'Cerrado · sin pronóstico'
-          ) : (
-            'Toca para pronosticar'
+      {/* ── Zona 1: tu pronóstico ── */}
+      <div className="flex items-stretch gap-3 px-3 pb-2 pt-2.5">
+        <div className="min-w-0 flex-1">
+          {mp && (
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-ink-soft">Tu pronóstico</span>
+              {mp.tripleActive && (
+                <span className="inline-flex items-center rounded-full bg-[#f6eed9] px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-gold">
+                  Triple ×3
+                </span>
+              )}
+            </div>
           )}
-        </p>
+
+          <div className="space-y-1">
+            <TeamSide team={home} score={mp?.scoreHome ?? null} winner={advId === home.id} dim={!mp} />
+            <TeamSide team={away} score={mp?.scoreAway ?? null} winner={advId === away.id} dim={!mp} />
+          </div>
+
+          {!mp && !editable && (
+            <p className="mt-1.5 font-mono text-[10px] font-bold uppercase tracking-wide text-ink-soft">Cerrado · sin pronóstico</p>
+          )}
+        </div>
+
+        {/* Afordancia derecha (en resuelto se omite: la franja inferior cierra la jerarquía). */}
+        {!scored && (
+          <div className="flex shrink-0 items-center">
+            {!mp ? (
+              editable ? (
+                <span className="grid size-8 place-items-center rounded-full bg-tint text-violet">
+                  <CaretRight size={16} weight="bold" />
+                </span>
+              ) : (
+                <LockSimple size={16} weight="bold" className="text-muted" />
+              )
+            ) : (
+              <CaretRight size={18} weight="bold" className="text-muted" />
+            )}
+          </div>
+        )}
       </div>
-      {scored ? (
-        <span className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-xs font-bold ${pe!.total > 0 ? 'bg-[#e6f4ee] text-success' : 'bg-surface-2 text-muted'}`}>
-          {signed(pe!.total)}
-        </span>
-      ) : mp?.tripleActive ? (
-        <span className="shrink-0 rounded bg-[#f6eed9] px-1.5 py-0.5 font-mono text-[10px] font-bold text-gold">×3</span>
-      ) : (
-        <CaretRight size={16} weight="bold" className="shrink-0 text-muted" />
+
+      {/* ── Zona 2: resultado real + aciertos + puntos (solo resuelto) ── */}
+      {scored && (
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-surface-2 px-3 py-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex shrink-0 flex-col leading-tight">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-ink-soft">Resultado real</span>
+              <span className="font-mono text-base font-bold tabular-nums text-ink">
+                {m.result!.scoreHome}–{m.result!.scoreAway}
+              </span>
+            </span>
+            <span className="flex min-w-0 flex-wrap items-center gap-1">
+              {gotAdvance && <HitChip label="Avanza" />}
+              {gotExact && <HitChip label="Exacto" />}
+              {!gotAdvance && !gotExact && (
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-ink-soft">Sin acierto</span>
+              )}
+            </span>
+          </div>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 font-mono text-base font-extrabold tabular-nums ${pointsClass}`}>
+            {signed(total)}
+          </span>
+        </div>
       )}
     </button>
   )
