@@ -15,6 +15,8 @@ const rawMatch = {
   awayTeam: null,
   homeTeamLabel: null,
   awayTeamLabel: 'Pos 2',
+  homeSource: null,
+  awaySource: null,
   result: null,
   myPrediction: null,
 }

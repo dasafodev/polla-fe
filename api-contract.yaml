@@ -1941,6 +1941,23 @@ components:
         code: { type: string }
         flag: { type: [string, 'null'], description: "URL de la bandera, ej: https://flagcdn.com/w80/co.png" }
 
+    KoSource:
+      type: object
+      description: "Origen de un slot de KO: el ganador o perdedor de otro partido. Permite al FE dibujar el árbol del bracket conectando cada partido con el que lo alimenta."
+      required: [matchId, matchNumber, outcome]
+      properties:
+        matchId:
+          type: string
+          format: uuid
+          description: "ID del partido que alimenta este slot (para conectar nodos del bracket)"
+        matchNumber:
+          type: integer
+          description: "Número del partido fuente (1–104)"
+        outcome:
+          type: string
+          enum: [WINNER, LOSER]
+          description: "WINNER en todas las rondas; LOSER solo en el partido por el 3er puesto (perdedores de semis)"
+
     KoMatch:
       type: object
       required: [id, externalMatchId, matchNumber, scheduledAt, lockedAt, status, homeTeamLabel, awayTeamLabel]
@@ -1976,6 +1993,17 @@ components:
           description: "Placeholder cuando homeTeam es null, ej: Runner-up Group A"
         awayTeamLabel:
           type: [string, 'null']
+        homeSource:
+          description: >
+            Partido cuyo ganador (o perdedor) llena el slot local. Null en R32 (los slots vienen
+            de grupos, ver homeTeamLabel). Permite al FE dibujar el árbol del bracket.
+          oneOf:
+            - $ref: '#/components/schemas/KoSource'
+            - type: 'null'
+        awaySource:
+          oneOf:
+            - $ref: '#/components/schemas/KoSource'
+            - type: 'null'
         result:
           oneOf:
             - $ref: '#/components/schemas/KoResult'

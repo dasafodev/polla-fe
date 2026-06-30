@@ -20,7 +20,7 @@ function ko(p: Partial<KoMatch> & { id: string }): KoMatch {
     status: 'scheduled', locked: false,
     homeTeam: { id: 'h', name: 'Home', code: 'HOM', flag: null },
     awayTeam: { id: 'a', name: 'Away', code: 'AWA', flag: null },
-    homeTeamLabel: null, awayTeamLabel: null, result: null, myPrediction: null,
+    homeTeamLabel: null, awayTeamLabel: null, homeSource: null, awaySource: null, result: null, myPrediction: null,
     ...p,
   }
 }

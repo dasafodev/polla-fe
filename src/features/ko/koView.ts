@@ -1,4 +1,4 @@
-import type { KoMatch, KoMatchesResponse, KoTeam } from '../../types/api'
+import type { KoMatch, KoMatchesResponse, KoSource, KoTeam } from '../../types/api'
 import { ROUND_SLUGS, type RoundSlug } from '../../types/enums'
 
 // Estructura fija del Mundial de 48 (R32→Final). El API /ko NO expone el conteo de partidos por
@@ -41,8 +41,8 @@ export function isDetermined(m: KoMatch): boolean {
 }
 
 // Nombre a mostrar de un lado: equipo real → rótulo del backend ("Ganador Grupo A") → "Por definir".
-// En producción el backend hoy manda homeTeamLabel = null para cruces sin definir, por eso el
-// fallback final es genérico (ver nota en la implementación; requiere arreglo de backend).
+// El backend ya expone homeTeamLabel/awayTeamLabel también en producción (cae a "Por definir" solo si
+// el partido aún no tiene rótulo cargado).
 export function sideLabel(m: KoMatch, side: 'home' | 'away'): string {
   const team = side === 'home' ? m.homeTeam : m.awayTeam
   const label = side === 'home' ? m.homeTeamLabel : m.awayTeamLabel
@@ -86,9 +86,10 @@ export interface KoSlot {
   match: KoMatch | null
   round: RoundSlug
   index: number
-  // Equipos PROYECTADOS para un cruce aún sin definir oficialmente: el ganador de la ronda anterior
-  // "sube" a su cupo para que la llave se arme a medida que se juegan los partidos. Es solo visual
-  // (el backend todavía no cargó homeTeam/awayTeam), así que el cruce no se vuelve pronosticable.
+  // Equipos PROYECTADOS para un cruce aún sin definir oficialmente: el ganador (o perdedor, en el 3er
+  // puesto) del partido alimentador "sube" a su cupo para que la llave se arme a medida que se juegan
+  // los partidos. Es solo visual (el backend todavía no cargó homeTeam/awayTeam), así que el cruce no
+  // se vuelve pronosticable.
   projHome: KoTeam | null
   projAway: KoTeam | null
 }
@@ -149,12 +150,6 @@ function bracketOrder(matches: KoMatch[], count: number): (KoMatch | null)[] {
   return slots
 }
 
-// Ronda → ronda que la alimenta con sus GANADORES. El 3er puesto se alimenta de PERDEDORES de semis
-// (caso aparte) → no se proyecta automáticamente.
-const FEEDER_ROUND: Partial<Record<RoundSlug, RoundSlug>> = {
-  r16: 'r32', qf: 'r16', sf: 'qf', final: 'sf',
-}
-
 // Equipo ganador (objeto) de un partido ya resuelto, o null si todavía no hay resultado.
 function winnerTeam(m: KoMatch): KoTeam | null {
   const id = m.result?.winnerTeamId
@@ -164,29 +159,107 @@ function winnerTeam(m: KoMatch): KoTeam | null {
   return null
 }
 
-// Proyección de cruces: a medida que se juegan los partidos de una ronda, el ganador "sube" al cupo
-// que le corresponde en la siguiente. Topología binaria de eliminación directa (confirmada por los
-// rótulos del backend, p. ej. "Ganador 16avos 7/8" para el partido 4 de octavos): el partido M de
-// una ronda lo alimentan los partidos 2M-1 (local) y 2M (visitante) de la ronda anterior.
-// Solo proyectamos lados que aún NO tienen equipo oficial (no se pisa lo que ya cargó el backend).
+// Equipo perdedor (objeto): el lado que NO es el ganador. Lo usa el 3er puesto, que se nutre de los
+// PERDEDORES de las semis (homeSource/awaySource con outcome LOSER).
+function loserTeam(m: KoMatch): KoTeam | null {
+  const id = m.result?.winnerTeamId
+  if (!id) return null
+  if (m.homeTeam?.id === id) return m.awayTeam ?? null
+  if (m.awayTeam?.id === id) return m.homeTeam ?? null
+  return null
+}
+
+// Equipo proyectado para un cupo desde su alimentador (homeSource/awaySource): el ganador —o perdedor,
+// en el 3er puesto— del partido fuente, una vez ese partido tenga resultado.
+function teamFromSource(src: KoSource | null, byId: Map<string, KoMatch>): KoTeam | null {
+  if (!src) return null
+  const feeder = byId.get(src.matchId)
+  if (!feeder) return null
+  return src.outcome === 'LOSER' ? loserTeam(feeder) : winnerTeam(feeder)
+}
+
+// Proyección de cruces: a medida que se juegan los partidos, el ganador (o perdedor, en el 3er puesto)
+// "sube" al cupo que alimenta en la siguiente ronda, siguiendo homeSource/awaySource del backend
+// (BRACKET_FEEDERS). Es la fuente de verdad del cuadro real del Mundial 2026, que NO es binario-
+// adyacente (p. ej. el partido 89 lo alimentan el 74 y el 77, no 73/74) y usa matchNumber GLOBAL
+// (1–104). Solo proyectamos lados que aún NO tienen equipo oficial (no se pisa lo que cargó el backend).
 function buildProjection(rounds: KoMatchesResponse[]): Map<string, { home: KoTeam | null; away: KoTeam | null }> {
-  const byNumber = new Map<string, KoMatch>()
-  for (const r of rounds) for (const m of r.matches) byNumber.set(`${r.round.slug}:${m.matchNumber}`, m)
+  const byId = new Map<string, KoMatch>()
+  for (const r of rounds) for (const m of r.matches) byId.set(m.id, m)
 
   const proj = new Map<string, { home: KoTeam | null; away: KoTeam | null }>()
   for (const r of rounds) {
-    const feeder = FEEDER_ROUND[r.round.slug]
-    if (!feeder) continue
     for (const m of r.matches) {
       if (m.homeTeam && m.awayTeam) continue // cruce ya oficial → nada que proyectar
-      const homeFeeder = m.homeTeam ? null : byNumber.get(`${feeder}:${m.matchNumber * 2 - 1}`)
-      const awayFeeder = m.awayTeam ? null : byNumber.get(`${feeder}:${m.matchNumber * 2}`)
-      const home = homeFeeder ? winnerTeam(homeFeeder) : null
-      const away = awayFeeder ? winnerTeam(awayFeeder) : null
+      const home = m.homeTeam ? null : teamFromSource(m.homeSource, byId)
+      const away = m.awayTeam ? null : teamFromSource(m.awaySource, byId)
       if (home || away) proj.set(m.id, { home, away })
     }
   }
   return proj
+}
+
+// ── Orden del árbol (vista Llaves) ────────────────────────────────────────────
+// El árbol de ganadores (r32→…→final) se ordena para que los dos alimentadores de cada partido caigan
+// en las posiciones 2i y 2i+1 de la ronda anterior; así los conectores del bracket (geometría por CSS
+// en KoBracketView) caen exactos sin medir el DOM. El orden se deriva top-down desde la ronda más
+// avanzada que ya tenga partidos cargados: esa se ordena por matchNumber (bracketOrder) y cada ronda
+// previa se expande siguiendo homeSource/awaySource. Sin alimentadores cableados degrada a bracketOrder
+// (orden por matchNumber), que es lo que se renderiza hasta que el backend corra linkBracketFeeders.
+const TREE_ROOT_TO_LEAF: RoundSlug[] = ['final', 'sf', 'qf', 'r16', 'r32']
+
+// Desde el orden de una ronda, deriva el de la ronda que la alimenta: por cada partido, su alimentador
+// local va antes que el visitante (posiciones 2i, 2i+1). Cupos sin partido/sin fuente quedan en null.
+function expandFeederOrder(parent: (KoMatch | null)[], byId: Map<string, KoMatch>): (KoMatch | null)[] {
+  const child: (KoMatch | null)[] = []
+  for (const p of parent) {
+    child.push(p?.homeSource ? byId.get(p.homeSource.matchId) ?? null : null)
+    child.push(p?.awaySource ? byId.get(p.awaySource.matchId) ?? null : null)
+  }
+  return child
+}
+
+// Coloca los partidos de una ronda: respeta las posiciones derivadas de los alimentadores y mete los
+// partidos no ubicados (alimentador aún sin cargar) en el primer hueco libre, por matchNumber.
+function fillFromDerived(derived: (KoMatch | null)[], matches: KoMatch[], count: number): (KoMatch | null)[] {
+  const slots: (KoMatch | null)[] = derived.slice(0, count)
+  while (slots.length < count) slots.push(null)
+  const placed = new Set(slots.filter((m): m is KoMatch => m != null).map((m) => m.id))
+  const leftover = matches.filter((m) => !placed.has(m.id)).sort((a, b) => a.matchNumber - b.matchNumber)
+  let k = 0
+  for (const m of leftover) {
+    while (k < slots.length && slots[k] !== null) k++
+    if (k < slots.length) slots[k] = m
+    else slots.push(m)
+  }
+  return slots
+}
+
+// Orden del árbol de ganadores por ronda (excluye 3er puesto, que no forma parte del árbol).
+function buildTreeOrder(rounds: KoMatchesResponse[]): Map<RoundSlug, (KoMatch | null)[]> {
+  const byId = new Map<string, KoMatch>()
+  const bySlug = new Map<RoundSlug, KoMatch[]>()
+  for (const r of rounds) {
+    bySlug.set(r.round.slug, r.matches)
+    for (const m of r.matches) byId.set(m.id, m)
+  }
+  const countFor = (slug: RoundSlug) => Math.max(KO_MATCH_COUNTS[slug], (bySlug.get(slug) ?? []).length)
+  // Raíz = ronda más avanzada (hacia la final) que ya tenga partidos cargados.
+  const rootIdx = TREE_ROOT_TO_LEAF.findIndex((slug) => (bySlug.get(slug) ?? []).length > 0)
+
+  const orders = new Map<RoundSlug, (KoMatch | null)[]>()
+  for (let i = 0; i < TREE_ROOT_TO_LEAF.length; i++) {
+    const slug = TREE_ROOT_TO_LEAF[i]
+    if (rootIdx === -1 || i < rootIdx) {
+      orders.set(slug, Array.from({ length: countFor(slug) }, () => null))
+    } else if (i === rootIdx) {
+      orders.set(slug, bracketOrder(bySlug.get(slug) ?? [], countFor(slug)))
+    } else {
+      const derived = expandFeederOrder(orders.get(TREE_ROOT_TO_LEAF[i - 1])!, byId)
+      orders.set(slug, fillFromDerived(derived, bySlug.get(slug) ?? [], countFor(slug)))
+    }
+  }
+  return orders
 }
 
 // Arma las columnas del cuadro en orden de ronda (R32→Final, con 3er puesto antes de la final),
@@ -197,10 +270,16 @@ function buildProjection(rounds: KoMatchesResponse[]): Map<string, { home: KoTea
 export function buildColumns(rounds: KoMatchesResponse[], order: KoColumnOrder = 'priority'): KoColumn[] {
   const bySlug = new Map(rounds.map((r) => [r.round.slug, r]))
   const proj = buildProjection(rounds)
+  // En modo Llaves el orden del árbol es cross-ronda (los alimentadores de cada partido definen la
+  // posición de la ronda previa); el 3er puesto no está en el árbol → cae a bracketOrder.
+  const treeOrder = order === 'bracket' ? buildTreeOrder(rounds) : null
   return ROUND_SLUGS.map((slug) => {
     const matches = bySlug.get(slug)?.matches ?? []
     const count = Math.max(KO_MATCH_COUNTS[slug], matches.length)
-    const ordered = order === 'bracket' ? bracketOrder(matches, count) : priorityOrder(matches, count)
+    const ordered =
+      order === 'bracket'
+        ? treeOrder!.get(slug) ?? bracketOrder(matches, count)
+        : priorityOrder(matches, count)
     const slots: KoSlot[] = ordered.map((match, index) => {
       const p = match ? proj.get(match.id) : undefined
       return { match, round: slug, index, projHome: p?.home ?? null, projAway: p?.away ?? null }

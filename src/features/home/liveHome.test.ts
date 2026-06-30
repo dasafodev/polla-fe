@@ -23,6 +23,8 @@ function match(p: Partial<KoMatch> = {}): KoMatch {
     awayTeam: team('bra', 'BRA'),
     homeTeamLabel: null,
     awayTeamLabel: null,
+    homeSource: null,
+    awaySource: null,
     result: null,
     myPrediction: null,
     ...p,

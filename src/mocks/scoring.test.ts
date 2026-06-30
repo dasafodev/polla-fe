@@ -109,6 +109,7 @@ describe('ROUND_TO_SCALE — cubre todas las rondas KO (incl. qf/sf/3rd/final qu
         id: 'x', roundSlug: slug, externalMatchId: 1, matchNumber: 1,
         scheduledAt: '2026-07-01T00:00:00.000Z', lockedAt: '2026-07-01T00:00:00.000Z', status: 'finished',
         homeTeamId: 'tA1', awayTeamId: 'tB1', homeTeamLabel: null, awayTeamLabel: null,
+        homeSource: null, awaySource: null,
         result: { scoreHome: 1, scoreAway: 0, winnerTeamId: 'tA1' },
       }
       const pred: DbKoPrediction = { participantId: 'p', matchId: 'x', scoreHome: 1, scoreAway: 0, teamAdvancesId: 'tA1', tripleActive: false }

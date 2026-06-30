@@ -21,7 +21,8 @@ function serializeMatch(m: DbKoMatch, pid: string) {
   return {
     id: m.id, externalMatchId: m.externalMatchId, matchNumber: m.matchNumber, scheduledAt: m.scheduledAt, lockedAt: m.lockedAt,
     status: m.status, homeTeam: koTeam(m.homeTeamId), awayTeam: koTeam(m.awayTeamId),
-    homeTeamLabel: m.homeTeamLabel, awayTeamLabel: m.awayTeamLabel, result: m.result,
+    homeTeamLabel: m.homeTeamLabel, awayTeamLabel: m.awayTeamLabel,
+    homeSource: m.homeSource, awaySource: m.awaySource, result: m.result,
     myPrediction: mp ? {
       scoreHome: mp.scoreHome, scoreAway: mp.scoreAway, teamAdvancesId: mp.teamAdvancesId, tripleActive: mp.tripleActive,
       lockedIn: now() >= Date.parse(m.lockedAt), pointsEarned: m.result ? koPointsFor(db, pid, m.id) : null,

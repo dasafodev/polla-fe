@@ -1,5 +1,5 @@
 import { setDb, type Db, type DbTeam, type DbGroup, type DbKoMatch, type DbKoRound, type DbParticipant, type DbGroupMatch } from './db'
-import type { ScoringParams } from '../types/enums'
+import type { RoundSlug, ScoringParams } from '../types/enums'
 
 const GROUP_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'] as const
 // 8 top8 = el equipo "1" de los primeros 8 grupos
@@ -50,7 +50,8 @@ function buildKoMatches(): DbKoMatch[] {
     result: DbKoMatch['result'],
   ): DbKoMatch => ({
     id, roundSlug, externalMatchId: n, matchNumber: n, scheduledAt, lockedAt: lock(scheduledAt),
-    status, homeTeamId, awayTeamId, homeTeamLabel: homeTeamId ? null : `Pos ${n}`, awayTeamLabel: awayTeamId ? null : `Pos ${n}b`, result,
+    status, homeTeamId, awayTeamId, homeTeamLabel: homeTeamId ? null : `Pos ${n}`, awayTeamLabel: awayTeamId ? null : `Pos ${n}b`,
+    homeSource: null, awaySource: null, result,
   })
   // Cruce aún sin definir: sin equipos, con rótulo descriptivo. El mock SÍ expone estos labels
   // (el backend real los descarta y manda null → el FE cae a "Por definir"). Sirve para demostrar
@@ -60,9 +61,10 @@ function buildKoMatches(): DbKoMatch[] {
     homeTeamLabel: string, awayTeamLabel: string,
   ): DbKoMatch => ({
     id, roundSlug, externalMatchId: 1000 + n, matchNumber: n, scheduledAt, lockedAt: lock(scheduledAt),
-    status: 'scheduled', homeTeamId: null, awayTeamId: null, homeTeamLabel, awayTeamLabel, result: null,
+    status: 'scheduled', homeTeamId: null, awayTeamId: null, homeTeamLabel, awayTeamLabel,
+    homeSource: null, awaySource: null, result: null,
   })
-  return [
+  const matches: DbKoMatch[] = [
     // finished (desempate): r32-1, r32-2 y r16-1. scheduledAt en el pasado respecto al reloj de
     // test (6-jun) → lockedIn true (un partido terminado está cerrado). Datos ilustrativos (§13 riesgo 7).
     m('ko-r32-1', 'r32', 1, '2026-06-01T16:00:00.000Z', 'finished', 'tA1', 'tB1', { scoreHome: 2, scoreAway: 1, winnerTeamId: 'tA1' }),
@@ -106,6 +108,33 @@ function buildKoMatches(): DbKoMatch[] {
     // Final
     u('ko-final-1', 'final', 1, '2026-07-19T18:00:00.000Z', 'Ganador Semifinal 1', 'Ganador Semifinal 2'),
   ]
+  linkBracketFeeders(matches)
+  return matches
+}
+
+// Cablea homeSource/awaySource como lo hace el backend real (linkBracketFeeders + BRACKET_FEEDERS),
+// pero sobre la numeración POR RONDA del mock (el backend usa matchNumber global 1–104). El cuadro del
+// mock sí es binario-adyacente, así que el partido M de una ronda lo alimentan el 2M-1 (local) y 2M
+// (visitante) de la ronda previa; la final toma los GANADORES de las semis y el 3er puesto los PERDEDORES.
+function linkBracketFeeders(matches: DbKoMatch[]): void {
+  const byKey = new Map(matches.map((m) => [`${m.roundSlug}:${m.matchNumber}`, m]))
+  const src = (slug: RoundSlug, n: number, outcome: 'WINNER' | 'LOSER') => {
+    const f = byKey.get(`${slug}:${n}`)
+    return f ? { matchId: f.id, matchNumber: f.matchNumber, outcome } : null
+  }
+  const FEEDER: Partial<Record<RoundSlug, RoundSlug>> = { r16: 'r32', qf: 'r16', sf: 'qf', final: 'sf' }
+  for (const m of matches) {
+    if (m.roundSlug === 'final') {
+      m.homeSource = src('sf', 1, 'WINNER'); m.awaySource = src('sf', 2, 'WINNER')
+    } else if (m.roundSlug === '3rd') {
+      m.homeSource = src('sf', 1, 'LOSER'); m.awaySource = src('sf', 2, 'LOSER')
+    } else {
+      const feeder = FEEDER[m.roundSlug]
+      if (!feeder) continue // r32 viene de grupos → sin alimentadores
+      m.homeSource = src(feeder, m.matchNumber * 2 - 1, 'WINNER')
+      m.awaySource = src(feeder, m.matchNumber * 2, 'WINNER')
+    }
+  }
 }
 
 // Partidos de fase de grupos (informativos). Resultados consistentes con officialGroupStandings

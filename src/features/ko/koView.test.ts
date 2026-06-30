@@ -26,11 +26,17 @@ function match(over: Partial<KoMatch> = {}): KoMatch {
     awayTeam: team('b'),
     homeTeamLabel: null,
     awayTeamLabel: null,
+    homeSource: null,
+    awaySource: null,
     result: null,
     myPrediction: null,
     ...over,
   }
 }
+
+// Alimentador (homeSource/awaySource): el ganador/perdedor de otro partido llena este cupo.
+const winnerOf = (m: KoMatch): KoMatch['homeSource'] => ({ matchId: m.id, matchNumber: m.matchNumber, outcome: 'WINNER' })
+const loserOf = (m: KoMatch): KoMatch['homeSource'] => ({ matchId: m.id, matchNumber: m.matchNumber, outcome: 'LOSER' })
 
 function round(slug: RoundSlug, matches: KoMatch[]): KoMatchesResponse {
   return { round: { slug, name: slug, order: 1 }, matches }
@@ -135,8 +141,19 @@ describe('buildColumns', () => {
     expect(cols[0].slots).toHaveLength(KO_MATCH_COUNTS.r32)
   })
 
-  it('proyecta el ganador de la ronda previa al cupo sin definir de la siguiente', () => {
-    // R32 #1 (terminado, gana a) y #2 (terminado, gana c) alimentan al R16 #1 (local←1, visitante←2).
+  it("orden 'bracket' source-driven: reordena por alimentadores, NO por matchNumber", () => {
+    const qfHi = match({ id: 'qf-hi', matchNumber: 99, homeTeam: team('a'), awayTeam: team('b') })
+    const qfLo = match({ id: 'qf-lo', matchNumber: 97, homeTeam: team('c'), awayTeam: team('d') })
+    // SF #1 lo alimentan qf-hi (local) y qf-lo (visitante): en el cuadro, qf-hi queda ARRIBA de qf-lo
+    // aunque su matchNumber sea mayor → la posición la mandan homeSource/awaySource, no el número.
+    const sf1 = match({ id: 'sf-1', matchNumber: 101, homeTeam: null, awayTeam: null, homeSource: winnerOf(qfHi), awaySource: winnerOf(qfLo) })
+    const cols = buildColumns([round('qf', [qfLo, qfHi]), round('sf', [sf1])], 'bracket')
+    const qfIds = cols[2].slots.map((s) => s.match?.id ?? '·')
+    expect(qfIds[0]).toBe('qf-hi') // alimentador local de SF#1 → arriba
+    expect(qfIds[1]).toBe('qf-lo') // alimentador visitante de SF#1 → abajo
+  })
+
+  it('proyecta el ganador del partido alimentador (homeSource/awaySource) al cupo sin definir', () => {
     const r32a = match({
       id: 'r32-1', matchNumber: 1, status: 'finished',
       homeTeam: team('a'), awayTeam: team('b'), result: { scoreHome: 2, scoreAway: 1, winnerTeamId: 'a' },
@@ -145,11 +162,24 @@ describe('buildColumns', () => {
       id: 'r32-2', matchNumber: 2, status: 'finished',
       homeTeam: team('c'), awayTeam: team('d'), result: { scoreHome: 0, scoreAway: 3, winnerTeamId: 'd' },
     })
-    const r16 = match({ id: 'r16-1', matchNumber: 1, homeTeam: null, awayTeam: null })
+    const r16 = match({ id: 'r16-1', matchNumber: 89, homeTeam: null, awayTeam: null, homeSource: winnerOf(r32a), awaySource: winnerOf(r32b) })
     const cols = buildColumns([round('r32', [r32a, r32b]), round('r16', [r16])], 'bracket')
     const slot = cols[1].slots.find((s) => s.match?.id === 'r16-1')!
-    expect(slot.projHome?.id).toBe('a') // ganador de R32 #1
-    expect(slot.projAway?.id).toBe('d') // ganador de R32 #2
+    expect(slot.projHome?.id).toBe('a') // ganador del alimentador local
+    expect(slot.projAway?.id).toBe('d') // ganador del alimentador visitante
+  })
+
+  it('reproduce el bug de prod: matchNumber GLOBAL + alimentadores intercalados (no 2M-1/2M)', () => {
+    // El cuadro real del Mundial 2026 NO es binario-adyacente: el partido 89 lo alimentan el 74 y el 77
+    // (no 73/74), y el matchNumber es global (1–104), no por ronda. La proyección debe seguir homeSource/
+    // awaySource, no aritmética sobre matchNumber.
+    const m74 = match({ id: 'g74', matchNumber: 74, status: 'finished', homeTeam: team('a'), awayTeam: team('b'), result: { scoreHome: 1, scoreAway: 0, winnerTeamId: 'a' } })
+    const m77 = match({ id: 'g77', matchNumber: 77, status: 'finished', homeTeam: team('c'), awayTeam: team('d'), result: { scoreHome: 2, scoreAway: 2, winnerTeamId: 'd' } })
+    const m89 = match({ id: 'g89', matchNumber: 89, homeTeam: null, awayTeam: null, homeSource: winnerOf(m74), awaySource: winnerOf(m77) })
+    const cols = buildColumns([round('r32', [m74, m77]), round('r16', [m89])], 'bracket')
+    const slot = cols[1].slots.find((s) => s.match?.id === 'g89')!
+    expect(slot.projHome?.id).toBe('a')
+    expect(slot.projAway?.id).toBe('d')
   })
 
   it('proyección parcial: solo sube el lado cuyo alimentador ya terminó', () => {
@@ -158,20 +188,30 @@ describe('buildColumns', () => {
       homeTeam: team('a'), awayTeam: team('b'), result: { scoreHome: 2, scoreAway: 1, winnerTeamId: 'a' },
     })
     const r32b = match({ id: 'r32-2', matchNumber: 2, homeTeam: team('c'), awayTeam: team('d') }) // sin jugar
-    const r16 = match({ id: 'r16-1', matchNumber: 1, homeTeam: null, awayTeam: null })
+    const r16 = match({ id: 'r16-1', matchNumber: 89, homeTeam: null, awayTeam: null, homeSource: winnerOf(r32a), awaySource: winnerOf(r32b) })
     const cols = buildColumns([round('r32', [r32a, r32b]), round('r16', [r16])], 'bracket')
     const slot = cols[1].slots.find((s) => s.match?.id === 'r16-1')!
     expect(slot.projHome?.id).toBe('a')
     expect(slot.projAway).toBeNull()
   })
 
-  it('no proyecta sobre lados ya oficiales ni sobre el 3er puesto (perdedores)', () => {
+  it('proyecta el PERDEDOR de las semis al 3er puesto (outcome LOSER)', () => {
+    const sf1 = match({ id: 'sf-1', matchNumber: 101, status: 'finished', homeTeam: team('a'), awayTeam: team('b'), result: { scoreHome: 1, scoreAway: 0, winnerTeamId: 'a' } })
+    const sf2 = match({ id: 'sf-2', matchNumber: 102, status: 'finished', homeTeam: team('c'), awayTeam: team('d'), result: { scoreHome: 0, scoreAway: 2, winnerTeamId: 'd' } })
+    const third = match({ id: 'third-1', matchNumber: 103, homeTeam: null, awayTeam: null, homeSource: loserOf(sf1), awaySource: loserOf(sf2) })
+    const cols = buildColumns([round('sf', [sf1, sf2]), round('3rd', [third])], 'bracket')
+    const slot = cols[4].slots.find((s) => s.match?.id === 'third-1')!
+    expect(slot.projHome?.id).toBe('b') // perdedor de SF #1
+    expect(slot.projAway?.id).toBe('c') // perdedor de SF #2
+  })
+
+  it('no proyecta sobre lados ya oficiales', () => {
     const r32a = match({
       id: 'r32-1', matchNumber: 1, status: 'finished',
       homeTeam: team('a'), awayTeam: team('b'), result: { scoreHome: 2, scoreAway: 1, winnerTeamId: 'a' },
     })
     // R16 con el local ya oficial: no se debe pisar con la proyección.
-    const r16 = match({ id: 'r16-1', matchNumber: 1, homeTeam: team('x'), awayTeam: null })
+    const r16 = match({ id: 'r16-1', matchNumber: 89, homeTeam: team('x'), awayTeam: null, homeSource: winnerOf(r32a), awaySource: null })
     const cols = buildColumns([round('r32', [r32a]), round('r16', [r16])], 'bracket')
     const slot = cols[1].slots.find((s) => s.match?.id === 'r16-1')!
     expect(slot.projHome).toBeNull() // lado oficial → sin proyección

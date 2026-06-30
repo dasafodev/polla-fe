@@ -14,10 +14,12 @@ export interface DbThirdsSelection { participantId: string; teamIds: string[] }
 export interface DbPowerups { participantId: string; darkHorseTeamId: string | null; disappointmentTeamId: string | null }
 export interface DbKoRound { slug: RoundSlug; name: string; order: number }
 export interface DbKoResult { scoreHome: number; scoreAway: number; winnerTeamId: string }
+export interface DbKoSource { matchId: string; matchNumber: number; outcome: 'WINNER' | 'LOSER' }
 export interface DbKoMatch {
   id: string; roundSlug: RoundSlug; externalMatchId: number; matchNumber: number
   scheduledAt: string; lockedAt: string; status: MatchStatus
   homeTeamId: string | null; awayTeamId: string | null; homeTeamLabel: string | null; awayTeamLabel: string | null
+  homeSource: DbKoSource | null; awaySource: DbKoSource | null
   result: DbKoResult | null
 }
 export interface DbKoPrediction {

@@ -110,10 +110,15 @@ export interface KoMyPrediction {
   scoreHome: number; scoreAway: number; teamAdvancesId: string; tripleActive: boolean
   lockedIn: boolean; pointsEarned: KoPointsEarned | null
 }
+// Origen de un slot KO: el ganador (o perdedor, solo en el 3er puesto) de otro partido. Permite
+// armar el árbol del bracket conectando cada cupo con el partido que lo alimenta. Null en R32
+// (los cupos vienen de grupos → ver homeTeamLabel). outcome en MAYÚSCULAS como lo serializa el backend.
+export interface KoSource { matchId: string; matchNumber: number; outcome: 'WINNER' | 'LOSER' }
 export interface KoMatch {
   id: string; externalMatchId: number; matchNumber: number; scheduledAt: string; lockedAt: string
   status: MatchStatus; locked: boolean; homeTeam: KoTeam | null; awayTeam: KoTeam | null
   homeTeamLabel: string | null; awayTeamLabel: string | null
+  homeSource: KoSource | null; awaySource: KoSource | null
   result: KoResult | null; myPrediction: KoMyPrediction | null
 }
 export interface KoRound { slug: RoundSlug; name: string; order: number }
