@@ -16,10 +16,14 @@ const toneClass: Record<Tone, string> = {
   neutral: 'bg-surface-2 text-ink-soft',
 }
 
-// Multiplicador de puntos por ronda KO (scale_*). El 3er puesto reusa la escala de semifinal.
+// Puntos base de eliminatorias y multiplicador por ronda (scale_* del backend).
+// Espejo de polla-be/prisma/seed.ts: pts_ko_advances=2, pts_ko_exact_score=3,
+// scale_r32=2, scale_r16=3, scale_qf=5, scale_sf=7, scale_final=10. El 3er puesto reusa la escala de semifinal.
+const KO_ADVANCE = 2 // pts_ko_advances
+const KO_EXACT = 3 // pts_ko_exact_score (adicional al marcador exacto)
 const ROUND_SCALE: { label: string; mult: number }[] = [
-  { label: 'Dieciseisavos', mult: 1 },
-  { label: 'Octavos', mult: 2 },
+  { label: 'Dieciseisavos', mult: 2 },
+  { label: 'Octavos', mult: 3 },
   { label: 'Cuartos', mult: 5 },
   { label: 'Semifinal', mult: 7 },
   { label: 'Tercer puesto', mult: 7 },
@@ -75,17 +79,36 @@ export function RulesSheet({ open, onClose }: { open: boolean; onClose: () => vo
         </Section>
 
         <Section icon={<Trophy size={18} weight="bold" />} title="Eliminatorias">
-          <Row label="Acertar quién avanza" pts="+2" />
-          <Row label="Marcador exacto (adicional)" pts="+3" />
-          <p className="pt-1 text-xs font-medium text-ink-soft">Los puntos se multiplican según la ronda:</p>
-          <div className="flex flex-wrap gap-1.5">
-            {ROUND_SCALE.map((r) => (
-              <span key={r.label} className="inline-flex items-center gap-1 rounded-full bg-surface px-2.5 py-1 text-[12px] text-ink-soft">
-                {r.label} <span className="font-mono font-bold text-violet-strong">×{r.mult}</span>
-              </span>
+          <p className="text-sm leading-snug text-ink-soft">
+            Ganas <span className="font-bold text-ink">+{KO_ADVANCE}</span> por acertar quién avanza y{' '}
+            <span className="font-bold text-ink">+{KO_EXACT}</span> más por el marcador exacto. Cada ronda
+            multiplica esos puntos:
+          </p>
+          <div className="overflow-hidden rounded-card border border-border bg-surface">
+            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 border-b border-border px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-muted">
+              <span>Ronda</span>
+              <span className="text-right">Avanza</span>
+              <span className="text-right">Exacto</span>
+              <span className="text-right">Total</span>
+            </div>
+            {ROUND_SCALE.map((r, i) => (
+              <div
+                key={r.label}
+                className={`grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 px-3 py-2 ${i % 2 === 1 ? 'bg-surface-2' : ''}`}
+              >
+                <span className="flex items-baseline gap-1.5 text-sm text-ink">
+                  {r.label}
+                  <span className="font-mono text-[11px] font-bold text-violet-strong">×{r.mult}</span>
+                </span>
+                <span className="text-right font-mono text-[13px] text-ink-soft">+{KO_ADVANCE * r.mult}</span>
+                <span className="text-right font-mono text-[13px] text-ink-soft">+{KO_EXACT * r.mult}</span>
+                <span className="text-right font-mono text-[13px] font-bold text-ink">{(KO_ADVANCE + KO_EXACT) * r.mult}</span>
+              </div>
             ))}
           </div>
-          <p className="text-xs leading-snug text-muted">Ejemplo: acertar quién avanza en la Final = 2 × 10 = 20 pts.</p>
+          <p className="text-xs leading-snug text-muted">
+            El marcador exacto ya incluye acertar quién avanza: clavarlo suma Avanza + Exacto = Total.
+          </p>
         </Section>
 
         <Section icon={<Lightning size={18} weight="bold" />} title="Triple o nada">
@@ -118,9 +141,9 @@ export function RulesSheet({ open, onClose }: { open: boolean; onClose: () => vo
         </Section>
 
         <Section icon={<Crown size={18} weight="bold" />} title="Premios">
-          <Row label="🥇 Primer lugar" tone="gold" pts="$700.000" />
-          <Row label="🥈 Segundo lugar" tone="gold" pts="$250.000" />
-          <Row label="🥉 Tercer lugar" tone="gold" pts="$50.000" />
+          <Row label="🥇 Primer lugar" tone="gold" pts="$800.000" />
+          <Row label="🥈 Segundo lugar" tone="gold" pts="$300.000" />
+          <Row label="🥉 Tercer lugar" tone="gold" pts="$100.000" />
           <p className="text-xs leading-snug text-muted">
             En caso de empate de puntos, gana quien tenga más marcadores exactos en eliminatorias.
           </p>

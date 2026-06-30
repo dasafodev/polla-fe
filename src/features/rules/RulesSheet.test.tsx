@@ -15,11 +15,11 @@ describe('RulesSheet', () => {
     expect(screen.getByText('La decepción')).toBeInTheDocument()
   })
 
-  it('muestra los premios 700.000 / 250.000 / 50.000', () => {
+  it('muestra los premios 800.000 / 300.000 / 100.000', () => {
     render(<RulesSheet open onClose={() => {}} />)
-    expect(screen.getByText('$700.000')).toBeInTheDocument()
-    expect(screen.getByText('$250.000')).toBeInTheDocument()
-    expect(screen.getByText('$50.000')).toBeInTheDocument()
+    expect(screen.getByText('$800.000')).toBeInTheDocument()
+    expect(screen.getByText('$300.000')).toBeInTheDocument()
+    expect(screen.getByText('$100.000')).toBeInTheDocument()
   })
 
   it('cuando open=false no renderiza el dialog', () => {

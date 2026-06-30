@@ -19,7 +19,7 @@ describe('GET /scoreboard', () => {
     const iMaria = body.data.findIndex((e: { participant: { id: string } }) => e.participant.id === 'p-maria')
     expect(iJuan).toBeLessThan(iMaria)
     expect(body.data[0].rank).toBe(1)
-    expect(body.data[0].prize).toBe(700000)
+    expect(body.data[0].prize).toBe(800000)
   })
 
   it('por defecto trae el top 10; con limit=all trae a TODOS los jugadores', async () => {

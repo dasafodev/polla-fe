@@ -5,7 +5,8 @@ import type {
   ScoreBreakdown, ScoreBreakdownDetail, ScoreboardEntry,
 } from '../types/api'
 
-const PRIZES = [700_000, 250_000, 50_000] as const
+// Espejo de polla-be/src/mappers/scoreboard.mapper.ts (PRIZES por rank 1/2/3).
+const PRIZES = [800_000, 300_000, 100_000] as const
 const TRIPLE_CAP = 3
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
