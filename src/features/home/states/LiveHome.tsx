@@ -4,8 +4,9 @@ import { useLiveHome } from '../liveHome'
 import { PendingKoAlert } from '../components/PendingKoAlert'
 import { PositionCard } from '../components/PositionCard'
 import { MatchCards } from '../components/MatchCards'
+import type { ColombiaTakeover } from '../colombia/colombiaTakeover'
 
-export function LiveHome() {
+export function LiveHome({ takeover }: { takeover?: ColombiaTakeover | null }) {
   const live = useLiveHome()
   if (live.loading) return <LiveSkeleton />
 
@@ -16,12 +17,13 @@ export function LiveHome() {
           <PendingKoAlert info={live.pendingKo} />
         </motion.div>
       )}
-      {live.position && (
+      {/* Con el takeover de Colombia activo se oculta el cuadro de posición: ese día el foco es Colombia. */}
+      {!takeover && live.position && (
         <motion.div variants={fadeUp}>
           <PositionCard info={live.position} />
         </motion.div>
       )}
-      <MatchCards />
+      <MatchCards excludeId={takeover?.match.id} heading={takeover ? 'También hoy' : undefined} />
     </motion.div>
   )
 }

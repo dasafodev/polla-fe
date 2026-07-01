@@ -9,6 +9,7 @@ vi.mock('./states/EmptyHome', () => ({ EmptyHome: () => <div>empty</div> }))
 vi.mock('./states/InProgressHome', () => ({ InProgressHome: () => <div>progress</div> }))
 vi.mock('./states/ReadyHome', () => ({ ReadyHome: () => <div>ready</div> }))
 vi.mock('./states/LiveHome', () => ({ LiveHome: () => <div>live</div> }))
+vi.mock('./colombia/useColombiaTakeover', () => ({ useColombiaTakeover: () => null }))
 vi.mock('../onboarding/onboardingState', () => ({ useOnboardingState: vi.fn() }))
 
 import { useOnboardingState } from '../onboarding/onboardingState'

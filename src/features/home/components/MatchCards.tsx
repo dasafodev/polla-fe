@@ -13,7 +13,7 @@ import { now, todayBogota } from '../../../lib/clock'
 import type { KoMatch } from '../../../types/api'
 
 // Todos los partidos del día (grupos + eliminatorias). Si hoy no hay, cae al próximo programado.
-export function MatchCards() {
+export function MatchCards({ excludeId, heading }: { excludeId?: string; heading?: string } = {}) {
   const groupMatches = useGroupMatches({}, { pollMs: 60_000 })
   const ko = useAllKoPredictions()
   const koMatches = useMemo(() => ko.rounds.flatMap((r) => r.matches), [ko.rounds])
@@ -41,16 +41,18 @@ export function MatchCards() {
   }
   const tripleRemaining = tripleUsesRemaining(ko.rounds)
 
-  if (matches.length === 0) return null
+  // El takeover de Colombia sube su partido al héroe; aquí se excluye para no repetirlo.
+  const shown = excludeId ? matches.filter((m) => m.id !== excludeId) : matches
+  if (shown.length === 0) return null
 
   return (
     <>
       <motion.div variants={fadeUp}>
         <p className="font-mono text-[10px] font-bold uppercase tracking-wide text-muted">
-          {mode === 'today' ? 'Partidos de hoy' : 'Próximo partido'}
+          {heading ?? (mode === 'today' ? 'Partidos de hoy' : 'Próximo partido')}
         </p>
       </motion.div>
-      {matches.map((m) => (
+      {shown.map((m) => (
         <motion.div key={m.id} variants={fadeUp}>
           <MatchCard m={m} onPick={m.kind === 'ko' ? () => setSelectedId(m.id) : undefined} />
         </motion.div>

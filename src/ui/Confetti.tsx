@@ -3,7 +3,7 @@ import { useReduced } from './motion'
 
 const COLORS = ['#6d3bd6', '#8b6dff', '#b8862e', '#1c8a5b', '#eee8fd']
 
-export function Confetti({ count = 80 }: { count?: number }) {
+export function Confetti({ count = 80, colors = COLORS }: { count?: number; colors?: string[] }) {
   const reduced = useReduced()
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -15,7 +15,7 @@ export function Confetti({ count = 80 }: { count?: number }) {
       const w = 6 + (i % 5)
       s.style.cssText = `position:absolute;top:40%;left:50%;width:${w}px;height:${
         w * 0.5
-      }px;background:${COLORS[i % COLORS.length]};border-radius:1px;will-change:transform,opacity`
+      }px;background:${colors[i % colors.length]};border-radius:1px;will-change:transform,opacity`
       host.appendChild(s)
       pieces.push(s)
       if (typeof s.animate !== 'function') continue
@@ -36,6 +36,6 @@ export function Confetti({ count = 80 }: { count?: number }) {
       clearTimeout(t)
       pieces.forEach((p) => p.remove())
     }
-  }, [count, reduced])
+  }, [count, reduced, colors])
   return <div ref={ref} className="pointer-events-none fixed inset-0 z-50 overflow-hidden" aria-hidden />
 }

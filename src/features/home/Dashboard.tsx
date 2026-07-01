@@ -9,10 +9,13 @@ import { LiveHome } from './states/LiveHome'
 import { pickHomeView } from './homeView'
 import { daysUntil } from './format'
 import { fadeUp } from '../../ui/motion'
+import { useColombiaTakeover } from './colombia/useColombiaTakeover'
+import { ColombiaHero } from './colombia/ColombiaHero'
 
 export function Dashboard() {
   const state = useOnboardingState()
   const view = pickHomeView(state)
+  const takeover = useColombiaTakeover()
   const days = state.closesAt ? daysUntil(state.closesAt) : null
 
   const subtitle = state.locked
@@ -23,12 +26,13 @@ export function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <DashboardHeader subtitle={subtitle} />
+      {/* Día que juega Colombia: el héroe tricolor reemplaza al header. Si no, header normal. */}
+      {takeover ? <ColombiaHero takeover={takeover} /> : <DashboardHeader subtitle={subtitle} />}
       {view === 'loading' && <HomeSkeleton />}
       {view === 'empty' && <EmptyHome closesAt={state.closesAt} />}
       {view === 'progress' && <InProgressHome state={state} />}
       {view === 'ready' && <ReadyHome state={state} />}
-      {view === 'live' && <LiveHome />}
+      {view === 'live' && <LiveHome takeover={takeover} />}
       {view !== 'loading' && (
         <motion.div variants={fadeUp} initial="hidden" animate="show">
           <FunFactCard />

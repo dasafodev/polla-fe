@@ -145,6 +145,20 @@ function CardForSlot({ slot, locked, onPick }: { slot: KoSlot; locked: boolean; 
   )
 }
 
+// Acento tricolor permanente: franja fina al borde izquierdo de la card de Colombia, para
+// distinguir "la nuestra" del resto del cuadro. ('COL' es el código FIFA, estable.)
+const COLOMBIA_CODE = 'COL'
+
+function ColombiaStripe() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-y-0 left-0 w-[3px]"
+      style={{ background: 'linear-gradient(#FCD116 0 40%, #00318A 40% 70%, #CE1126 70% 100%)' }}
+    />
+  )
+}
+
 function Side({ team, score, win }: { team: KoTeam; score: number | null; win: boolean }) {
   return (
     <div className={`flex items-center gap-1.5 px-2 py-1 ${win ? 'bg-tint' : ''}`}>
@@ -162,13 +176,15 @@ function BracketCard({ m, locked, onPick }: { m: KoMatch; locked: boolean; onPic
   const pe = mp?.pointsEarned
   const scored = locked && m.result != null && pe != null
   const advId = mp?.teamAdvancesId
+  const isCol = home.code === COLOMBIA_CODE || away.code === COLOMBIA_CODE
   return (
     <button
       type="button"
       onClick={() => onPick(m)}
       aria-label={`${home.name} vs ${away.name}`}
-      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-border bg-surface text-left shadow-card active:scale-[0.98]"
+      className="relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-border bg-surface text-left shadow-card active:scale-[0.98]"
     >
+      {isCol && <ColombiaStripe />}
       <div className="flex shrink-0 items-center gap-1 border-b border-border bg-surface-2 px-2 py-0.5">
         <Clock size={9} weight="bold" className="shrink-0 text-muted" />
         <span className="truncate font-mono text-[9px] font-medium text-ink-soft">{formatKoKickoffShort(m.scheduledAt)}</span>
@@ -205,8 +221,10 @@ function UndefinedCard({ slot }: { slot: KoSlot }) {
   const both = slot.projHome && slot.projAway
   const some = slot.projHome || slot.projAway
   const status = both ? 'Clasificados' : some ? 'Falta rival' : 'Por definir'
+  const isCol = slot.projHome?.code === COLOMBIA_CODE || slot.projAway?.code === COLOMBIA_CODE
   return (
-    <div className="flex h-full flex-col justify-center rounded-xl border border-dashed border-border bg-surface-2/60 px-2 py-1.5">
+    <div className="relative flex h-full flex-col justify-center overflow-hidden rounded-xl border border-dashed border-border bg-surface-2/60 px-2 py-1.5">
+      {isCol && <ColombiaStripe />}
       <ProjSide team={slot.projHome} label={homeLabel} />
       <div className="my-1 h-px bg-border" />
       <ProjSide team={slot.projAway} label={awayLabel} />

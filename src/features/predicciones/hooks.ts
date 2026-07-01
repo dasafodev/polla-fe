@@ -5,14 +5,18 @@ import { getKoMatches } from '../ko/api'
 import { ROUND_SLUGS } from '../../types/enums'
 import type { KoMatchesResponse } from '../../types/api'
 
-export function useAllKoPredictions(): {
+export function useAllKoPredictions(options?: { pollMs?: number }): {
   isLoading: boolean
   isError: boolean
   rounds: KoMatchesResponse[]
   refetch: () => void
 } {
   const results = useQueries({
-    queries: ROUND_SLUGS.map((slug) => ({ queryKey: keys.ko.round(slug), queryFn: () => getKoMatches(slug) })),
+    queries: ROUND_SLUGS.map((slug) => ({
+      queryKey: keys.ko.round(slug),
+      queryFn: () => getKoMatches(slug),
+      refetchInterval: options?.pollMs,
+    })),
   })
   const data = results.map((r) => r.data)
   // Cada r.data es estable en react-query; el array externo de useQueries no, por eso
