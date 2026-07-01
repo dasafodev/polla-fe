@@ -5,7 +5,6 @@
 import { ROUND_LONG } from '../../ko/koView'
 import { bogotaDateOf } from '../../../lib/clock'
 import type { KoMatch, KoMatchesResponse, KoTeam } from '../../../types/api'
-import type { RoundSlug } from '../../../types/enums'
 
 export const COLOMBIA_CODE = 'COL'
 
@@ -19,17 +18,6 @@ export interface ColombiaTakeover {
   opponent: KoTeam
   kickoffAt: string
   score: { col: number; opp: number } | null
-  stampText: string | null
-}
-
-// Texto del sello al ganar una ronda (el ganador AVANZA a…). La final corona campeón.
-const STAMP_BY_ROUND: Record<RoundSlug, string> = {
-  r32: 'A octavos',
-  r16: 'A cuartos',
-  qf: 'A la semifinal',
-  sf: 'A la final',
-  final: '¡CAMPEÓN!',
-  '3rd': 'Tercer puesto',
 }
 
 export function isColombiaMatch(m: KoMatch): boolean {
@@ -62,14 +50,14 @@ export function deriveColombiaTakeover(input: {
         if (!m.result || m.result.winnerTeamId !== colombia.id) return null
         return {
           phase: 'won', match: m, roundLong, colombia, opponent,
-          kickoffAt: m.scheduledAt, score: scoreOf(m, colIsHome), stampText: STAMP_BY_ROUND[r.round.slug],
+          kickoffAt: m.scheduledAt, score: scoreOf(m, colIsHome),
         }
       }
 
       const phase: ColombiaPhase = m.status === 'live' ? 'live' : 'countdown'
       return {
         phase, match: m, roundLong, colombia, opponent,
-        kickoffAt: m.scheduledAt, score: phase === 'live' ? scoreOf(m, colIsHome) : null, stampText: null,
+        kickoffAt: m.scheduledAt, score: phase === 'live' ? scoreOf(m, colIsHome) : null,
       }
     }
   }

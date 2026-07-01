@@ -121,11 +121,6 @@ function WonContent({ t }: { t: ColombiaTakeover }) {
           COL {t.score.col} – {t.score.opp} {t.opponent.code}
         </p>
       )}
-      {t.stampText && (
-        <div className="mt-3 flex justify-center">
-          <Sello text={t.stampText} />
-        </div>
-      )}
     </div>
   )
 }
@@ -183,17 +178,6 @@ function TeamCol({ code, flag }: { code: string; flag: string | null }) {
       <Flag code={code} flag={flag} className="size-7" />
       <span className="text-xs font-bold text-ink">{code}</span>
     </div>
-  )
-}
-
-function Sello({ text }: { text: string }) {
-  return (
-    <span
-      className="pointer-events-none inline-block select-none rounded-xl border-4 px-4 py-1.5 font-display text-lg font-extrabold uppercase tracking-wide"
-      style={{ color: RED, borderColor: RED, transform: 'rotate(-6deg)' }}
-    >
-      {text}
-    </span>
   )
 }
 

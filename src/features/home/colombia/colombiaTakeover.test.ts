@@ -49,7 +49,6 @@ describe('deriveColombiaTakeover', () => {
     expect(t.roundLong).toBe('Cuartos')
     expect(t.kickoffAt).toBe(KICK)
     expect(t.score).toBeNull()
-    expect(t.stampText).toBeNull()
   })
 
   it('en vivo con marcador → fase live y score orientado a Colombia', () => {
@@ -66,18 +65,11 @@ describe('deriveColombiaTakeover', () => {
     expect(t.score).toBeNull()
   })
 
-  it('finalizado y Colombia gana → fase won, sello de la ronda ganada', () => {
+  it('finalizado y Colombia gana → fase won con marcador', () => {
     const rounds = [round('qf', [ko({ id: 'm1', status: 'finished', result: { scoreHome: 2, scoreAway: 1, winnerTeamId: COL.id } })])]
     const t = deriveColombiaTakeover({ rounds, today: TODAY })!
     expect(t.phase).toBe('won')
     expect(t.score).toEqual({ col: 2, opp: 1 })
-    expect(t.stampText).toBe('A la semifinal')
-  })
-
-  it('gana la final → sello CAMPEÓN', () => {
-    const rounds = [round('final', [ko({ id: 'm1', status: 'finished', result: { scoreHome: 1, scoreAway: 0, winnerTeamId: COL.id } })])]
-    const t = deriveColombiaTakeover({ rounds, today: TODAY })!
-    expect(t.stampText).toBe('¡CAMPEÓN!')
   })
 
   it('finalizado y Colombia pierde → null (home normal)', () => {
