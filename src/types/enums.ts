@@ -47,7 +47,7 @@ export const ROUND_TO_SCALE: Record<RoundSlug, ScaleSlug> = {
 export const SCORING_KEYS = [
   'pts_group_position_exact', 'pts_group_position_partial', 'bonus_group_complete',
   'pts_third_correct', 'pts_ko_advances', 'pts_ko_exact_score',
-  'pts_dark_horse_per_round', 'pts_disappointment_per_round', 'mult_triple',
+  'pts_dark_horse_per_round', 'pts_disappointment_per_round', 'mult_triple', 'mult_colombia_ko',
   'scale_r32', 'scale_r16', 'scale_qf', 'scale_sf', 'scale_final',
 ] as const
 export type ScoringKey = (typeof SCORING_KEYS)[number]

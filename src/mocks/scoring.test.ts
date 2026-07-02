@@ -120,3 +120,37 @@ describe('ROUND_TO_SCALE — cubre todas las rondas KO (incl. qf/sf/3rd/final qu
     }
   })
 })
+
+describe('computeKoPoints — ×5 de Colombia y triple ×3 (espejo del backend)', () => {
+  const COL = 'col-id'
+  // base cuartos = (adv 2 + exacto 3) × scale_qf 5 = 25
+  const qf = (result: NonNullable<DbKoMatch['result']>, homeTeamId = COL): DbKoMatch => ({
+    id: 'x', roundSlug: 'qf', externalMatchId: 1, matchNumber: 1,
+    scheduledAt: '2026-07-10T00:00:00.000Z', lockedAt: '2026-07-10T00:00:00.000Z', status: 'finished',
+    homeTeamId, awayTeamId: 'rival', homeTeamLabel: null, awayTeamLabel: null, homeSource: null, awaySource: null, result,
+  })
+  const pred = (over: Partial<DbKoPrediction> = {}): DbKoPrediction =>
+    ({ participantId: 'p', matchId: 'x', scoreHome: 2, scoreAway: 0, teamAdvancesId: COL, tripleActive: false, ...over })
+
+  it('Colombia, sin triple, acierto pleno → base ×5 = 125', () => {
+    const pe = computeKoPoints(qf({ scoreHome: 2, scoreAway: 0, winnerTeamId: COL }), pred(), db.scoringParams, COL)!
+    expect(pe.total).toBe(125)
+  })
+  it('Colombia + triple, acierto pleno → base ×5 ×3 = 375', () => {
+    const pe = computeKoPoints(qf({ scoreHome: 2, scoreAway: 0, winnerTeamId: COL }), pred({ tripleActive: true }), db.scoringParams, COL)!
+    expect(pe.total).toBe(375)
+  })
+  it('Colombia + triple, marcador errado → 0 (todo o nada)', () => {
+    const pe = computeKoPoints(qf({ scoreHome: 3, scoreAway: 0, winnerTeamId: COL }), pred({ tripleActive: true }), db.scoringParams, COL)!
+    expect(pe.total).toBe(0)
+  })
+  it('partido sin Colombia → sin el ×5', () => {
+    const pe = computeKoPoints(qf({ scoreHome: 2, scoreAway: 0, winnerTeamId: 'other' }, 'other'), pred({ teamAdvancesId: 'other' }), db.scoringParams, COL)!
+    expect(pe.total).toBe(25)
+  })
+  it('marcador exacto cuenta aunque falles quién avanza (penales)', () => {
+    // 1-1 en regulación, gana el rival por penales; predije 1-1 y que avanzaba teamA → solo suma el exacto
+    const pe = computeKoPoints(qf({ scoreHome: 1, scoreAway: 1, winnerTeamId: 'rival' }, 'teamA'), pred({ scoreHome: 1, scoreAway: 1, teamAdvancesId: 'teamA' }), db.scoringParams, COL)!
+    expect(pe.total).toBe(15)
+  })
+})

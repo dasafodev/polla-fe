@@ -36,7 +36,7 @@ function completeRankings(participantId: string, groups: DbGroup[]) {
 const SCORING: ScoringParams = {
   pts_group_position_exact: 5, pts_group_position_partial: 0, bonus_group_complete: 20,
   pts_third_correct: 10, pts_ko_advances: 2, pts_ko_exact_score: 3,
-  pts_dark_horse_per_round: 5, pts_disappointment_per_round: 5, mult_triple: 3,
+  pts_dark_horse_per_round: 5, pts_disappointment_per_round: 5, mult_triple: 3, mult_colombia_ko: 5,
   scale_r32: 1, scale_r16: 2, scale_qf: 5, scale_sf: 7, scale_final: 10,
 }
 

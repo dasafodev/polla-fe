@@ -41,28 +41,42 @@ export function computeThirdPoints(
   return { pts_third_correct, total: pts_third_correct }
 }
 
+// Espejo de polla-be/src/services/ko.service.ts. Sobre la base escalada por ronda:
+//  - los partidos de Colombia valen ×mult_colombia_ko,
+//  - el triple multiplica ×mult_triple TODO el partido (todo o nada; ambos se apilan multiplicativo),
+//  - el marcador exacto cuenta aunque falles quién avanza (penales pueden cambiar el ganador).
 export function computeKoPoints(
-  match: DbKoMatch, pred: DbKoPrediction, params: ScoringParams,
+  match: DbKoMatch, pred: DbKoPrediction, params: ScoringParams, colombiaTeamId: string | null = null,
 ): KoPointsEarned | null {
   if (!match.result) return null
   const scale_slug = ROUND_TO_SCALE[match.roundSlug]
   const scale_factor = params[scale_slug]
-  const advancesHit = pred.teamAdvancesId === match.result.winnerTeamId
-  const exactHit = advancesHit && pred.scoreHome === match.result.scoreHome && pred.scoreAway === match.result.scoreAway
-  // Triple = todo o nada: si lo activaste y no clavas el marcador exacto, el partido queda en 0.
-  if (pred.tripleActive && !exactHit) {
+  const advancesCorrect = pred.teamAdvancesId === match.result.winnerTeamId
+  const scoreCorrect = pred.scoreHome === match.result.scoreHome && pred.scoreAway === match.result.scoreAway
+  const fullyCorrect = scoreCorrect && advancesCorrect
+
+  // Triple = todo o nada: activado y sin acertar TODO (marcador + quién avanza) → el partido queda en 0.
+  if (pred.tripleActive && !fullyCorrect) {
     return { pts_ko_advances: 0, pts_ko_exact_score: 0, mult_colombia_ko: 0, mult_triple: 0, scale_factor, scale_slug, total: 0 }
   }
-  const pts_ko_advances = (advancesHit ? params.pts_ko_advances : 0) * scale_factor
-  const pts_ko_exact_score = (exactHit ? params.pts_ko_exact_score : 0) * scale_factor
-  const mult_triple = pred.tripleActive && exactHit ? params.mult_triple : 0 // bono fijo, no escala por ronda
-  // El mock aún no calcula el ×5 de Colombia (mult_colombia_ko); ver pendiente de sincronizar scoring.
-  const mult_colombia_ko = 0
+
+  const pts_ko_advances = (advancesCorrect ? params.pts_ko_advances : 0) * scale_factor
+  const pts_ko_exact_score = (scoreCorrect ? params.pts_ko_exact_score : 0) * scale_factor
+  const scaledBase = pts_ko_advances + pts_ko_exact_score
+
+  const hasColombia = colombiaTeamId != null && (match.homeTeamId === colombiaTeamId || match.awayTeamId === colombiaTeamId)
+  const colombiaFactor = hasColombia ? params.mult_colombia_ko : 1
+  const mult_colombia_ko = scaledBase * (colombiaFactor - 1)
+  const mult_triple = fullyCorrect && pred.tripleActive ? scaledBase * colombiaFactor * (params.mult_triple - 1) : 0
+
   return {
     pts_ko_advances, pts_ko_exact_score, mult_colombia_ko, mult_triple, scale_factor, scale_slug,
-    total: pts_ko_advances + pts_ko_exact_score + mult_triple,
+    total: scaledBase + mult_colombia_ko + mult_triple,
   }
 }
+
+// Id del equipo Colombia en el mock (o null si no está en el mundo actual). 'COL' = código FIFA.
+const colombiaTeamIdOf = (db: Db): string | null => db.teams.find((t) => t.code === 'COL')?.id ?? null
 
 // Escalas de la ruta principal KO en orden (R32→Final). Como el mock solo guarda cuántas rondas
 // avanzó cada equipo, los pálpitos suman la escala de esas primeras N rondas (igual que el backend).
@@ -102,7 +116,7 @@ export function koPointsFor(db: Db, participantId: string, matchId: string): KoP
   const pred = db.koPredictions.find((p) => p.participantId === participantId && p.matchId === matchId)
   const match = db.koMatches.find((m) => m.id === matchId)
   if (!pred || !match) return null
-  return computeKoPoints(match, pred, db.scoringParams)
+  return computeKoPoints(match, pred, db.scoringParams, colombiaTeamIdOf(db))
 }
 export function powerupsPointsFor(db: Db, participantId: string): PowerupsPointsEarned | null {
   const pw = db.powerups.find((x) => x.participantId === participantId)
@@ -123,11 +137,12 @@ function buildMatchIndex(db: Db): Map<string, DbKoMatch> {
 // Una sola pasada por las predicciones KO del participante: total de puntos + # de exactos.
 function participantKo(db: Db, participantId: string, idx: Map<string, DbKoMatch>): { total: number; exact: number } {
   let total = 0, exact = 0
+  const colId = colombiaTeamIdOf(db)
   for (const pred of db.koPredictions) {
     if (pred.participantId !== participantId) continue
     const match = idx.get(pred.matchId)
     if (!match) continue
-    const pe = computeKoPoints(match, pred, db.scoringParams)
+    const pe = computeKoPoints(match, pred, db.scoringParams, colId)
     if (pe) total += pe.total
     if (match.result && pred.scoreHome === match.result.scoreHome && pred.scoreAway === match.result.scoreAway) exact += 1
   }

@@ -63,7 +63,7 @@ function makeEmptyDb(): Db {
     scoringParams: {
       pts_group_position_exact: 0, pts_group_position_partial: 0, bonus_group_complete: 0,
       pts_third_correct: 0, pts_ko_advances: 0, pts_ko_exact_score: 0,
-      pts_dark_horse_per_round: 0, pts_disappointment_per_round: 0, mult_triple: 0,
+      pts_dark_horse_per_round: 0, pts_disappointment_per_round: 0, mult_triple: 0, mult_colombia_ko: 1,
       scale_r32: 1, scale_r16: 1, scale_qf: 1, scale_sf: 1, scale_final: 1,
     },
     officialGroupStandings: null, officialBestThirds: null, teamRoundsAdvanced: null,
