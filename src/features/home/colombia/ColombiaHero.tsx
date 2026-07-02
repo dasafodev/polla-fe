@@ -1,11 +1,13 @@
 import { memo, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { Info } from '@phosphor-icons/react'
 import { Flag } from '../../../ui/Flag'
 import { Confetti } from '../../../ui/Confetti'
+import { Sheet } from '../../../ui/Sheet'
 import { spring, useReduced } from '../../../ui/motion'
 import { useCountdown } from '../useCountdown'
 import { formatKickoffBogota } from '../format'
-import type { ColombiaTakeover } from './colombiaTakeover'
+import { MULT_COLOMBIA_KO, type ColombiaTakeover } from './colombiaTakeover'
 
 // "Amarillo camiseta": fondo tricolor amarillo, "10" fantasma navy, tipografía navy, acentos rojos.
 const YELLOW = '#FCD116'
@@ -75,6 +77,7 @@ function CountdownContent({ t }: { t: ColombiaTakeover }) {
           <CdBox n={cd.seconds} u="seg" />
         </div>
       )}
+      <PointsChip />
     </>
   )
 }
@@ -105,6 +108,7 @@ function LiveContent({ t }: { t: ColombiaTakeover }) {
         </div>
       )}
       <p className="mt-2 text-center text-xs font-bold text-ink/70">{leadText(s)}</p>
+      <PointsChip />
     </>
   )
 }
@@ -126,6 +130,47 @@ function WonContent({ t }: { t: ColombiaTakeover }) {
 }
 
 // ── piezas ────────────────────────────────────────────────────────────────────
+
+// Informativo: los partidos de Colombia en KO pagan ×5 (mult_colombia_ko del backend). Tap → explica.
+function PointsChip() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={`Con la tricolor, cada punto cuenta por ${MULT_COLOMBIA_KO}. Más información`}
+        className="mt-4 flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left active:scale-[0.99]"
+        style={{ backgroundColor: NAVY }}
+      >
+        <span
+          className="grid shrink-0 place-items-center rounded-lg px-2 py-1 font-display text-base font-black leading-none"
+          style={{ backgroundColor: YELLOW, color: NAVY }}
+        >
+          ×{MULT_COLOMBIA_KO}
+        </span>
+        <span className="flex-1 text-[12.5px] font-bold leading-tight text-white">
+          Con la tricolor, cada punto cuenta por {MULT_COLOMBIA_KO}
+        </span>
+        <Info size={18} weight="bold" className="shrink-0 text-white/70" aria-hidden />
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)} title={`Puntos ×${MULT_COLOMBIA_KO} por Colombia`}>
+        <div className="space-y-3 px-2 pb-3 pt-1">
+          <p className="text-sm leading-relaxed text-ink-soft">
+            Los partidos de Colombia en eliminatorias valen <b className="text-ink">5 veces más</b>. Cada punto que ganes en
+            este partido —por acertar quién avanza o el marcador exacto— se multiplica por {MULT_COLOMBIA_KO}.
+          </p>
+          <p className="text-sm leading-relaxed text-ink-soft">
+            Es la forma de la polla de premiar que le pongas a la Selección: un acierto con Colombia rinde como cinco.
+          </p>
+          <p className="text-xs leading-snug text-muted">
+            Aplica a todos los partidos de Colombia en eliminatorias, en cualquier ronda.
+          </p>
+        </div>
+      </Sheet>
+    </>
+  )
+}
 
 function Kicker({ children }: { children: React.ReactNode }) {
   return (

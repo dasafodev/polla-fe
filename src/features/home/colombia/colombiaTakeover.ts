@@ -8,6 +8,11 @@ import type { KoMatch, KoMatchesResponse, KoTeam } from '../../../types/api'
 
 export const COLOMBIA_CODE = 'COL'
 
+// Multiplicador de puntos de los partidos de Colombia en eliminatorias. Espejo del backend
+// (polla-be/prisma/seed.ts → mult_colombia_ko = 5): un partido de Colombia paga 5× los puntos,
+// en cualquier ronda. Solo para el informativo; el cálculo real lo hace el backend.
+export const MULT_COLOMBIA_KO = 5
+
 export type ColombiaPhase = 'countdown' | 'live' | 'won'
 
 export interface ColombiaTakeover {
