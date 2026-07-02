@@ -103,7 +103,7 @@ export interface FriendsPowerups { available: boolean; availableAt?: string; dat
 export interface KoTeam { id: string; name: string; code: string; flag: string | null }
 export interface KoResult { scoreHome: number; scoreAway: number; winnerTeamId: string }
 export interface KoPointsEarned {
-  pts_ko_advances: number; pts_ko_exact_score: number; mult_triple: number
+  pts_ko_advances: number; pts_ko_exact_score: number; mult_colombia_ko: number; mult_triple: number
   scale_factor: number; scale_slug: ScaleSlug; total: number
 }
 export interface KoMyPrediction {

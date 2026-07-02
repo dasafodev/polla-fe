@@ -51,13 +51,15 @@ export function computeKoPoints(
   const exactHit = advancesHit && pred.scoreHome === match.result.scoreHome && pred.scoreAway === match.result.scoreAway
   // Triple = todo o nada: si lo activaste y no clavas el marcador exacto, el partido queda en 0.
   if (pred.tripleActive && !exactHit) {
-    return { pts_ko_advances: 0, pts_ko_exact_score: 0, mult_triple: 0, scale_factor, scale_slug, total: 0 }
+    return { pts_ko_advances: 0, pts_ko_exact_score: 0, mult_colombia_ko: 0, mult_triple: 0, scale_factor, scale_slug, total: 0 }
   }
   const pts_ko_advances = (advancesHit ? params.pts_ko_advances : 0) * scale_factor
   const pts_ko_exact_score = (exactHit ? params.pts_ko_exact_score : 0) * scale_factor
   const mult_triple = pred.tripleActive && exactHit ? params.mult_triple : 0 // bono fijo, no escala por ronda
+  // El mock aún no calcula el ×5 de Colombia (mult_colombia_ko); ver pendiente de sincronizar scoring.
+  const mult_colombia_ko = 0
   return {
-    pts_ko_advances, pts_ko_exact_score, mult_triple, scale_factor, scale_slug,
+    pts_ko_advances, pts_ko_exact_score, mult_colombia_ko, mult_triple, scale_factor, scale_slug,
     total: pts_ko_advances + pts_ko_exact_score + mult_triple,
   }
 }

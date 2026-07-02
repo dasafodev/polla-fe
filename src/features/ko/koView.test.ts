@@ -218,7 +218,7 @@ describe('buildColumns', () => {
   })
 
   it('acumula puntos KO de la ronda', () => {
-    const scored = match({ id: 's', myPrediction: { scoreHome: 2, scoreAway: 1, teamAdvancesId: 'a', tripleActive: false, lockedIn: true, pointsEarned: { pts_ko_advances: 2, pts_ko_exact_score: 3, mult_triple: 0, scale_factor: 1, scale_slug: 'scale_r32', total: 5 } } })
+    const scored = match({ id: 's', myPrediction: { scoreHome: 2, scoreAway: 1, teamAdvancesId: 'a', tripleActive: false, lockedIn: true, pointsEarned: { pts_ko_advances: 2, pts_ko_exact_score: 3, mult_colombia_ko: 0, mult_triple: 0, scale_factor: 1, scale_slug: 'scale_r32', total: 5 } } })
     const cols = buildColumns([round('r32', [scored])])
     expect(cols[0].points).toBe(5)
   })
