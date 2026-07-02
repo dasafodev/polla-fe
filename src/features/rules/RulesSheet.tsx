@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import {
-  ListNumbers, Medal, Trophy, Lightning, Sparkle, Crown, Lock, TrendUp, TrendDown,
+  ListNumbers, Medal, Trophy, Lightning, Sparkle, Crown, Lock, TrendUp, TrendDown, Star,
 } from '@phosphor-icons/react'
 import { Sheet } from '../../ui/Sheet'
 import { stagger, fadeUp } from '../../ui/motion'
@@ -29,6 +29,10 @@ const ROUND_SCALE: { label: string; mult: number }[] = [
   { label: 'Tercer puesto', mult: 7 },
   { label: 'Final', mult: 10 },
 ]
+// mult_triple=3 (el triple multiplica ×3 TODO el partido, todo o nada) y mult_colombia_ko=5
+// (los partidos de Colombia en KO valen ×5). Ambos multiplican el total ya escalado por ronda.
+const TRIPLE_MULT = 3
+const COLOMBIA_MULT = 5
 
 function Pts({ tone = 'violet', children }: { tone?: Tone; children: ReactNode }) {
   return (
@@ -111,11 +115,29 @@ export function RulesSheet({ open, onClose }: { open: boolean; onClose: () => vo
           </p>
         </Section>
 
+        <Section icon={<Star size={18} weight="fill" />} title="Cuando juega Colombia">
+          <Row
+            label={<>Los partidos de Colombia en eliminatorias valen <span className="font-bold text-ink">×{COLOMBIA_MULT}</span></>}
+            tone="success"
+            pts={`×${COLOMBIA_MULT}`}
+          />
+          <p className="text-xs leading-snug text-muted">
+            Cada punto que ganes en un partido de Colombia se multiplica por {COLOMBIA_MULT}, en cualquier ronda.
+          </p>
+          <p className="text-xs leading-snug text-muted">
+            Con Triple o nada encima, un partido de Colombia clavado vale ×{COLOMBIA_MULT * TRIPLE_MULT}. Pero el triple es
+            todo o nada: si no aciertas el marcador exacto, ese partido queda en 0.
+          </p>
+        </Section>
+
         <Section icon={<Lightning size={18} weight="bold" />} title="Triple o nada">
+          <Row
+            label={<>Multiplica <span className="font-bold text-ink">×{TRIPLE_MULT}</span> todos los puntos de ese partido</>}
+            tone="success"
+            pts={`×${TRIPLE_MULT}`}
+          />
+          <Row label="Solo si clavas el marcador exacto; si no, ese partido queda en 0 (aunque aciertes quién avanza)" tone="danger" />
           <Row label="Actívalo en hasta 3 partidos de eliminatorias" tone="neutral" pts="3 usos" />
-          <Row label="Solo suma si aciertas el marcador exacto; si no, ese partido queda en 0" tone="danger" />
-          <Row label="Bono extra al clavar el marcador exacto" tone="success" pts="+3" />
-          <p className="text-xs leading-snug text-muted">El bono es fijo: no se multiplica por la ronda.</p>
         </Section>
 
         <Section icon={<Sparkle size={18} weight="bold" />} title="Pálpitos">
