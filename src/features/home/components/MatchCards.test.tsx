@@ -47,6 +47,17 @@ describe('MatchCards', () => {
     expect(within(dialog).getByText('Tu marcador')).toBeInTheDocument() // form de ingreso KO (autoguarda, sin botón)
   })
 
+  it('muestra el pronóstico del usuario en la card de un partido KO', async () => {
+    seedSession('p-pedro') // pedro ya pronosticó ko-r32-open-1 (1–0, pasa G1)
+    setNow('2026-06-29T14:00:00.000Z') // hoy = 29-jun: juega ko-r32-open-1 (G1 vs H1)
+    renderWithProviders(<MatchCards />)
+
+    const card = await screen.findByRole('button', { name: 'G1 vs H1' })
+    expect(within(card).getByText('Tu pronóstico')).toBeInTheDocument()
+    expect(within(card).getByText('1–0')).toBeInTheDocument()
+    expect(within(card).getByText(/pasa G1/)).toBeInTheDocument()
+  })
+
   it('los partidos de grupos no abren el sheet (no son interactivos)', async () => {
     seedSession('p-juan')
     setNow('2026-06-12T18:00:00.000Z') // 12-jun: solo partidos de grupos

@@ -93,6 +93,17 @@ function MatchCard({ m, onPick }: { m: MatchDisplay; onPick?: () => void }) {
         </div>
         <TeamSide team={m.away} fallback={m.awayLabel} />
       </div>
+      {m.prediction && (
+        <div className="mt-3 flex items-center justify-center gap-1.5 border-t border-border pt-2.5">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-muted">Tu pronóstico</span>
+          <span className="font-mono text-xs font-bold tabular-nums text-ink-soft">
+            {`${m.prediction.scoreHome}–${m.prediction.scoreAway}`}
+          </span>
+          {m.prediction.advancesCode && (
+            <span className="text-[11px] text-muted">{`· pasa ${m.prediction.advancesCode}`}</span>
+          )}
+        </div>
+      )}
     </>
   )
 

@@ -2,6 +2,14 @@ import type { GroupMatch, KoMatch } from '../../types/api'
 import type { MatchStatus } from '../../types/enums'
 import { bogotaDateOf } from '../../lib/clock'
 
+// Pronóstico del usuario para mostrar en la card (solo KO: grupos no tiene pronóstico por partido).
+// advancesCode = código del equipo que el usuario marcó como clasificado.
+export interface MatchPrediction {
+  scoreHome: number
+  scoreAway: number
+  advancesCode: string | null
+}
+
 export interface MatchDisplay {
   id: string
   kind: 'group' | 'ko'
@@ -15,6 +23,7 @@ export interface MatchDisplay {
   awayLabel: string | null
   scoreHome: number | null
   scoreAway: number | null
+  prediction: MatchPrediction | null
 }
 
 export interface DayMatches {
@@ -37,7 +46,17 @@ const fromGroup = (m: GroupMatch): MatchDisplay => ({
   home: m.homeTeam, away: m.awayTeam,
   homeLabel: m.homeTeamLabel, awayLabel: m.awayTeamLabel,
   scoreHome: m.scoreHome, scoreAway: m.scoreAway,
+  prediction: null,
 })
+
+// Código del equipo que el usuario marcó como clasificado (para "pasa COL" en la card).
+function advancesCodeOf(m: KoMatch): string | null {
+  const id = m.myPrediction?.teamAdvancesId
+  if (!id) return null
+  if (m.homeTeam?.id === id) return m.homeTeam.code
+  if (m.awayTeam?.id === id) return m.awayTeam.code
+  return null
+}
 
 const fromKo = (m: KoMatch): MatchDisplay => ({
   id: m.id,
@@ -48,6 +67,9 @@ const fromKo = (m: KoMatch): MatchDisplay => ({
   home: m.homeTeam, away: m.awayTeam,
   homeLabel: m.homeTeamLabel, awayLabel: m.awayTeamLabel,
   scoreHome: m.result?.scoreHome ?? null, scoreAway: m.result?.scoreAway ?? null,
+  prediction: m.myPrediction
+    ? { scoreHome: m.myPrediction.scoreHome, scoreAway: m.myPrediction.scoreAway, advancesCode: advancesCodeOf(m) }
+    : null,
 })
 
 const byKickoff = (a: MatchDisplay, b: MatchDisplay) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt)
