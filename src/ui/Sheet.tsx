@@ -3,21 +3,31 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X } from '@phosphor-icons/react'
 import { useReduced, springSoft } from './motion'
 
+type SheetTone = 'default' | 'colombia'
+
+// Tono "colombia": panel amarillo camiseta con título, cerrar y grabber en navy (detalle de un
+// partido de Colombia). Los hexes se inlinean para no acoplar este primitivo a una feature.
+const COLOMBIA_YELLOW = '#FCD116'
+const COLOMBIA_NAVY = '#00318A'
+
 export function Sheet({
   open,
   onClose,
   title,
   ariaLabel,
+  tone = 'default',
   children,
 }: {
   open: boolean
   onClose: () => void
   title?: string
   ariaLabel?: string
+  tone?: SheetTone
   children: ReactNode
 }) {
   const reduced = useReduced()
   const panelRef = useRef<HTMLDivElement>(null)
+  const colombia = tone === 'colombia'
 
   useEffect(() => {
     if (!open) return
@@ -47,20 +57,32 @@ export function Sheet({
             aria-modal="true"
             aria-label={ariaLabel ?? title}
             tabIndex={-1}
-            className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[80%] max-w-[480px] flex-col rounded-t-[24px] bg-surface shadow-diffuse focus:outline-none"
+            className={`absolute inset-x-0 bottom-0 mx-auto flex max-h-[80%] max-w-[480px] flex-col rounded-t-[24px] shadow-diffuse focus:outline-none ${
+              colombia ? '' : 'bg-surface'
+            }`}
+            style={colombia ? { backgroundColor: COLOMBIA_YELLOW } : undefined}
             initial={reduced ? false : { y: '100%' }}
             animate={{ y: 0 }}
             exit={reduced ? { opacity: 0 } : { y: '100%' }}
             transition={springSoft}
           >
-            <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-border" aria-hidden />
+            <div
+              className={`mx-auto mt-2.5 h-1 w-10 rounded-full ${colombia ? 'bg-[#00318A]/30' : 'bg-border'}`}
+              aria-hidden
+            />
             {title && (
               <div className="flex items-center justify-between px-5 pb-2 pt-3">
-                <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
+                <h2
+                  className={`font-display text-lg font-bold ${colombia ? '' : 'text-ink'}`}
+                  style={colombia ? { color: COLOMBIA_NAVY } : undefined}
+                >
+                  {title}
+                </h2>
                 <button
                   onClick={onClose}
                   aria-label="Cerrar"
-                  className="grid size-9 place-items-center rounded-full text-muted active:scale-95"
+                  className={`grid size-9 place-items-center rounded-full active:scale-95 ${colombia ? '' : 'text-muted'}`}
+                  style={colombia ? { color: COLOMBIA_NAVY } : undefined}
                 >
                   <X size={20} weight="bold" />
                 </button>

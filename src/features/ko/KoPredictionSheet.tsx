@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { motion } from 'framer-motion'
 import { useQueryClient } from '@tanstack/react-query'
 import { Minus, Plus, Check, X, LockSimple, Trophy, Users, Clock } from '@phosphor-icons/react'
 import { Sheet } from '../../ui/Sheet'
 import { Flag } from '../../ui/Flag'
+import { Confetti } from '../../ui/Confetti'
+import { useReduced } from '../../ui/motion'
 import { useKoMatch, useSaveKoPrediction, useFriendsKo } from './hooks'
+import { isColombiaKoMatch, MULT_COLOMBIA_KO, COLOMBIA_COLORS, COLOMBIA_CONFETTI } from './colombia'
 import { koSaveErrorText } from './koErrors'
 import { displayName } from '../../lib/names'
 import { keys } from '../../lib/queryClient'
@@ -21,11 +25,24 @@ export function KoPredictionSheet({
   tripleRemaining: number
   onClose: () => void
 }) {
+  // Partido de Colombia → detalle con takeover tricolor (fondo amarillo + confeti + informativo ×5).
+  const colombia = isColombiaKoMatch(match)
   return (
-    <Sheet open={!!match} onClose={onClose} title={roundName ?? 'Eliminatoria'} ariaLabel="Pronóstico de eliminatoria">
-      {/* key por id: remonta el form (y reinicia el estado desde myPrediction) al cambiar de partido. */}
-      {match && <SheetBody key={match.id} initial={match} tripleRemaining={tripleRemaining} />}
-    </Sheet>
+    <>
+      <Sheet
+        open={!!match}
+        onClose={onClose}
+        title={roundName ?? 'Eliminatoria'}
+        ariaLabel="Pronóstico de eliminatoria"
+        tone={colombia ? 'colombia' : 'default'}
+      >
+        {/* key por id: remonta el form (y reinicia el estado desde myPrediction) al cambiar de partido. */}
+        {match && <SheetBody key={match.id} initial={match} tripleRemaining={tripleRemaining} />}
+      </Sheet>
+      {/* Confeti como overlay de viewport (fuera del panel, que framer-motion transforma y recorta con
+          overflow), para que estalle sobre toda la pantalla al abrir el detalle de Colombia. */}
+      {colombia && match && <ColombiaOpenConfetti matchId={match.id} />}
+    </>
   )
 }
 
@@ -39,11 +56,16 @@ function SheetBody({ initial, tripleRemaining }: { initial: KoMatch; tripleRemai
   const away = m.awayTeam
   if (!home || !away) return null
 
+  const colombia = isColombiaKoMatch(m)
   const editable = !m.locked && m.status !== 'finished'
   return (
     <div className="space-y-4 px-2 pt-1">
-      <p className="flex items-center gap-1.5 font-mono text-[12px] font-medium text-ink-soft">
-        <Clock size={13} weight="bold" className="shrink-0 text-muted" />
+      {colombia && <ColombiaSheetDecor />}
+      <p
+        className={`flex items-center gap-1.5 font-mono text-[12px] font-medium ${colombia ? '' : 'text-ink-soft'}`}
+        style={colombia ? { color: COLOMBIA_COLORS.navy } : undefined}
+      >
+        <Clock size={13} weight="bold" className={`shrink-0 ${colombia ? '' : 'text-muted'}`} />
         {formatKoKickoff(m.scheduledAt)}
       </p>
       {editable ? (
@@ -62,6 +84,55 @@ function SheetBody({ initial, tripleRemaining }: { initial: KoMatch; tripleRemai
       />
     </div>
   )
+}
+
+// Banner del detalle cuando el partido es de Colombia: informa el ×5. El "10" flota detrás
+// (aria-hidden, respeta reduced-motion).
+function ColombiaSheetDecor() {
+  const reduced = useReduced()
+  return (
+    <div className="relative overflow-hidden rounded-2xl px-3.5 py-3" style={{ backgroundColor: COLOMBIA_COLORS.navy }}>
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute -right-1 -top-3 font-display text-[92px] font-black leading-none"
+        style={{ color: COLOMBIA_COLORS.yellow, opacity: 0.12 }}
+        animate={reduced ? undefined : { y: [0, -6, 0] }}
+        transition={reduced ? undefined : { duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        10
+      </motion.span>
+      <div className="relative flex items-center gap-2.5">
+        <span
+          className="grid shrink-0 place-items-center rounded-lg px-2 py-1 font-display text-base font-black leading-none"
+          style={{ backgroundColor: COLOMBIA_COLORS.yellow, color: COLOMBIA_COLORS.navy }}
+        >
+          ×{MULT_COLOMBIA_KO}
+        </span>
+        <span className="text-[12.5px] font-bold leading-tight text-white">
+          Este partido de Colombia vale ×{MULT_COLOMBIA_KO}: cada punto que ganes aquí cuenta por {MULT_COLOMBIA_KO}.
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// Confeti tricolor al abrir el detalle. Se monta como hermano del Sheet (overlay de viewport, no dentro
+// del panel transformado) para no quedar recortado por el overflow del contenido.
+function ColombiaOpenConfetti({ matchId }: { matchId: string }) {
+  const burst = useSheetConfettiOnce(matchId)
+  return burst ? <Confetti count={70} colors={COLOMBIA_CONFETTI} /> : null
+}
+
+// Confeti una sola vez al abrir el detalle. Dep [id]: como el overlay se monta con match, estalla solo
+// al abrir/cambiar de partido, no en cada refetch de react-query.
+function useSheetConfettiOnce(id: string): boolean {
+  const [burst, setBurst] = useState(false)
+  useEffect(() => {
+    setBurst(true)
+    const to = setTimeout(() => setBurst(false), 2600)
+    return () => clearTimeout(to)
+  }, [id])
+  return burst
 }
 
 function TeamLine({ team, children }: { team: KoTeam; children?: ReactNode }) {
@@ -109,6 +180,11 @@ function EditForm({
   isFetching: boolean
 }) {
   const mp = match.myPrediction
+  // En el takeover de Colombia el panel es amarillo: los textos que van directo sobre el fondo
+  // (no dentro de una tarjeta) pasan a navy para no perder contraste.
+  const colombia = isColombiaKoMatch(match)
+  const mutedCls = colombia ? '' : 'text-muted'
+  const mutedStyle = colombia ? { color: COLOMBIA_COLORS.navy } : undefined
   const [scoreHome, setScoreHome] = useState(mp?.scoreHome ?? 0)
   const [scoreAway, setScoreAway] = useState(mp?.scoreAway ?? 0)
   // En empate el usuario elige; con ganador se deriva del marcador (es obvio quién pasa).
@@ -183,7 +259,9 @@ function EditForm({
 
       {isTie && (
         <div className="space-y-2">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-wide text-muted">¿Quién avanza?</p>
+          <p className={`font-mono text-[11px] font-bold uppercase tracking-wide ${mutedCls}`} style={mutedStyle}>
+            ¿Quién avanza?
+          </p>
           <div className="grid grid-cols-2 gap-2">
             {[home, away].map((t) => {
               const on = advances === t.id
@@ -204,7 +282,9 @@ function EditForm({
               )
             })}
           </div>
-          <p className="text-[11px] text-muted">En empate, define quién pasa (penales o prórroga).</p>
+          <p className={`text-[11px] ${mutedCls}`} style={mutedStyle}>
+            En empate, define quién pasa (penales o prórroga).
+          </p>
         </div>
       )}
 
@@ -232,17 +312,17 @@ function EditForm({
       {/* Sin botón: el marcador se guarda solo. Esta línea da el feedback que antes daba el botón. */}
       <div className="flex min-h-[22px] items-center justify-center gap-1.5 text-center text-sm font-medium" role="status" aria-live="polite">
         {save.isPending ? (
-          <span className="text-muted">Guardando…</span>
+          <span className={mutedCls} style={mutedStyle}>Guardando…</span>
         ) : message && !message.ok ? (
           <span className="text-danger">{message.text}</span>
         ) : !advances ? (
-          <span className="text-muted">Elige quién avanza para guardar</span>
+          <span className={mutedCls} style={mutedStyle}>Elige quién avanza para guardar</span>
         ) : message?.ok ? (
           <span className="flex items-center gap-1 text-success">
             <Check size={15} weight="bold" /> {message.text}
           </span>
         ) : (
-          <span className="text-muted">Se guarda automáticamente</span>
+          <span className={mutedCls} style={mutedStyle}>Se guarda automáticamente</span>
         )}
       </div>
     </>

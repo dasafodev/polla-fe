@@ -3,15 +3,12 @@
 // en Bogotá. Estamos en eliminatorias, así que no hay empates: cada partido resuelve a ganó/perdió.
 
 import { ROUND_LONG } from '../../ko/koView'
+import { COLOMBIA_CODE, MULT_COLOMBIA_KO, isColombiaKoMatch } from '../../ko/colombia'
 import { bogotaDateOf } from '../../../lib/clock'
 import type { KoMatch, KoMatchesResponse, KoTeam } from '../../../types/api'
 
-export const COLOMBIA_CODE = 'COL'
-
-// Multiplicador de puntos de los partidos de Colombia en eliminatorias. Espejo del backend
-// (polla-be/prisma/seed.ts → mult_colombia_ko = 5): un partido de Colombia paga 5× los puntos,
-// en cualquier ronda. Solo para el informativo; el cálculo real lo hace el backend.
-export const MULT_COLOMBIA_KO = 5
+// Re-exportados desde la fuente única (ko/colombia) por retrocompatibilidad de imports.
+export { COLOMBIA_CODE, MULT_COLOMBIA_KO }
 
 export type ColombiaPhase = 'countdown' | 'live' | 'won'
 
@@ -26,7 +23,7 @@ export interface ColombiaTakeover {
 }
 
 export function isColombiaMatch(m: KoMatch): boolean {
-  return m.homeTeam?.code === COLOMBIA_CODE || m.awayTeam?.code === COLOMBIA_CODE
+  return isColombiaKoMatch(m)
 }
 
 function scoreOf(m: KoMatch, colIsHome: boolean): { col: number; opp: number } | null {

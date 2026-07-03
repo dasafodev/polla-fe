@@ -1,12 +1,15 @@
 import { memo, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Info } from '@phosphor-icons/react'
+import { Info, CaretRight } from '@phosphor-icons/react'
 import { Flag } from '../../../ui/Flag'
 import { Confetti } from '../../../ui/Confetti'
 import { Sheet } from '../../../ui/Sheet'
 import { spring, useReduced } from '../../../ui/motion'
 import { useCountdown } from '../useCountdown'
 import { formatKickoffBogota } from '../format'
+import { useAllKoPredictions } from '../../predicciones/hooks'
+import { tripleUsesRemaining } from '../../ko/koView'
+import { KoPredictionSheet } from '../../ko/KoPredictionSheet'
 import { MULT_COLOMBIA_KO, type ColombiaTakeover } from './colombiaTakeover'
 
 // "Amarillo camiseta": fondo tricolor amarillo, "10" fantasma navy, tipografía navy, acentos rojos.
@@ -16,12 +19,25 @@ const RED = '#CE1126'
 const CONFETTI_COLORS = ['#FCD116', '#00318A', '#CE1126', '#ffffff']
 
 export function ColombiaHero({ takeover }: { takeover: ColombiaTakeover }) {
+  // Tocar la card abre el mismo detalle de pronóstico del panel de Predicciones (marcador + ×5).
+  const [open, setOpen] = useState(false)
+  const ko = useAllKoPredictions()
+  const tripleRemaining = tripleUsesRemaining(ko.rounds)
+  const onOpen = () => setOpen(true)
   return (
-    <HeroShell label={ariaLabel(takeover)}>
-      {takeover.phase === 'countdown' && <CountdownContent t={takeover} />}
-      {takeover.phase === 'live' && <LiveContent t={takeover} />}
-      {takeover.phase === 'won' && <WonContent t={takeover} />}
-    </HeroShell>
+    <>
+      <HeroShell label={ariaLabel(takeover)}>
+        {takeover.phase === 'countdown' && <CountdownContent t={takeover} onOpen={onOpen} />}
+        {takeover.phase === 'live' && <LiveContent t={takeover} onOpen={onOpen} />}
+        {takeover.phase === 'won' && <WonContent t={takeover} onOpen={onOpen} />}
+      </HeroShell>
+      <KoPredictionSheet
+        match={open ? takeover.match : null}
+        roundName={takeover.roundLong}
+        tripleRemaining={tripleRemaining}
+        onClose={() => setOpen(false)}
+      />
+    </>
   )
 }
 
@@ -57,75 +73,88 @@ const Ghost10 = memo(function Ghost10() {
   )
 })
 
-function CountdownContent({ t }: { t: ColombiaTakeover }) {
+function CountdownContent({ t, onOpen }: { t: ColombiaTakeover; onOpen: () => void }) {
   const cd = useCountdown(t.kickoffAt)
   return (
     <>
-      <Kicker>Vamos mi Colombia</Kicker>
-      <Title>COLOMBIA</Title>
-      <RoundLine t={t} />
-      <Matchup t={t} />
-      {cd.done ? (
-        <p className="mt-4 font-mono text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>
-          Por comenzar
-        </p>
-      ) : (
-        <div className="mt-4 flex gap-1.5">
-          {cd.days > 0 && <CdBox n={cd.days} u="días" />}
-          <CdBox n={cd.hours} u="hrs" />
-          <CdBox n={cd.minutes} u="min" />
-          <CdBox n={cd.seconds} u="seg" />
-        </div>
-      )}
+      <TapArea onOpen={onOpen} label={`Pronosticar el marcador de Colombia contra ${t.opponent.name}`}>
+        <Kicker>Vamos mi Colombia</Kicker>
+        <Title>COLOMBIA</Title>
+        <RoundLine t={t} />
+        <Matchup t={t} />
+        {cd.done ? (
+          <p className="mt-4 font-mono text-sm font-bold uppercase tracking-wide" style={{ color: NAVY }}>
+            Por comenzar
+          </p>
+        ) : (
+          <div className="mt-4 flex gap-1.5">
+            {cd.days > 0 && <CdBox n={cd.days} u="días" />}
+            <CdBox n={cd.hours} u="hrs" />
+            <CdBox n={cd.minutes} u="min" />
+            <CdBox n={cd.seconds} u="seg" />
+          </div>
+        )}
+        <OpenHint>Pronostica el marcador</OpenHint>
+      </TapArea>
       <PointsChip />
     </>
   )
 }
 
-function LiveContent({ t }: { t: ColombiaTakeover }) {
+function LiveContent({ t, onOpen }: { t: ColombiaTakeover; onOpen: () => void }) {
   const s = t.score
   return (
     <>
-      <span
-        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-white"
-        style={{ backgroundColor: RED }}
-      >
-        <span className="size-1.5 rounded-full bg-white motion-safe:animate-pulse" /> En vivo
-      </span>
-      {s ? (
-        <div className="mt-3 flex items-center justify-center gap-3">
-          <TeamCol code="COL" flag={t.colombia.flag} />
-          <span className="font-display text-5xl font-black tabular-nums" style={{ color: NAVY }}>{s.col}</span>
-          <span className="font-display text-3xl font-black" style={{ color: NAVY, opacity: 0.4 }}>–</span>
-          <span className="font-display text-5xl font-black tabular-nums" style={{ color: NAVY }}>{s.opp}</span>
-          <TeamCol code={t.opponent.code} flag={t.opponent.flag} />
+      <TapArea onOpen={onOpen} label={`Ver el partido de Colombia contra ${t.opponent.name}, en vivo`}>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-white"
+          style={{ backgroundColor: RED }}
+        >
+          <span className="size-1.5 rounded-full bg-white motion-safe:animate-pulse" /> En vivo
+        </span>
+        {s ? (
+          <div className="mt-3 flex items-center justify-center gap-3">
+            <TeamCol code="COL" flag={t.colombia.flag} />
+            <span className="font-display text-5xl font-black tabular-nums" style={{ color: NAVY }}>{s.col}</span>
+            <span className="font-display text-3xl font-black" style={{ color: NAVY, opacity: 0.4 }}>–</span>
+            <span className="font-display text-5xl font-black tabular-nums" style={{ color: NAVY }}>{s.opp}</span>
+            <TeamCol code={t.opponent.code} flag={t.opponent.flag} />
+          </div>
+        ) : (
+          <div className="mt-3 flex items-center justify-center gap-4 text-lg font-extrabold text-ink">
+            <TeamCol code="COL" flag={t.colombia.flag} />
+            <span className="font-display text-2xl text-ink-soft">vs</span>
+            <TeamCol code={t.opponent.code} flag={t.opponent.flag} />
+          </div>
+        )}
+        <p className="mt-2 text-center text-xs font-bold text-ink/70">{leadText(s)}</p>
+        <div className="mt-1 flex justify-center">
+          <OpenHint>Ver el partido</OpenHint>
         </div>
-      ) : (
-        <div className="mt-3 flex items-center justify-center gap-4 text-lg font-extrabold text-ink">
-          <TeamCol code="COL" flag={t.colombia.flag} />
-          <span className="font-display text-2xl text-ink-soft">vs</span>
-          <TeamCol code={t.opponent.code} flag={t.opponent.flag} />
-        </div>
-      )}
-      <p className="mt-2 text-center text-xs font-bold text-ink/70">{leadText(s)}</p>
+      </TapArea>
       <PointsChip />
     </>
   )
 }
 
-function WonContent({ t }: { t: ColombiaTakeover }) {
+function WonContent({ t, onOpen }: { t: ColombiaTakeover; onOpen: () => void }) {
   const burst = useConfettiOnce(t.match.id)
   return (
-    <div className="text-center">
+    <>
       {burst && <Confetti count={90} colors={CONFETTI_COLORS} />}
-      <h2 className="font-display text-2xl font-black leading-none" style={{ color: RED }}>¡GANÓ</h2>
-      <h2 className="font-display text-3xl font-black leading-none" style={{ color: NAVY }}>COLOMBIA!</h2>
-      {t.score && (
-        <p className="mt-3 font-display text-xl font-black text-ink">
-          COL {t.score.col} – {t.score.opp} {t.opponent.code}
-        </p>
-      )}
-    </div>
+      <TapArea onOpen={onOpen} label={`Ver el detalle de Colombia contra ${t.opponent.name}`}>
+        <div className="text-center">
+          <h2 className="font-display text-2xl font-black leading-none" style={{ color: RED }}>¡GANÓ</h2>
+          <h2 className="font-display text-3xl font-black leading-none" style={{ color: NAVY }}>COLOMBIA!</h2>
+          {t.score && (
+            <p className="mt-3 font-display text-xl font-black text-ink">
+              COL {t.score.col} – {t.score.opp} {t.opponent.code}
+            </p>
+          )}
+          <OpenHint>Ver el detalle</OpenHint>
+        </div>
+      </TapArea>
+    </>
   )
 }
 
@@ -169,6 +198,26 @@ function PointsChip() {
         </div>
       </Sheet>
     </>
+  )
+}
+
+// El área de info del héroe es tocable: abre el detalle de pronóstico del partido de Colombia.
+// El PointsChip (×5) queda como botón hermano fuera de esta zona (sin botones anidados).
+function TapArea({ onOpen, label, children }: { onOpen: () => void; label: string; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onOpen} aria-label={label} className="block w-full text-left active:scale-[0.99]">
+      {children}
+    </button>
+  )
+}
+
+// Pista de que la card abre el detalle. inline-flex: se alinea o centra según el contenedor de la fase.
+function OpenHint({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-bold" style={{ color: NAVY }}>
+      {children}
+      <CaretRight size={13} weight="bold" aria-hidden />
+    </span>
   )
 }
 

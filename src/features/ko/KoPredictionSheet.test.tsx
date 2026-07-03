@@ -6,6 +6,8 @@ import { renderWithProviders, seedSession } from '../../test/utils'
 import { server } from '../../mocks/server'
 import { db } from '../../mocks/db'
 import { EliminatoriasPanel } from '../predicciones/EliminatoriasPanel'
+import { KoPredictionSheet } from './KoPredictionSheet'
+import type { KoMatch, KoTeam } from '../../types/api'
 
 // Se ejercita a través del panel (integración realista): tocar un partido abre el sheet.
 describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
@@ -137,6 +139,60 @@ describe('KoPredictionSheet — ingreso de pronóstico KO', () => {
 
     expect(await within(dialog).findByText('Ya tienes un pronóstico para este partido.', undefined, { timeout: 2000 })).toBeInTheDocument()
     expect(within(dialog).queryByText(/already exists/i)).not.toBeInTheDocument()
+  })
+})
+
+describe('KoPredictionSheet — takeover de Colombia (×5)', () => {
+  beforeEach(() => {
+    seedSession('p-juan')
+  })
+
+  const COL = { id: 'col', name: 'Colombia', code: 'COL', flag: null } as KoTeam
+  const BRA = { id: 'bra', name: 'Brasil', code: 'BRA', flag: null } as KoTeam
+
+  // Partido construido a mano (el seed KO no incluye a Colombia). Id no sembrado → el sheet cae al initial.
+  function koMatch(over: Partial<KoMatch> = {}): KoMatch {
+    return {
+      id: 'col-detalle',
+      externalMatchId: 1,
+      matchNumber: 1,
+      scheduledAt: '2026-09-01T23:30:00.000Z',
+      lockedAt: '2026-09-01T22:00:00.000Z',
+      status: 'scheduled',
+      locked: false,
+      homeTeam: COL,
+      awayTeam: BRA,
+      homeTeamLabel: null,
+      awayTeamLabel: null,
+      homeSource: null,
+      awaySource: null,
+      result: null,
+      myPrediction: null,
+      ...over,
+    }
+  }
+
+  it('partido de Colombia: informa que vale ×5 en el detalle', async () => {
+    renderWithProviders(
+      <KoPredictionSheet match={koMatch()} roundName="Cuartos de final" tripleRemaining={2} onClose={() => {}} />,
+    )
+    const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+    expect(await within(dialog).findByText(/cada punto que ganes aquí cuenta por 5/i)).toBeInTheDocument()
+  })
+
+  it('partido normal (sin Colombia): no muestra el informativo ×5', async () => {
+    const normal = koMatch({
+      id: 'no-col',
+      homeTeam: { id: 'aaa', name: 'Equipo A', code: 'AAA', flag: null } as KoTeam,
+      awayTeam: BRA,
+    })
+    renderWithProviders(
+      <KoPredictionSheet match={normal} roundName="Cuartos de final" tripleRemaining={2} onClose={() => {}} />,
+    )
+    const dialog = await screen.findByRole('dialog', { name: 'Pronóstico de eliminatoria' })
+    // El formulario ya está montado (marcador visible), pero sin banner ×5.
+    expect(await within(dialog).findByText('Tu marcador')).toBeInTheDocument()
+    expect(within(dialog).queryByText(/cada punto que ganes aquí cuenta por 5/i)).not.toBeInTheDocument()
   })
 })
 
