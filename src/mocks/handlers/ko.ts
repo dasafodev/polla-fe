@@ -5,8 +5,9 @@ import { roundToFrontend } from '../../lib/contract'
 import { now } from '../../lib/clock'
 import { err, requireSession } from './_shared'
 import { koPointsFor } from '../scoring'
+import { MAX_TRIPLES } from '../../lib/constants'
 
-const TRIPLE_CAP = 3
+const TRIPLE_CAP = MAX_TRIPLES
 const matchLocked = (m: DbKoMatch) => now() >= Date.parse(m.lockedAt)
 const validScore = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 0
 const predOf = (pid: string, mid: string) => db.koPredictions.find((p) => p.participantId === pid && p.matchId === mid)

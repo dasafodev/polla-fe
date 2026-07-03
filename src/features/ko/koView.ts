@@ -1,5 +1,6 @@
 import type { KoMatch, KoMatchesResponse, KoSource, KoTeam } from '../../types/api'
 import { ROUND_SLUGS, type RoundSlug } from '../../types/enums'
+import { MAX_TRIPLES } from '../../lib/constants'
 
 // Estructura fija del Mundial de 48 (R32→Final). El API /ko NO expone el conteo de partidos por
 // ronda (Round.matchCount queda del lado del backend), así que lo fijamos aquí para poder dibujar
@@ -58,13 +59,13 @@ export function advancesName(m: KoMatch): string | null {
   return null
 }
 
-// "Triple o nada" tiene tope global de 3 por participante. Se cuenta sobre TODAS las rondas.
+// "Triple o nada" tiene tope global (MAX_TRIPLES) por participante. Se cuenta sobre TODAS las rondas.
 export function tripleUsesRemaining(rounds: KoMatchesResponse[]): number {
   const used = rounds.reduce(
     (n, r) => n + r.matches.filter((m) => m.myPrediction?.tripleActive).length,
     0,
   )
-  return Math.max(0, 3 - used)
+  return Math.max(0, MAX_TRIPLES - used)
 }
 
 // Cuántos partidos jugables (definidos) ya tienen pronóstico, sobre el total de jugables.

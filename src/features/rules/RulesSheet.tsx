@@ -5,6 +5,7 @@ import {
 } from '@phosphor-icons/react'
 import { Sheet } from '../../ui/Sheet'
 import { stagger, fadeUp } from '../../ui/motion'
+import { MAX_TRIPLES } from '../../lib/constants'
 
 type Tone = 'violet' | 'success' | 'gold' | 'danger' | 'neutral'
 
@@ -137,7 +138,7 @@ export function RulesSheet({ open, onClose }: { open: boolean; onClose: () => vo
             pts={`×${TRIPLE_MULT}`}
           />
           <Row label="Solo si clavas el marcador exacto; si no, ese partido queda en 0 (aunque aciertes quién avanza)" tone="danger" />
-          <Row label="Actívalo en hasta 3 partidos de eliminatorias" tone="neutral" pts="3 usos" />
+          <Row label={`Actívalo en hasta ${MAX_TRIPLES} partidos de eliminatorias`} tone="neutral" pts={`${MAX_TRIPLES} usos`} />
         </Section>
 
         <Section icon={<Sparkle size={18} weight="bold" />} title="Pálpitos">

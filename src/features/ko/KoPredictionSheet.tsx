@@ -12,6 +12,7 @@ import { koSaveErrorText } from './koErrors'
 import { displayName } from '../../lib/names'
 import { keys } from '../../lib/queryClient'
 import { formatKoKickoff } from '../predicciones/format'
+import { MAX_TRIPLES } from '../../lib/constants'
 import type { KoMatch, KoTeam, KoResult, SaveKoPredictionBody } from '../../types/api'
 
 export function KoPredictionSheet({
@@ -303,7 +304,7 @@ function EditForm({
         <span className="flex-1">
           <span className="block text-sm font-bold text-ink">Triple o nada</span>
           <span className="block text-[11px] text-muted">
-            {triple ? 'Activo: x3 si aciertas el marcador exacto, 0 si no.' : `Te quedan ${tripleRemaining} de 3.`}
+            {triple ? 'Activo: x3 si aciertas el marcador exacto, 0 si no.' : `Te quedan ${tripleRemaining} de ${MAX_TRIPLES}.`}
           </span>
         </span>
         <span className={`size-5 shrink-0 rounded-full border-2 ${triple ? 'border-gold bg-gold' : 'border-border'}`} aria-hidden />

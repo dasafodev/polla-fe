@@ -1,5 +1,6 @@
 import type { Db, DbKoMatch, DbKoPrediction, DbGroupRanking } from './db'
 import { ROUND_TO_SCALE, type ScoringParams } from '../types/enums'
+import { MAX_TRIPLES } from '../lib/constants'
 import type {
   GroupPointsEarned, ThirdPointsEarned, KoPointsEarned, PowerupsPointsEarned,
   ScoreBreakdown, ScoreBreakdownDetail, ScoreboardEntry,
@@ -7,7 +8,7 @@ import type {
 
 // Espejo de polla-be/src/mappers/scoreboard.mapper.ts (PRIZES por rank 1/2/3).
 const PRIZES = [800_000, 300_000, 100_000] as const
-const TRIPLE_CAP = 3
+const TRIPLE_CAP = MAX_TRIPLES
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
 // ── Funciones puras (core) ────────────────────────────────────────────────────

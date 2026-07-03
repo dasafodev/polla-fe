@@ -67,16 +67,14 @@ describe('advancesName', () => {
 })
 
 describe('tripleUsesRemaining', () => {
-  it('descuenta del tope global de 3 contando todas las rondas', () => {
-    const triple = (id: string): KoMatch =>
-      match({ id, myPrediction: { scoreHome: 1, scoreAway: 0, teamAdvancesId: 'a', tripleActive: true, lockedIn: false, pointsEarned: null } })
+  const triple = (id: string): KoMatch =>
+    match({ id, myPrediction: { scoreHome: 1, scoreAway: 0, teamAdvancesId: 'a', tripleActive: true, lockedIn: false, pointsEarned: null } })
+  it('descuenta del tope global de 8 contando todas las rondas', () => {
     const rounds = [round('r32', [triple('x'), triple('y')]), round('r16', [match({ id: 'z' }), match()])]
-    expect(tripleUsesRemaining(rounds)).toBe(1) // 2 triples usados de 3
+    expect(tripleUsesRemaining(rounds)).toBe(6) // 2 triples usados de 8
   })
   it('nunca baja de 0', () => {
-    const triple = (id: string): KoMatch =>
-      match({ id, myPrediction: { scoreHome: 1, scoreAway: 0, teamAdvancesId: 'a', tripleActive: true, lockedIn: false, pointsEarned: null } })
-    const rounds = [round('r32', [triple('a'), triple('b'), triple('c'), triple('d')])]
+    const rounds = [round('r32', Array.from({ length: 9 }, (_, i) => triple(`t${i}`)))]
     expect(tripleUsesRemaining(rounds)).toBe(0)
   })
 })

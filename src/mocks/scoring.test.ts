@@ -96,9 +96,9 @@ describe('koPointsFor — null vs no-null', () => {
   })
 })
 
-describe('tripleUsesRemaining (derivado, clamp 0..3)', () => {
-  it('pedro tiene 3 triples activos → remaining 0', () => {
-    expect(computeBreakdown(db, 'p-pedro').tripleUsesRemaining).toBe(0)
+describe('tripleUsesRemaining (derivado, clamp 0..MAX_TRIPLES)', () => {
+  it('pedro tiene 3 triples activos → remaining 5 (de 8)', () => {
+    expect(computeBreakdown(db, 'p-pedro').tripleUsesRemaining).toBe(5)
   })
 })
 

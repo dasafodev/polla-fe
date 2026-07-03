@@ -209,7 +209,7 @@ export function makeDb(): Db {
     { participantId: 'p-maria', matchId: 'ko-r32-1', scoreHome: 3, scoreAway: 0, teamAdvancesId: 'tA1', tripleActive: false },
     { participantId: 'p-maria', matchId: 'ko-r32-2', scoreHome: 2, scoreAway: 0, teamAdvancesId: 'tC1', tripleActive: false },
     { participantId: 'p-maria', matchId: 'ko-r16-1', scoreHome: 0, scoreAway: 0, teamAdvancesId: 'tA1', tripleActive: false },
-    // pedro: 3 triples activos en partidos abiertos → triple agotado
+    // pedro: 3 triples activos en partidos abiertos (de 8 disponibles → aún le quedan 5)
     { participantId: 'p-pedro', matchId: 'ko-r32-open-1', scoreHome: 1, scoreAway: 0, teamAdvancesId: 'tG1', tripleActive: true },
     { participantId: 'p-pedro', matchId: 'ko-r32-open-2', scoreHome: 1, scoreAway: 0, teamAdvancesId: 'tA2', tripleActive: true },
     { participantId: 'p-pedro', matchId: 'ko-r32-open-3', scoreHome: 1, scoreAway: 0, teamAdvancesId: 'tC2', tripleActive: true },

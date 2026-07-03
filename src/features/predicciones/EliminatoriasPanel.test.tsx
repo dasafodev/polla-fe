@@ -43,7 +43,7 @@ describe('EliminatoriasPanel', () => {
     expect(within(dialog).getByText('Tu marcador')).toBeInTheDocument() // form de ingreso (autoguarda, sin botón)
   })
 
-  it('tocar el tag Triple o nada abre la explicación con la mecánica y el tope de 3 usos', async () => {
+  it('tocar el tag Triple o nada abre la explicación con la mecánica y el tope de 8 usos', async () => {
     renderWithProviders(<EliminatoriasPanel locked={false} />)
     await screen.findByText('Dieciseisavos')
     await userEvent.click(screen.getByRole('button', { name: 'Cómo funciona Triple o nada' }))
@@ -51,8 +51,8 @@ describe('EliminatoriasPanel', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Cómo funciona Triple o nada' })
     expect(within(dialog).getAllByText(/marcador exacto/).length).toBeGreaterThan(0)
     expect(within(dialog).getByText(/suma 0/)).toBeInTheDocument()
-    expect(within(dialog).getByText(/3 veces/)).toBeInTheDocument()
-    expect(within(dialog).getByText(/de 3/)).toBeInTheDocument() // activaciones restantes
+    expect(within(dialog).getByText(/8 veces/)).toBeInTheDocument()
+    expect(within(dialog).getByText(/de 8/)).toBeInTheDocument() // activaciones restantes
   })
 
   it('locked: muestra el progreso de la fase, no el subtotal de puntos KO', async () => {

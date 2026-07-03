@@ -3,6 +3,7 @@ import { setNow } from '../../lib/clock'
 import { db } from '../db'
 import { makeFakeIdToken } from '../jwt'
 import { adaptKoMatch } from '../../features/ko/api'
+import { MAX_TRIPLES } from '../../lib/constants'
 
 const URL = (p: string) => `http://localhost/api${p}`
 const get = (p: string) => fetch(URL(p), { credentials: 'include' })
@@ -73,15 +74,16 @@ describe('POST validaciones', () => {
   })
 })
 
-describe('triple — 4 transiciones + tope global 3 (§9.3.1)', () => {
-  it('POST con triple consume; 4º triple → 400 TRIPLE_USES_EXHAUSTED', async () => {
+describe(`triple — transiciones + tope global ${MAX_TRIPLES} (§9.3.1)`, () => {
+  it(`POST con triple consume; triple #${MAX_TRIPLES + 1} → 400 TRIPLE_USES_EXHAUSTED`, async () => {
     const ms = openMatches()
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < MAX_TRIPLES; i++) {
       const r = await send(`/ko/matches/${ms[i].id}/predictions`, 'POST', { scoreHome: 1, scoreAway: 0, teamAdvancesId: ms[i].homeTeamId, tripleActive: true })
       expect(r.status).toBe(201)
-      expect((await r.json()).tripleUsesRemaining).toBe(3 - (i + 1))
+      expect((await r.json()).tripleUsesRemaining).toBe(MAX_TRIPLES - (i + 1))
     }
-    const exhausted = await send(`/ko/matches/${ms[3].id}/predictions`, 'POST', { scoreHome: 0, scoreAway: 0, teamAdvancesId: ms[3].homeTeamId, tripleActive: true })
+    const last = ms[MAX_TRIPLES]
+    const exhausted = await send(`/ko/matches/${last.id}/predictions`, 'POST', { scoreHome: 0, scoreAway: 0, teamAdvancesId: last.homeTeamId, tripleActive: true })
     expect(exhausted.status).toBe(400)
     expect(await exhausted.json()).toMatchObject({ code: 'TRIPLE_USES_EXHAUSTED' })
   })
@@ -89,13 +91,13 @@ describe('triple — 4 transiciones + tope global 3 (§9.3.1)', () => {
     const m = openMatches()[0]
     await send(`/ko/matches/${m.id}/predictions`, 'POST', { scoreHome: 1, scoreAway: 0, teamAdvancesId: m.homeTeamId, tripleActive: false })
     let r = await send(`/ko/matches/${m.id}/predictions`, 'PUT', { scoreHome: 1, scoreAway: 0, teamAdvancesId: m.homeTeamId, tripleActive: true })
-    expect((await r.json()).tripleUsesRemaining).toBe(2)
+    expect((await r.json()).tripleUsesRemaining).toBe(MAX_TRIPLES - 1)
     r = await send(`/ko/matches/${m.id}/predictions`, 'PUT', { scoreHome: 2, scoreAway: 1, teamAdvancesId: m.homeTeamId, tripleActive: true })
-    expect((await r.json()).tripleUsesRemaining).toBe(2)
+    expect((await r.json()).tripleUsesRemaining).toBe(MAX_TRIPLES - 1)
     r = await send(`/ko/matches/${m.id}/predictions`, 'PUT', { scoreHome: 2, scoreAway: 1, teamAdvancesId: m.homeTeamId, tripleActive: false })
-    expect((await r.json()).tripleUsesRemaining).toBe(3)
+    expect((await r.json()).tripleUsesRemaining).toBe(MAX_TRIPLES)
     r = await send(`/ko/matches/${m.id}/predictions`, 'PUT', { scoreHome: 0, scoreAway: 0, teamAdvancesId: m.homeTeamId, tripleActive: false })
-    expect((await r.json()).tripleUsesRemaining).toBe(3)
+    expect((await r.json()).tripleUsesRemaining).toBe(MAX_TRIPLES)
   })
   it('PUT 404 PREDICTION_NOT_FOUND si no existe', async () => {
     const m = openMatches()[2]

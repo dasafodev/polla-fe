@@ -7,6 +7,7 @@ import { KoListView } from '../ko/KoListView'
 import { KoBracketView } from '../ko/KoBracketView'
 import { KoPredictionSheet } from '../ko/KoPredictionSheet'
 import { Sheet } from '../../ui/Sheet'
+import { MAX_TRIPLES } from '../../lib/constants'
 import type { KoMatch } from '../../types/api'
 
 type ViewMode = 'lista' | 'llaves'
@@ -80,7 +81,7 @@ export function EliminatoriasPanel({ locked }: { locked: boolean }) {
             </button>
           ))}
         </div>
-        {/* Tap → explica la mecánica y el tope de 3 usos por torneo. */}
+        {/* Tap → explica la mecánica y el tope de usos por torneo (MAX_TRIPLES). */}
         <button
           type="button"
           onClick={() => setShowTripleInfo(true)}
@@ -124,7 +125,7 @@ function InfoRow({ icon, tone, children }: { icon: ReactNode; tone: 'success' | 
   )
 }
 
-// Explica la mecánica de "Triple o nada" y el tope de 3 usos por torneo (se abre al tocar el tag).
+// Explica la mecánica de "Triple o nada" y el tope de usos por torneo (se abre al tocar el tag).
 function TripleInfoSheet({ open, onClose, remaining }: { open: boolean; onClose: () => void; remaining: number }) {
   return (
     <Sheet open={open} onClose={onClose} title="Triple o nada" ariaLabel="Cómo funciona Triple o nada">
@@ -148,12 +149,12 @@ function TripleInfoSheet({ open, onClose, remaining }: { open: boolean; onClose:
             acertado quién avanza.
           </InfoRow>
           <InfoRow tone="gold" icon={<Trophy size={14} weight="fill" />}>
-            Solo puedes activarlo <span className="font-bold text-ink">3 veces</span> en todo el torneo.
+            Solo puedes activarlo <span className="font-bold text-ink">{MAX_TRIPLES} veces</span> en todo el torneo.
           </InfoRow>
         </ul>
 
         <p className="rounded-control bg-surface-2 px-3 py-2.5 text-center text-sm text-ink-soft">
-          Te quedan <span className="font-bold text-ink">{remaining} de 3</span> activaciones.
+          Te quedan <span className="font-bold text-ink">{remaining} de {MAX_TRIPLES}</span> activaciones.
         </p>
       </div>
     </Sheet>

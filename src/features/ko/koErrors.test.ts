@@ -9,7 +9,7 @@ describe('koSaveErrorText', () => {
   })
 
   it('cubre los códigos KO de escritura', () => {
-    expect(koSaveErrorText(new ApiError('TRIPLE_USES_EXHAUSTED', 'x', 400))).toBe('Ya usaste tus 3 triples o nada.')
+    expect(koSaveErrorText(new ApiError('TRIPLE_USES_EXHAUSTED', 'x', 400))).toBe('Ya usaste tus 8 triples o nada.')
     expect(koSaveErrorText(new ApiError('PREDICTION_ALREADY_EXISTS', 'x', 409))).toBe('Ya tienes un pronóstico para este partido.')
     expect(koSaveErrorText(new ApiError('PREDICTION_NOT_FOUND', 'x', 404))).toBe('Aún no tienes un pronóstico para este partido.')
   })
